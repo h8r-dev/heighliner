@@ -1,1 +1,7 @@
-# stack-test
+# Heighliner
+
+## Quickstart
+
+```
+make build run
+```
