@@ -1,0 +1,14 @@
+metadata:
+  name: ai-demo
+  namespace: default
+
+build:
+  cmd: "go build -o /app/server main.go"
+
+deploy:
+  cmd: "/app/server -p 8080"
+  ports:
+    - port: 8080
+      http:
+        path: /
+  region: ["shenzhen"]
