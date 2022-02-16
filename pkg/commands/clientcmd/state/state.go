@@ -11,11 +11,12 @@ import (
 )
 
 type State struct {
-	Env string `json:"env"`
+	Env   string `json:"env"`
+	Stack string `json:"stack"`
 }
 
 // InitEnv initializes the local state, e.g. environment data, cue mods.
-func InitEnv(name string) (*State, error) {
+func InitEnv(envName string, stackName string) (*State, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, errors.New("failed to get current working dir")
@@ -28,13 +29,14 @@ func InitEnv(name string) (*State, error) {
 	}
 
 	var s *State
-	fn := filepath.Join(dir, name)
+	fn := filepath.Join(dir, envName)
 	_, err = os.Stat("/path/to/whatever")
 	switch {
 	case errors.Is(err, os.ErrNotExist):
 		// create a new env state file
 		s = &State{
-			Env: name,
+			Env:   envName,
+			Stack: stackName,
 		}
 		b, err := yaml.Marshal(s)
 		if err != nil {
