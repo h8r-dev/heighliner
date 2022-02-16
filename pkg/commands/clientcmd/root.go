@@ -14,6 +14,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(stackCmd)
+	rootCmd.AddCommand(stackhubCmd)
 	rootCmd.AddCommand(upCmd)
 }
 
