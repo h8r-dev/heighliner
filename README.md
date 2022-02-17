@@ -44,3 +44,7 @@ Create an application:
 ```shell
 hln up -f ./examples/sample/app.yaml
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
