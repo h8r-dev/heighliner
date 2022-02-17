@@ -7,8 +7,8 @@ import (
 var (
 	rootCmd = &cobra.Command{
 		Use:   "hln",
-		Short: "Heighliner: Cloud native stacks to develop and deploy your applications",
-		Long:  "Heighliner: Cloud native stacks to develop and deploy your applications",
+		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
+		Long:  "Heighliner: Cloud native best practices to build and deploy your applications",
 	}
 )
 
