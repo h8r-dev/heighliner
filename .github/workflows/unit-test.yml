@@ -2,13 +2,17 @@ name: Unit-Test
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+    - main
+    - dev
   pull_request:
-    branches: [ main ]
+    branches: 
+    - main
+    - dev
 
 jobs:
 
-  build:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
