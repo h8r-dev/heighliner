@@ -23,3 +23,9 @@ GIT_REVISION := $(shell git rev-parse --short HEAD)
 .PHONY: server
 server: # build server binary
 	CGO_ENABLED=0 go build -o bin/server '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/server/main.go -ldflags
+
+test: unit-test
+	@echo unit-tests pass
+
+unit-test:
+	go test ./...

@@ -62,8 +62,6 @@ func downloadStack(i int, url string, wg *sync.WaitGroup) {
 }
 
 func decompressStack(i int, wg *sync.WaitGroup) {
-
-	fmt.Printf("TODO: decompress %s/stack%d.tar.gz\n", hlnStore, i)
 	command := exec.Command("tar",
 		"-zxvf", fmt.Sprintf("%s/stack%d.tar.gz", hlnStore, i),
 		"-C", hlnStore)
