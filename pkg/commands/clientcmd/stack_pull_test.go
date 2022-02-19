@@ -21,6 +21,14 @@ func Test_pullStack(t *testing.T) {
 			args:    args{&cobra.Command{}, []string{}},
 			wantErr: true,
 		},
+		{
+			name: "test-stack",
+			args: args{&cobra.Command{}, []string{
+				"test-stack",
+				"https://stack.h8r.io/sample-latest.tar.gz",
+			}},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
