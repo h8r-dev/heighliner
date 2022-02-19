@@ -8,15 +8,15 @@ import (
 )
 
 type HlnStore struct {
-	Path   string  `json:"path"`
-	Stacks []Stack `json:"stacks"`
+	Path   string   `json:"path"`
+	Stacks []*Stack `json:"stacks"`
 }
 
 // Initialize the .hln dir to keep stacks and other things
 func CreateHlnStore() (*HlnStore, error) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, errors.New("failed to get uer home dir")
+		return nil, errors.New("failed to get user home dir")
 	}
 	// Create the .hln dir
 	dir := filepath.Join(userHomeDir, ".hln")
@@ -42,5 +42,6 @@ func (hs *HlnStore) NewStack(name, url string) (*Stack, error) {
 		Url:  url,
 		Path: dir,
 	}
+	hs.Stacks = append(hs.Stacks, s)
 	return s, nil
 }
