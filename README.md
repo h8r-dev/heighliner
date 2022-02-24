@@ -32,6 +32,7 @@ Config an environment:
 ```shell
 hln env new demo --stack=sample
 hln config list
+hln config set app -f ./examples/sample/app.yaml
 hln config set push.target ghcr.io/hongchaodeng/my-app
 hln config set push.auth.username hongchaodeng
 hln secret list
@@ -42,7 +43,7 @@ hln secret set kubeconfig -f $KUBECONFIG
 Create an application:
 
 ```shell
-hln up -f ./examples/sample/app.yaml
+hln up
 ```
 
 ## Contributing

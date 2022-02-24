@@ -12,8 +12,8 @@ type HlnStore struct {
 	Stacks []*Stack `json:"stacks"`
 }
 
-// Initialize the .hln dir to keep stacks and other things
-func CreateHlnStore() (*HlnStore, error) {
+// InitHlnStore initializes the .hln dir to keep stacks and other things
+func InitHlnStore() (*HlnStore, error) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, errors.New("failed to get user home dir")
