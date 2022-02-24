@@ -67,20 +67,15 @@ type dirInfo struct {
 	ModTime time.Time
 }
 
-// Decompress 解压 tar.gz。 保留原始的层级结构和文件修改时间
-//
-// tarFile 被解压的 .tar.gz文件名
-//
-// dest 解压到哪个目录，结尾的"/"可有可无。"" 和 "./" 和 "." 都表示解压到当前目录。
-func decompress(tarFile, dest string) error {
-	srcFile, err := os.Open(tarFile)
+func makeTarReader(filename string) (*tar.Reader, func(), error) {
+	srcFile, err := os.Open(filename)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
-	defer srcFile.Close()
 	content, err := ioutil.ReadAll(srcFile)
 	if err != nil {
-		return err
+		srcFile.Close()
+		return nil, nil, err
 	}
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
@@ -88,10 +83,25 @@ func decompress(tarFile, dest string) error {
 	w.Close()
 	gr, err := gzip.NewReader(&b)
 	if err != nil {
+		srcFile.Close()
+		return nil, nil, err
+	}
+
+	closeFunc := func() {
+		srcFile.Close()
+		gr.Close()
+	}
+	tr := tar.NewReader(gr)
+	return tr, closeFunc, nil
+}
+
+// decompress decompresses a tar.gz file into dest dir.
+func decompress(tarFile, dest string) error {
+	tr, closeFDs, err := makeTarReader(tarFile)
+	if err != nil {
 		return err
 	}
-	defer gr.Close()
-	tr := tar.NewReader(gr)
+	defer closeFDs()
 	if dest != "" {
 		_, err = makeDir(dest)
 		if err != nil {
@@ -99,6 +109,8 @@ func decompress(tarFile, dest string) error {
 		}
 	}
 	currentDir := dirInfo{}
+
+	// iterate until all files are decompresses
 	for {
 		header, err := tr.Next()
 		if err != nil {

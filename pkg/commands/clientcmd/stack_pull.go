@@ -22,7 +22,7 @@ func pullStack(c *cobra.Command, args []string) error {
 		return errors.New("please specify stack name and url")
 	}
 
-	hs, err := state.CreateHlnStore()
+	hs, err := state.InitHlnStore()
 	if err != nil {
 		return err
 	}
