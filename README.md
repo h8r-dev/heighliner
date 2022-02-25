@@ -9,10 +9,10 @@ make hln
 export PATH="$PWD/bin:$PATH"
 ```
 
-List stack:
+Init heighliner
 
 ```shell
-hln stack list
+hln init
 ```
 
 Pull stack:
@@ -24,7 +24,25 @@ hln stack pull sample
 Show stack:
 
 ```shell
-hln stack show sample
+hln stack show
+```
+
+Init stack:
+
+```shell
+hln stack init
+```
+
+List input:
+
+```shell
+hln stack list
+```
+
+Up
+
+```shell
+hln up
 ```
 
 Config an environment:
