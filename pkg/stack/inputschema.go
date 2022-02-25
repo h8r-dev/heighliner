@@ -1,4 +1,4 @@
-package state
+package stack
 
 type InputSchema struct {
 	Name        string

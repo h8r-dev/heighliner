@@ -3,6 +3,7 @@ package clientcmd
 import (
 	"os"
 	"os/exec"
+	"path"
 
 	"github.com/h8r-dev/heighliner/pkg/datastore"
 	"github.com/rs/zerolog/log"
@@ -10,15 +11,14 @@ import (
 )
 
 var (
-	stackListCmd = &cobra.Command{
-		Use:   "list",
-		Short: "List stacks",
-		Long:  "",
-		RunE:  listStack,
+	stackInitCmd = &cobra.Command{
+		Use:   "init",
+		Short: "List input values of stack",
+		RunE:  initStack,
 	}
 )
 
-func listStack(c *cobra.Command, args []string) error {
+func initStack(c *cobra.Command, args []string) error {
 	ds, err := datastore.Stat()
 	if err != nil {
 		return err
@@ -29,8 +29,15 @@ func listStack(c *cobra.Command, args []string) error {
 	}
 	cmd := exec.Command("dagger",
 		"--project", s.Path,
-		"-e", "hln",
-		"input", "list")
+		"init")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatal().Msg(string(out))
+	}
+	cmd = exec.Command("dagger",
+		"--project", s.Path,
+		"new", "hln",
+		"-p", path.Join(s.Path, "plans"))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()

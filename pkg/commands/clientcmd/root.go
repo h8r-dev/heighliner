@@ -13,12 +13,15 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(stackCmd)
-	rootCmd.AddCommand(stackhubCmd)
-	rootCmd.AddCommand(envCmd)
-	rootCmd.AddCommand(configCmd)
-	rootCmd.AddCommand(secretCmd)
-	rootCmd.AddCommand(upCmd)
+	rootCmd.AddCommand(
+		initCmd,
+		stackCmd,
+		stackhubCmd,
+		envCmd,
+		configCmd,
+		secretCmd,
+		upCmd,
+	)
 }
 
 // Execute executes the root command.

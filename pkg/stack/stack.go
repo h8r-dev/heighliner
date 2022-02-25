@@ -1,4 +1,4 @@
-package state
+package stack
 
 import (
 	"archive/tar"
@@ -13,15 +13,46 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Stack struct {
-	Name        string         `json:"name"`
+	Name        string         `json:"name" yaml:"name"`
 	Path        string         `json:"path"`
 	Url         string         `json:"url"`
-	Version     string         `json:"version"`
-	Description string         `json:"description"`
+	Version     string         `json:"version" yaml:"version"`
+	Description string         `json:"description" yaml:"description"`
 	Inputs      []*InputSchema `json:"inputSchema"`
+}
+
+func New(name, dst, src string) (*Stack, error) {
+	dir := filepath.Join(dst, name)
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make dir %s in %s", name, dst)
+	}
+	s := &Stack{
+		Name: name,
+		Path: dst,
+		Url:  src,
+	}
+	return s, nil
+}
+
+func (s *Stack) Load() error {
+	meta := path.Join(s.Path, "metadata.yaml")
+	file, err := os.Open(meta)
+	if err != nil {
+		return fmt.Errorf("failed to open file %s", meta)
+	}
+	defer file.Close()
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(b, s)
+	return err
 }
 
 func (s *Stack) Download() error {

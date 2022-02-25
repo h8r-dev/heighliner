@@ -17,17 +17,14 @@ func Test_pullStack(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "empty url input",
+			name:    "no arg",
 			args:    args{&cobra.Command{}, []string{}},
 			wantErr: true,
 		},
 		{
-			name: "test-stack",
-			args: args{&cobra.Command{}, []string{
-				"test-stack",
-				"https://stack.h8r.io/sample-latest.tar.gz",
-			}},
-			wantErr: false,
+			name:    "unexisted stack name",
+			args:    args{&cobra.Command{}, []string{"unexisted-stack-name"}},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

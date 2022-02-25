@@ -1,11 +1,11 @@
 package clientcmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
 
+	"github.com/h8r-dev/heighliner/pkg/datastore"
 	"github.com/spf13/cobra"
 )
 
@@ -14,32 +14,27 @@ var (
 		Use:   "show [NAME]",
 		Short: "Show the description of a stack",
 		Long:  "",
-		RunE:  showStacks,
+		RunE:  showStack,
 	}
 )
 
-func showStacks(c *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return errors.New("please specify the name of the stack")
+func showStack(c *cobra.Command, args []string) error {
+	ds, err := datastore.Stat()
+	if err != nil {
+		return err
 	}
-	for _, stackName := range args {
-		showStack(stackName)
+	s, err := ds.Find()
+	if err != nil {
+		return err
 	}
-	return nil
-}
-
-func showStack(name string) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.TabIndent)
 	defer w.Flush()
-
-	fmt.Fprintln(w, "Input\tType\tRequired\tDescription")
-	for _, s := range defaultStacks {
-		if s.Name != name {
-			continue
-		}
-		for _, in := range s.Inputs {
-			line := fmt.Sprintf("%s\t%s\t%t\t%s\t", in.Name, in.Type, in.Required, in.Description)
-			fmt.Fprintln(w, line)
-		}
+	fmt.Fprintln(w, "NAME\tVERSION\tDESCRIPTION")
+	err = s.Load()
+	if err != nil {
+		return err
 	}
+	line := fmt.Sprintf("%s\t%s\t%s\t", s.Name, s.Version, s.Description)
+	fmt.Fprintln(w, line)
+	return nil
 }

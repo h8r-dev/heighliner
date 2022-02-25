@@ -3,41 +3,50 @@ package clientcmd
 import (
 	"errors"
 
-	"github.com/h8r-dev/heighliner/pkg/commands/clientcmd/state"
-
+	"github.com/h8r-dev/heighliner/pkg/datastore"
+	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/spf13/cobra"
 )
 
 var (
 	stackPullCmd = &cobra.Command{
-		Use:   "pull [stack name] [stack url]",
+		Use:   "pull [stack name] (stack url)",
 		Short: "Pull a stack",
-		Long:  "",
+		Args:  cobra.RangeArgs(1, 2),
 		RunE:  pullStack,
 	}
 )
 
 func pullStack(c *cobra.Command, args []string) error {
-	if len(args) < 2 {
-		return errors.New("please specify stack name and url")
-	}
 
-	hs, err := state.InitHlnStore()
+	ds, err := datastore.Stat()
+	if err != nil {
+		return err
+	}
+	var s *stack.Stack
+	if len(args) == 1 {
+		switch args[0] {
+		case "sample":
+			s, err = stack.New(
+				args[0],
+				ds.Path,
+				"https://stack.h8r.io/sample-latest.tar.gz")
+		default:
+			return errors.New("can not find such stack")
+		}
+	} else {
+		s, err = stack.New(args[0], ds.Path, args[1])
+	}
 	if err != nil {
 		return err
 	}
 
-	stack, err := hs.NewStack(args[0], args[1])
+	err = s.Download()
 	if err != nil {
 		return err
 	}
 
-	err = stack.Download()
-	if err != nil {
-		return err
-	}
-
-	err = stack.Decompress()
+	err = s.Decompress()
 	if err != nil {
 		return err
 	}
