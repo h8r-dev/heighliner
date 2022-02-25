@@ -25,8 +25,34 @@ GIT_REVISION := $(shell git rev-parse --short HEAD)
 server: # build server binary
 	CGO_ENABLED=0 go build -o bin/server '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/server/main.go -ldflags
 
-test: unit-test
-	@echo unit-tests pass
+# Run tests
+test: vet lint staticcheck unit-test-core
+	@$(OK) unit-tests pass
 
-unit-test:
+# Run go vet against code
+vet:
+	go vet ./...
+
+lint: golangci
+	$(GOLANGCILINT) run ./...
+	
+unit-test-core:
 	go test ./...
+
+.PHONY: golangci
+golangci:
+ifneq ($(shell which golangci-lint),)
+	@$(OK) golangci-lint is already installed
+GOLANGCILINT=$(shell which golangci-lint)
+else ifeq (, $(shell which $(GOBIN)/golangci-lint))
+	@{ \
+	set -e ;\
+	echo 'installing golangci-lint-$(GOLANGCILINT_VERSION)' ;\
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) $(GOLANGCILINT_VERSION) ;\
+	echo 'Successfully installed' ;\
+	}
+GOLANGCILINT=$(GOBIN)/golangci-lint
+else
+	@$(OK) golangci-lint is already installed
+GOLANGCILINT=$(GOBIN)/golangci-lint
+endif
