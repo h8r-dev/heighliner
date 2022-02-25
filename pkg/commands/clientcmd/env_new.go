@@ -21,7 +21,7 @@ var (
 
 func init() {
 	envNewCmd.Flags().StringVar(&envStack, "stack", "", "Specify the name of the stack")
-	envNewCmd.MarkFlagRequired("stack")
+	_ = envNewCmd.MarkFlagRequired("stack")
 }
 
 func envNew(c *cobra.Command, args []string) error {

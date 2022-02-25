@@ -79,7 +79,11 @@ func makeTarReader(filename string) (*tar.Reader, func(), error) {
 	}
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
-	w.Write(content)
+	_, err = w.Write(content)
+	if err != nil {
+		srcFile.Close()
+		return nil, nil, err
+	}
 	w.Close()
 	gr, err := gzip.NewReader(&b)
 	if err != nil {
@@ -143,7 +147,10 @@ func decompress(tarFile, dest string) error {
 		if err != nil {
 			return fmt.Errorf("can not create file %v: %v", fileName, err)
 		}
-		io.Copy(file, tr)
+		_, err = io.Copy(file, tr)
+		if err != nil {
+			return err
+		}
 		file.Close()
 		remodifyTime(fileName, header.ModTime)
 	}
@@ -155,7 +162,7 @@ func remodifyTime(name string, modTime time.Time) {
 		return
 	}
 	atime := time.Now()
-	os.Chtimes(name, atime, modTime)
+	_ = os.Chtimes(name, atime, modTime)
 }
 
 func makeDir(name string) (string, error) {

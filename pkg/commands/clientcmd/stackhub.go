@@ -12,8 +12,9 @@ var (
 	}
 )
 
-type stackhub struct {
-	Repo   string
-	Branch string
-	Path   string
-}
+// Currently not used. Comment out to pass ci test
+// type stackhub struct {
+// 	Repo   string
+// 	Branch string
+// 	Path   string
+// }
