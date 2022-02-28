@@ -12,8 +12,13 @@
 *.out
 tmp/
 bin/
-.hln/
+.vscode/
 .idea/
 
 # Dependency directories (remove the comment below to include it)
 vendor/
+
+# heighliner proj files
+.hln/
+.dagger/
+cue.mod/

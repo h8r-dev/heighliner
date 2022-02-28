@@ -1,9 +1,6 @@
 package stack
 
 import (
-	"archive/tar"
-	"bytes"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,22 +8,38 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
-	"time"
 
+	"github.com/h8r-dev/heighliner/pkg/util/compress"
 	"gopkg.in/yaml.v3"
 )
 
 type Stack struct {
-	Name        string         `json:"name" yaml:"name"`
-	Path        string         `json:"path"`
-	Url         string         `json:"url"`
-	Version     string         `json:"version" yaml:"version"`
-	Description string         `json:"description" yaml:"description"`
-	Inputs      []*InputSchema `json:"inputSchema"`
+	Name        string `json:"name" yaml:"name"`
+	Path        string `json:"path"`
+	Url         string `json:"url"`
+	Version     string `json:"version" yaml:"version"`
+	Description string `json:"description" yaml:"description"`
 }
 
-// New() creates a stack and a dir to store it's data
+var (
+	Sample = &Stack{
+		Name:        "sample",
+		Url:         "https://stack.h8r.io/sample-latest.tar.gz",
+		Description: "This is an example stack",
+	}
+	GoGinStack = &Stack{
+		Name:        "go-gin-stack",
+		Url:         "https://stack.h8r.io/go-gin-stack-latest.tar.gz",
+		Description: "This is an go-gin stack",
+	}
+)
+
+var Stacks = map[string]*Stack{
+	"sample":       Sample,
+	"go-gin-stack": GoGinStack,
+}
+
+// New creates a Stack struct and a dir to store it's files
 func New(name, dst, src string) (*Stack, error) {
 	dir := filepath.Join(dst, name)
 	err := os.MkdirAll(dir, 0755)
@@ -41,22 +54,7 @@ func New(name, dst, src string) (*Stack, error) {
 	return s, nil
 }
 
-// Load() loads values from the metadata.yaml file
-func (s *Stack) Load() error {
-	meta := path.Join(s.Path, "metadata.yaml")
-	file, err := os.Open(meta)
-	if err != nil {
-		return fmt.Errorf("failed to open file %s", meta)
-	}
-	defer file.Close()
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-	err = yaml.Unmarshal(b, s)
-	return err
-}
-
+// Download downloads the stack form it's Url field
 func (s *Stack) Download() error {
 	fp := filepath.Join(s.Path, s.Name+".tar.gz")
 	file, err := os.Create(fp)
@@ -67,7 +65,7 @@ func (s *Stack) Download() error {
 
 	rsp, err := http.Get(s.Url)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to download stack from %s: %w", s.Url, err)
 	}
 	defer rsp.Body.Close()
 
@@ -79,12 +77,13 @@ func (s *Stack) Download() error {
 	return nil
 }
 
+// Decompress decompresses the raw .tar.gz package of a stack
 func (s *Stack) Decompress() error {
 	src := filepath.Join(s.Path, s.Name+".tar.gz")
 
-	err := decompress(src, s.Path)
+	err := compress.Decompress(src, s.Path)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to decompress stack %s: %w", s.Name, err)
 	}
 
 	err = os.Remove(src)
@@ -95,134 +94,21 @@ func (s *Stack) Decompress() error {
 	return nil
 }
 
-type dirInfo struct {
-	Name    string
-	ModTime time.Time
-}
-
-func makeTarReader(filename string) (*tar.Reader, func(), error) {
-	srcFile, err := os.Open(filename)
-	if err != nil {
-		return nil, nil, err
-	}
-	content, err := ioutil.ReadAll(srcFile)
-	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
-	}
-	var b bytes.Buffer
-	w := gzip.NewWriter(&b)
-	_, err = w.Write(content)
-	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
-	}
-	w.Close()
-	gr, err := gzip.NewReader(&b)
-	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
-	}
-
-	closeFunc := func() {
-		srcFile.Close()
-		gr.Close()
-	}
-	tr := tar.NewReader(gr)
-	return tr, closeFunc, nil
-}
-
-// decompress decompresses a tar.gz file into dest dir.
-func decompress(tarFile, dest string) error {
-	tr, closeFDs, err := makeTarReader(tarFile)
+// Load() loads values from the metadata.yaml file
+func (s *Stack) Load() error {
+	metadata := path.Join(s.Path, "metadata.yaml")
+	file, err := os.Open(metadata)
 	if err != nil {
 		return err
 	}
-	defer closeFDs()
-	if dest != "" {
-		_, err = makeDir(dest)
-		if err != nil {
-			return err
-		}
+	defer file.Close()
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
 	}
-	currentDir := dirInfo{}
-
-	// iterate until all files are decompresses
-	for {
-		header, err := tr.Next()
-		if err != nil {
-			if err == io.EOF {
-				if currentDir.Name != "" {
-					remodifyTime(currentDir.Name, currentDir.ModTime)
-				}
-				break
-			} else {
-				return err
-			}
-		}
-		fi := header.FileInfo()
-		fileName := filepath.Join(dest, header.Name)
-		if !strings.HasPrefix(fileName, currentDir.Name) {
-			remodifyTime(currentDir.Name, currentDir.ModTime)
-		}
-		if fi.IsDir() {
-			foldName, err := makeDir(fileName)
-			if err != nil {
-				return err
-			}
-			currentDir = dirInfo{
-				foldName,
-				fi.ModTime(),
-			}
-			continue
-		}
-		file, err := createFile(fileName)
-		if err != nil {
-			return fmt.Errorf("can not create file %v: %v", fileName, err)
-		}
-		_, err = io.Copy(file, tr)
-		if err != nil {
-			return err
-		}
-		file.Close()
-		remodifyTime(fileName, header.ModTime)
+	err = yaml.Unmarshal(b, s)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal data from %s: %w", metadata, err)
 	}
 	return nil
-}
-
-func remodifyTime(name string, modTime time.Time) {
-	if name == "" {
-		return
-	}
-	atime := time.Now()
-	_ = os.Chtimes(name, atime, modTime)
-}
-
-func makeDir(name string) (string, error) {
-	if name != "" {
-		_, err := os.Stat(name)
-		if err != nil {
-			err = os.MkdirAll(name, 0755)
-			if err != nil {
-				return "", fmt.Errorf("can not make directory: %v", err)
-			}
-			return name, nil
-		}
-		return "", nil
-	}
-	return "", fmt.Errorf("can not make directory without a name: %v", name)
-}
-
-func createFile(name string) (*os.File, error) {
-	dir := path.Dir(name)
-	if dir != "" {
-		_, err := os.Lstat(dir)
-		if err != nil {
-			err := os.MkdirAll(dir, 0755)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-	return os.Create(name)
 }

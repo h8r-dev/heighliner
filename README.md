@@ -11,39 +11,27 @@ export PATH="$PWD/bin:$PATH"
 
 cd to a workdir
 
-Init heighliner:
-
-```shell
-hln init
-```
-
-Pull stack (name could be 'sample'):
-
-```shell
-hln stack pull <name>
-```
-
-Show stack:
-
-```shell
-hln stack show
-```
-
-Init stack:
-
-```shell
-hln stack init
-```
-
-List input values:
+List all heighliner stacks:
 
 ```shell
 hln stack list
 ```
 
-Input values:
+Choose a stack and create a project
+
 ```shell
-hln stack input <type> <name> <value>
+hln new -s=<stack>
+```
+
+List all input values:
+
+```shell
+hln input list
+```
+
+Input a value:
+```shell
+hln input <type> <name> <value>
 ```
 
 Up

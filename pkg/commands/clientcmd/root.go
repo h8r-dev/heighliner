@@ -14,12 +14,9 @@ var (
 
 func init() {
 	rootCmd.AddCommand(
-		initCmd,
 		stackCmd,
-		stackhubCmd,
-		envCmd,
-		configCmd,
-		secretCmd,
+		newCmd,
+		inputCmd,
 		upCmd,
 	)
 }

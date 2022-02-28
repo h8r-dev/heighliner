@@ -8,16 +8,11 @@ var (
 	stackCmd = &cobra.Command{
 		Use:   "stack",
 		Short: "Manage stacks",
-		Long:  "",
 	}
 )
 
 func init() {
 	stackCmd.AddCommand(
-		stackPullCmd,
-		stackShowCmd,
-		stackInitCmd,
 		stackListCmd,
-		stackInputCmd,
 	)
 }

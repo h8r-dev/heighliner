@@ -9,19 +9,20 @@ import (
 )
 
 var (
-	upCmd = &cobra.Command{
-		Use:   "up",
-		Short: "Run an application",
+	inputListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "List input values",
 		Args:  cobra.NoArgs,
-		RunE:  upStack,
+		RunE:  inputList,
 	}
 )
 
-func upStack(c *cobra.Command, args []string) error {
+func inputList(c *cobra.Command, args []string) error {
 	cmd := exec.Command(
 		"dagger",
 		"--project", "",
-		"up")
+		"-e", "hln",
+		"input", "list")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()

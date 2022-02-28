@@ -11,46 +11,31 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
+var (
+	ErrNoStack = fmt.Errorf("no stack in datastore")
+)
+
 type DataStore struct {
 	Path string `json:"path"`
 }
 
-// Init creates datastore in the currernt workdir
-func Init() (*DataStore, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, errors.New("failed to get current working dir")
+// Make makes hln dir in dst
+func Make(dst string) (*DataStore, error) {
+	dir := path.Join(dst, "hln")
+	if dst == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, errors.New("failed to get current working dir")
+		}
+		dir = filepath.Join(cwd, "hln")
 	}
-	dir := filepath.Join(cwd, ".hln")
-	// Make .hln Dir
-	err = os.MkdirAll(dir, 0755)
+	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make dir (%s): %w", dir, err)
 	}
-	ds := &DataStore{
-		Path: "",
-	}
-	ds.Path = dir
-	return ds, nil
-}
-
-// Stat shows the status of datastore
-func Stat() (*DataStore, error) {
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, errors.New("failed to get current working dir")
-	}
-	dir := filepath.Join(cwd, ".hln")
-
-	_, err = os.Stat(dir)
-	if err != nil {
-		return nil, errors.New("please init firstly")
-	}
 	var ds = &DataStore{
-		Path: "",
+		Path: dir,
 	}
-	ds.Path = dir
 	return ds, nil
 }
 
@@ -64,12 +49,14 @@ func (ds *DataStore) Find() (*stack.Stack, error) {
 		Path: "",
 	}
 	for _, fi := range dir {
-		if fi.IsDir() && fi.Name() != "env" {
-			s.Path = path.Join(ds.Path, fi.Name())
+		if fi.IsDir() {
+			s.Name = fi.Name()
+			s.Path = path.Join(ds.Path)
+			break
 		}
 	}
 	if s.Path == "" {
-		return nil, errors.New("can not find a stack in current space")
+		return nil, ErrNoStack
 	}
 	return s, nil
 }
