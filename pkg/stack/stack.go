@@ -26,6 +26,7 @@ type Stack struct {
 	Inputs      []*InputSchema `json:"inputSchema"`
 }
 
+// New() creates a stack and a dir to store it's data
 func New(name, dst, src string) (*Stack, error) {
 	dir := filepath.Join(dst, name)
 	err := os.MkdirAll(dir, 0755)
@@ -40,6 +41,7 @@ func New(name, dst, src string) (*Stack, error) {
 	return s, nil
 }
 
+// Load() loads values from the metadata.yaml file
 func (s *Stack) Load() error {
 	meta := path.Join(s.Path, "metadata.yaml")
 	file, err := os.Open(meta)

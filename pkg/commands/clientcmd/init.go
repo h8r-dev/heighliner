@@ -8,7 +8,7 @@ import (
 var (
 	initCmd = &cobra.Command{
 		Use:   "init",
-		Short: "Manage secrets",
+		Short: "Create .hln dir",
 		Args:  cobra.NoArgs,
 		RunE:  initDataStore,
 	}

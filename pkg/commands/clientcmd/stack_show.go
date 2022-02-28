@@ -11,9 +11,9 @@ import (
 
 var (
 	stackShowCmd = &cobra.Command{
-		Use:   "show [NAME]",
+		Use:   "show",
 		Short: "Show the description of a stack",
-		Long:  "",
+		Args:  cobra.NoArgs,
 		RunE:  showStack,
 	}
 )

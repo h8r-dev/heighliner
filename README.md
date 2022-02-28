@@ -9,16 +9,18 @@ make hln
 export PATH="$PWD/bin:$PATH"
 ```
 
-Init heighliner
+cd to a workdir
+
+Init heighliner:
 
 ```shell
 hln init
 ```
 
-Pull stack:
+Pull stack (name could be 'sample'):
 
 ```shell
-hln stack pull sample
+hln stack pull <name>
 ```
 
 Show stack:
@@ -33,10 +35,15 @@ Init stack:
 hln stack init
 ```
 
-List input:
+List input values:
 
 ```shell
 hln stack list
+```
+
+Input values:
+```shell
+hln stack input <type> <name> <value>
 ```
 
 Up

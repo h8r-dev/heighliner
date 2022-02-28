@@ -12,8 +12,8 @@ import (
 var (
 	stackListCmd = &cobra.Command{
 		Use:   "list",
-		Short: "List stacks",
-		Long:  "",
+		Short: "List input values of the stack",
+		Args:  cobra.NoArgs,
 		RunE:  listStack,
 	}
 )

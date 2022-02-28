@@ -11,7 +11,7 @@ import (
 
 var (
 	stackInputCmd = &cobra.Command{
-		Use:   "input",
+		Use:   "input [type] [name] [value]",
 		Short: "input a value for a stack",
 		Args:  cobra.ExactArgs(3),
 		RunE:  stackInput,

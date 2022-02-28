@@ -13,6 +13,7 @@ var (
 	upCmd = &cobra.Command{
 		Use:   "up",
 		Short: "Run an application",
+		Args:  cobra.NoArgs,
 		RunE:  upStack,
 	}
 )

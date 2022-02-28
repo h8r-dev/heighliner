@@ -13,7 +13,8 @@ import (
 var (
 	stackInitCmd = &cobra.Command{
 		Use:   "init",
-		Short: "List input values of stack",
+		Short: "init a dagger plan",
+		Args:  cobra.NoArgs,
 		RunE:  initStack,
 	}
 )
