@@ -9,7 +9,11 @@ make hln
 export PATH="$PWD/bin:$PATH"
 ```
 
-cd to a workdir
+Make priject dir
+
+```shell
+mkdir hlnstack && cd hlnstack
+```
 
 List all heighliner stacks:
 
@@ -20,7 +24,7 @@ hln stack list
 Choose a stack and create a project
 
 ```shell
-hln new -s=<stack>
+hln new -s=sample
 ```
 
 List all input values:
@@ -29,12 +33,13 @@ List all input values:
 hln input list
 ```
 
-Input a value:
+Config user input:
+
 ```shell
 hln input <type> <name> <value>
 ```
 
-Up
+Spin up your application
 
 ```shell
 hln up
