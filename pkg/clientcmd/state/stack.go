@@ -94,7 +94,7 @@ func (s *Stack) Decompress() error {
 	return nil
 }
 
-// Load() loads values from the metadata.yaml file
+// Load loads values from the metadata.yaml file
 func (s *Stack) Load() error {
 	metadata := path.Join(s.Path, "metadata.yaml")
 	file, err := os.Open(metadata)
