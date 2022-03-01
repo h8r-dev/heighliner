@@ -33,6 +33,12 @@ List all input values:
 hln input list
 ```
 
+Config a input value
+
+```shell
+hln input text hello.message "Hello heighliner"
+```
+
 Spin up your application
 
 ```shell

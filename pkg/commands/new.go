@@ -1,14 +1,14 @@
-package clientcmd
+package commands
 
 import (
-	"errors"
+	"fmt"
 	"os"
-	"os/exec"
 	"path"
 
-	"github.com/h8r-dev/heighliner/pkg/datastore"
-	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/rs/zerolog/log"
+
+	"github.com/h8r-dev/heighliner/pkg/clientcmd/state"
+	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 	"github.com/spf13/cobra"
 )
 
@@ -27,12 +27,12 @@ func init() {
 	newCmd.Flags().StringVarP(&projStack, "stack", "s", "", "The stack of your project")
 	err := newCmd.MarkFlagRequired("stack")
 	if err != nil {
-		panic(err)
+		log.Fatal().Msg(err.Error())
 	}
 }
 
 func newProj(c *cobra.Command, args []string) error {
-	if val, ok := stack.Stacks[projStack]; !ok {
+	if val, ok := state.Stacks[projStack]; !ok {
 		panic("no such stack")
 	} else {
 		err := initProj(projStack, "", val.Url)
@@ -47,20 +47,20 @@ func initProj(name, dst, src string) error {
 	if dst == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
-			return errors.New("failed to get current working dir")
+			return fmt.Errorf("failed to get current working dir: %w", err)
 		}
 		dst = cwd
 	}
 	// prepare hln dir
-	ds, err := datastore.Make(dst)
+	ds, err := state.Make(dst)
 	if err != nil {
 		return err
 	}
 	s, err := ds.Find()
-	if err == datastore.ErrNoStack {
+	if err == state.ErrNoStack {
 		// prepare stack
 		dir := path.Join(dst, "hln")
-		s, err = stack.New(name, dir, src)
+		s, err = state.New(name, dir, src)
 		if err != nil {
 			return err
 		}
@@ -76,25 +76,19 @@ func initProj(name, dst, src string) error {
 		return err
 	}
 	// init project 1st step --dagger init
-	cmd := exec.Command("dagger",
+	err = util.Exec("dagger",
 		"--project", dst,
 		"init")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
 	if err != nil {
-		log.Fatal().Msg(err.Error())
+		return err
 	}
 	// 2nd step --dagger new hln -p /path/to/plans
-	cmd = exec.Command("dagger",
+	err = util.Exec("dagger",
 		"--project", dst,
 		"new", "hln",
 		"-p", path.Join(s.Path, s.Name, "plans"))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
 	if err != nil {
-		log.Fatal().Msg(err.Error())
+		return err
 	}
 	return nil
 }

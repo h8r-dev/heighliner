@@ -1,4 +1,4 @@
-package stack
+package state
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/h8r-dev/heighliner/pkg/util/compress"
+	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -81,7 +81,7 @@ func (s *Stack) Download() error {
 func (s *Stack) Decompress() error {
 	src := filepath.Join(s.Path, s.Name+".tar.gz")
 
-	err := compress.Decompress(src, s.Path)
+	err := util.Decompress(src, s.Path)
 	if err != nil {
 		return fmt.Errorf("failed to decompress stack %s: %w", s.Name, err)
 	}

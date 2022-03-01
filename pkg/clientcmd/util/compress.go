@@ -1,4 +1,4 @@
-package compress
+package util
 
 import (
 	"archive/tar"

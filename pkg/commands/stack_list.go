@@ -1,11 +1,11 @@
-package clientcmd
+package commands
 
 import (
 	"fmt"
 	"os"
 	"text/tabwriter"
 
-	"github.com/h8r-dev/heighliner/pkg/stack"
+	"github.com/h8r-dev/heighliner/pkg/clientcmd/state"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ func listStack(c *cobra.Command, args []string) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.TabIndent)
 	defer w.Flush()
 	fmt.Fprintln(w, "NAME\tVERSION\tDESCRIPTION")
-	for _, v := range stack.Stacks {
+	for _, v := range state.Stacks {
 		line := fmt.Sprintf("%s\t%s\t%s\t", v.Name, v.Version, v.Description)
 		fmt.Fprintln(w, line)
 	}

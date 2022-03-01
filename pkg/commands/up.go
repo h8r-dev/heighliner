@@ -1,10 +1,7 @@
-package clientcmd
+package commands
 
 import (
-	"os"
-	"os/exec"
-
-	"github.com/rs/zerolog/log"
+	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 	"github.com/spf13/cobra"
 )
 
@@ -18,15 +15,10 @@ var (
 )
 
 func upStack(c *cobra.Command, args []string) error {
-	cmd := exec.Command(
+	err := util.Exec(
 		"dagger",
 		"--project", "",
-		"up")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-	}
-	return nil
+		"up",
+	)
+	return err
 }
