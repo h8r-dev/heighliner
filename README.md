@@ -33,12 +33,6 @@ List all input values:
 hln input list
 ```
 
-Config user input:
-
-```shell
-hln input <type> <name> <value>
-```
-
 Spin up your application
 
 ```shell
