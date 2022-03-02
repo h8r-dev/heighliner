@@ -6,20 +6,21 @@ import (
 )
 
 var (
-	inputListCmd = &cobra.Command{
-		Use:   "list",
-		Short: "List input values",
-		Args:  cobra.NoArgs,
-		RunE:  inputList,
+	inputUnsetCmd = &cobra.Command{
+		Use:   "unset [name]",
+		Short: "unset an input value",
+		Args:  cobra.ExactArgs(1),
+		RunE:  inputUnset,
 	}
 )
 
-func inputList(c *cobra.Command, args []string) error {
+func inputUnset(c *cobra.Command, args []string) error {
 	err := util.Exec(
 		"dagger",
 		"--project", "",
 		"-e", "hln",
-		"input", "list",
+		"input", "unset",
+		args[0],
 	)
 	if err != nil {
 		return err

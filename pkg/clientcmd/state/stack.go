@@ -1,16 +1,16 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
-	"gopkg.in/yaml.v3"
+	"github.com/otiai10/copy"
 )
 
 type Stack struct {
@@ -22,40 +22,96 @@ type Stack struct {
 }
 
 var (
-	Sample = &Stack{
+	ErrStackNotExist = errors.New("target stack doesn't exist")
+)
+
+var (
+	SampleStack = &Stack{
 		Name:        "sample",
 		Url:         "https://stack.h8r.io/sample-latest.tar.gz",
 		Description: "This is an example stack",
+		Version:     "1.0.0",
 	}
 	GoGinStack = &Stack{
 		Name:        "go-gin-stack",
 		Url:         "https://stack.h8r.io/go-gin-stack-latest.tar.gz",
 		Description: "This is an go-gin stack",
+		Version:     "1.0.0",
 	}
 )
 
 var Stacks = map[string]*Stack{
-	"sample":       Sample,
+	"sample":       SampleStack,
 	"go-gin-stack": GoGinStack,
 }
 
 // New creates a Stack struct and a dir to store it's files
-func New(name, dst, src string) (*Stack, error) {
-	dir := filepath.Join(dst, name)
-	err := os.MkdirAll(dir, 0755)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make dir %s in %s", name, dst)
-	}
-	s := &Stack{
+func NewStack(name string) *Stack {
+	return &Stack{
 		Name: name,
-		Path: dst,
-		Url:  src,
 	}
-	return s, nil
 }
 
-// Download downloads the stack form it's Url field
-func (s *Stack) Download() error {
+// Pull downloads and decompresses a stack
+func (s *Stack) Pull(url string) error {
+	s.Url = url
+
+	uhd, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home dir: %w", err)
+	}
+
+	dir := path.Join(uhd, ".hln")
+
+	err = os.MkdirAll(dir, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to initialize local storage: %w", err)
+	}
+
+	s.Path = dir
+
+	err = s.download()
+	if err != nil {
+		return fmt.Errorf("failed to download stack %s: %w", s.Name, err)
+	}
+
+	err = s.decompress()
+	if err != nil {
+		return fmt.Errorf("failed to decompress stack %s: %w", s.Name, err)
+	}
+
+	return nil
+}
+
+//Check checks the status of target stack
+func (s *Stack) Check() error {
+	uhd, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home dir: %w", err)
+	}
+
+	dir := path.Join(uhd, ".hln", s.Name)
+
+	_, err = os.Stat(dir)
+	if err != nil {
+		return ErrStackNotExist
+	}
+
+	s.Path = path.Join(uhd, ".hln")
+	return nil
+}
+
+// Cpoy copies stack into dest
+func (s *Stack) Copy(dest string) error {
+	src := path.Join(s.Path, s.Name)
+	err := copy.Copy(src, dest)
+	if err != nil {
+		return fmt.Errorf("failed to copy stack %s: %w", s.Name, err)
+	}
+	return nil
+}
+
+func (s *Stack) download() error {
 	fp := filepath.Join(s.Path, s.Name+".tar.gz")
 	file, err := os.Create(fp)
 	if err != nil {
@@ -65,7 +121,7 @@ func (s *Stack) Download() error {
 
 	rsp, err := http.Get(s.Url)
 	if err != nil {
-		return fmt.Errorf("failed to download stack from %s: %w", s.Url, err)
+		return err
 	}
 	defer rsp.Body.Close()
 
@@ -77,13 +133,12 @@ func (s *Stack) Download() error {
 	return nil
 }
 
-// Decompress decompresses the raw .tar.gz package of a stack
-func (s *Stack) Decompress() error {
+func (s *Stack) decompress() error {
 	src := filepath.Join(s.Path, s.Name+".tar.gz")
 
 	err := util.Decompress(src, s.Path)
 	if err != nil {
-		return fmt.Errorf("failed to decompress stack %s: %w", s.Name, err)
+		return err
 	}
 
 	err = os.Remove(src)
@@ -91,24 +146,5 @@ func (s *Stack) Decompress() error {
 		return err
 	}
 
-	return nil
-}
-
-// Load loads values from the metadata.yaml file
-func (s *Stack) Load() error {
-	metadata := path.Join(s.Path, "metadata.yaml")
-	file, err := os.Open(metadata)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-	err = yaml.Unmarshal(b, s)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal data from %s: %w", metadata, err)
-	}
 	return nil
 }
