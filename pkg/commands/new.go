@@ -32,13 +32,13 @@ func init() {
 }
 
 func newProj(c *cobra.Command, args []string) error {
-	if val, ok := state.Stacks[projStack]; !ok {
+	val, ok := state.Stacks[projStack]
+	if !ok {
 		return fmt.Errorf("no such stack")
-	} else {
-		err := initProj(projStack, "", val.Url)
-		if err != nil {
-			return err
-		}
+	}
+	err := initProj(projStack, "", val.Url)
+	if err != nil {
+		return err
 	}
 	return nil
 }
