@@ -9,38 +9,37 @@ make hln
 export PATH="$PWD/bin:$PATH"
 ```
 
-List stack:
+Make priject dir
+
+```shell
+mkdir hlnstack && cd hlnstack
+```
+
+List all heighliner stacks:
 
 ```shell
 hln stack list
 ```
 
-Pull stack:
+Choose a stack and create a project
 
 ```shell
-hln stack pull sample
+hln new -s=sample
 ```
 
-Show stack:
+List all input values:
 
 ```shell
-hln stack show sample
+hln input list
 ```
 
-Config an environment:
+Config a input value
 
 ```shell
-hln env new demo --stack=sample
-hln config list
-hln config set app -f ./examples/sample/app.yaml
-hln config set push.target ghcr.io/hongchaodeng/my-app
-hln config set push.auth.username hongchaodeng
-hln secret list
-hln secret set push.auth.secret $GITHUB_TOKEN
-hln secret set kubeconfig -f $KUBECONFIG
+hln input text hello.message "Hello heighliner"
 ```
 
-Create an application:
+Spin up your application
 
 ```shell
 hln up

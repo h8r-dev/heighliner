@@ -1,4 +1,4 @@
-package clientcmd
+package commands
 
 import (
 	"github.com/spf13/cobra"
@@ -13,12 +13,12 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(stackCmd)
-	rootCmd.AddCommand(stackhubCmd)
-	rootCmd.AddCommand(envCmd)
-	rootCmd.AddCommand(configCmd)
-	rootCmd.AddCommand(secretCmd)
-	rootCmd.AddCommand(upCmd)
+	rootCmd.AddCommand(
+		stackCmd,
+		newCmd,
+		inputCmd,
+		upCmd,
+	)
 }
 
 // Execute executes the root command.

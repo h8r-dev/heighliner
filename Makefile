@@ -30,6 +30,7 @@ server: # build server binary
 	CGO_ENABLED=0 go build -o bin/server '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/server/main.go -ldflags
 
 # Run tests
+.PHONY: test
 test: vet lint unit-test-core
 	@$(OK) unit-tests pass
 

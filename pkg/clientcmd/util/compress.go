@@ -1,4 +1,4 @@
-package state
+package util
 
 import (
 	"archive/tar"
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -15,92 +14,13 @@ import (
 	"time"
 )
 
-type Stack struct {
-	Name        string         `json:"name"`
-	Path        string         `json:"path"`
-	Url         string         `json:"url"`
-	Version     string         `json:"version"`
-	Description string         `json:"description"`
-	Inputs      []*InputSchema `json:"inputSchema"`
-}
-
-func (s *Stack) Download() error {
-	fp := filepath.Join(s.Path, s.Name+".tar.gz")
-	file, err := os.Create(fp)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	rsp, err := http.Get(s.Url)
-	if err != nil {
-		return err
-	}
-	defer rsp.Body.Close()
-
-	_, err = io.Copy(file, rsp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Stack) Decompress() error {
-	src := filepath.Join(s.Path, s.Name+".tar.gz")
-
-	err := decompress(src, s.Path)
-	if err != nil {
-		return err
-	}
-
-	err = os.Remove(src)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type dirInfo struct {
 	Name    string
 	ModTime time.Time
 }
 
-func makeTarReader(filename string) (*tar.Reader, func(), error) {
-	srcFile, err := os.Open(filename)
-	if err != nil {
-		return nil, nil, err
-	}
-	content, err := ioutil.ReadAll(srcFile)
-	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
-	}
-	var b bytes.Buffer
-	w := gzip.NewWriter(&b)
-	_, err = w.Write(content)
-	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
-	}
-	w.Close()
-	gr, err := gzip.NewReader(&b)
-	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
-	}
-
-	closeFunc := func() {
-		srcFile.Close()
-		gr.Close()
-	}
-	tr := tar.NewReader(gr)
-	return tr, closeFunc, nil
-}
-
 // decompress decompresses a tar.gz file into dest dir.
-func decompress(tarFile, dest string) error {
+func Decompress(tarFile, dest string) error {
 	tr, closeFDs, err := makeTarReader(tarFile)
 	if err != nil {
 		return err
@@ -114,7 +34,7 @@ func decompress(tarFile, dest string) error {
 	}
 	currentDir := dirInfo{}
 
-	// iterate until all files are decompresses
+	// iterate until all files are decompressed
 	for {
 		header, err := tr.Next()
 		if err != nil {
@@ -155,6 +75,38 @@ func decompress(tarFile, dest string) error {
 		remodifyTime(fileName, header.ModTime)
 	}
 	return nil
+}
+
+func makeTarReader(filename string) (*tar.Reader, func(), error) {
+	srcFile, err := os.Open(filename)
+	if err != nil {
+		return nil, nil, err
+	}
+	content, err := ioutil.ReadAll(srcFile)
+	if err != nil {
+		srcFile.Close()
+		return nil, nil, err
+	}
+	var b bytes.Buffer
+	w := gzip.NewWriter(&b)
+	_, err = w.Write(content)
+	if err != nil {
+		srcFile.Close()
+		return nil, nil, err
+	}
+	w.Close()
+	gr, err := gzip.NewReader(&b)
+	if err != nil {
+		srcFile.Close()
+		return nil, nil, err
+	}
+
+	closeFunc := func() {
+		srcFile.Close()
+		gr.Close()
+	}
+	tr := tar.NewReader(gr)
+	return tr, closeFunc, nil
 }
 
 func remodifyTime(name string, modTime time.Time) {
