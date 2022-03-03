@@ -9,12 +9,14 @@ import (
 	stackmanager2 "github.com/h8r-dev/heighliner/pkg/stack/stackmanager"
 )
 
+// ApplicationHandler ...
 type ApplicationHandler interface {
 	PostApplication(c *gin.Context)
 	GetApplication(c *gin.Context)
 	ListApplication(c *gin.Context)
 }
 
+// NewApplicationHandler ...
 func NewApplicationHandler(sm stackmanager2.StackManager) ApplicationHandler {
 	return &applicationHandler{
 		sm: sm,

@@ -1,15 +1,16 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 
 	"github.com/h8r-dev/heighliner/pkg/clientcmd/state"
 	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -36,7 +37,7 @@ func newProj(c *cobra.Command, args []string) error {
 	if !ok {
 		return fmt.Errorf("no such stack")
 	}
-	err := initProj(projStack, "", val.Url)
+	err := initProj(projStack, "", val.URL)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func initProj(name, dest, src string) error {
 	s := state.NewStack(name)
 	err := s.Check()
 	if err != nil {
-		if err == state.ErrStackNotExist {
+		if errors.Is(err, state.ErrStackNotExist) {
 			err := s.Pull(src)
 			if err != nil {
 				return fmt.Errorf("failed to pull stack %s: %w", s.Name, err)

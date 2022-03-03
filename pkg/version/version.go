@@ -1,6 +1,7 @@
 package version
 
 const (
+	// DevelopmentVersion may contain bugs.
 	DevelopmentVersion = "dev"
 )
 

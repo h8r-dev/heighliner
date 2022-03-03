@@ -7,6 +7,7 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/stack/stackhandler"
 )
 
+// StackManager is unused
 type StackManager interface {
 	GetStack(id string) *models.Stack
 	ListStackNames() []string
@@ -42,6 +43,7 @@ func (s *stackManager) InstantiateStack(id string, stackID string, params map[st
 	return app, nil
 }
 
+// New creates a StackManager and returns it
 func New() StackManager {
 	return &stackManager{
 		stacks:   defaultStacks(),

@@ -9,6 +9,7 @@ import (
 	stackmanager2 "github.com/h8r-dev/heighliner/pkg/stack/stackmanager"
 )
 
+// Server ...
 type Server interface {
 	Start() error
 }
@@ -41,6 +42,7 @@ func (s *server) registerV1APIs(r *gin.RouterGroup) {
 	stackGroup.GET("/:id", sh.GetStack)
 }
 
+// New ...
 func New(port int) Server {
 	s := &server{
 		port: port,

@@ -8,11 +8,13 @@ import (
 	stackmanager2 "github.com/h8r-dev/heighliner/pkg/stack/stackmanager"
 )
 
+// StackHandler ...
 type StackHandler interface {
 	GetStack(c *gin.Context)
 	ListStack(c *gin.Context)
 }
 
+// NewStackHandler ...
 func NewStackHandler(sm stackmanager2.StackManager) StackHandler {
 	return &stackHandler{sm: sm}
 }

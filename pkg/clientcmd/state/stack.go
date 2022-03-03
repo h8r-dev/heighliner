@@ -8,44 +8,52 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+
+	"github.com/otiai10/copy"
+	"github.com/rs/zerolog/log"
 
 	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
-	"github.com/otiai10/copy"
 )
 
+// Stack is a CloudNative app template
 type Stack struct {
-	Name        string `json:"name" yaml:"name"`
-	Path        string `json:"path"`
-	Url         string `json:"url"`
-	Version     string `json:"version" yaml:"version"`
-	Description string `json:"description" yaml:"description"`
+	Name        string `json:"name" yaml:"name"`               // The Name of the stack
+	Path        string `json:"path"`                           // Path to localstorage
+	URL         string `json:"url"`                            // URL to pull the stack
+	Version     string `json:"version" yaml:"version"`         // Version
+	Description string `json:"description" yaml:"description"` // A short description
 }
 
 var (
+	// ErrStackNotExist means heighliner can't find the stack in localstorage
 	ErrStackNotExist = errors.New("target stack doesn't exist")
 )
 
 var (
+	// SampleStack is a demo stack that echoes your input
 	SampleStack = &Stack{
 		Name:        "sample",
-		Url:         "https://stack.h8r.io/sample-latest.tar.gz",
+		URL:         "https://stack.h8r.io/sample-latest.tar.gz",
 		Description: "This is an example stack",
 		Version:     "1.0.0",
 	}
+	// GoGinStack is a go microservice architecture app
 	GoGinStack = &Stack{
 		Name:        "go-gin-stack",
-		Url:         "https://stack.h8r.io/go-gin-stack-latest.tar.gz",
+		URL:         "https://stack.h8r.io/go-gin-stack-latest.tar.gz",
 		Description: "This is an go-gin stack",
 		Version:     "1.0.0",
 	}
 )
 
+// Stacks stores all stacks that currently usable
 var Stacks = map[string]*Stack{
 	"sample":       SampleStack,
 	"go-gin-stack": GoGinStack,
 }
 
-// New creates a Stack struct and a dir to store it's files
+// NewStack returns a Stack struct
 func NewStack(name string) *Stack {
 	return &Stack{
 		Name: name,
@@ -54,7 +62,7 @@ func NewStack(name string) *Stack {
 
 // Pull downloads and decompresses a stack
 func (s *Stack) Pull(url string) error {
-	s.Url = url
+	s.URL = url
 
 	uhd, err := os.UserHomeDir()
 	if err != nil {
@@ -63,7 +71,7 @@ func (s *Stack) Pull(url string) error {
 
 	dir := path.Join(uhd, ".hln")
 
-	err = os.MkdirAll(dir, 0755)
+	err = os.MkdirAll(dir, 0750)
 	if err != nil {
 		return fmt.Errorf("failed to initialize local storage: %w", err)
 	}
@@ -83,7 +91,7 @@ func (s *Stack) Pull(url string) error {
 	return nil
 }
 
-//Check checks the status of target stack
+// Check checks the status of target stack
 func (s *Stack) Check() error {
 	uhd, err := os.UserHomeDir()
 	if err != nil {
@@ -101,7 +109,7 @@ func (s *Stack) Check() error {
 	return nil
 }
 
-// Cpoy copies stack into dest
+// Copy copies the stack into dest
 func (s *Stack) Copy(dest string) error {
 	src := path.Join(s.Path, s.Name)
 	err := copy.Copy(src, dest)
@@ -113,17 +121,29 @@ func (s *Stack) Copy(dest string) error {
 
 func (s *Stack) download() error {
 	fp := filepath.Join(s.Path, s.Name+".tar.gz")
+	fp = filepath.Clean(fp)
+	if !strings.HasPrefix(fp, s.Path) {
+		log.Fatal().Msg("malicious code")
+	}
 	file, err := os.Create(fp)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Fatal().Msg(err.Error())
+		}
+	}()
 
-	rsp, err := http.Get(s.Url)
+	rsp, err := http.Get(s.URL)
 	if err != nil {
 		return err
 	}
-	defer rsp.Body.Close()
+	defer func() {
+		if err := rsp.Body.Close(); err != nil {
+			log.Fatal().Msg(err.Error())
+		}
+	}()
 
 	_, err = io.Copy(file, rsp.Body)
 	if err != nil {
