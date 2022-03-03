@@ -4,14 +4,16 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type dirInfo struct {
@@ -19,13 +21,12 @@ type dirInfo struct {
 	ModTime time.Time
 }
 
-// decompress decompresses a tar.gz file into dest dir.
+// Decompress decompresses a tar.gz file into dest dir.
 func Decompress(tarFile, dest string) error {
-	tr, closeFDs, err := makeTarReader(tarFile)
+	tr, err := makeTarReader(tarFile)
 	if err != nil {
 		return err
 	}
-	defer closeFDs()
 	if dest != "" {
 		_, err = makeDir(dest)
 		if err != nil {
@@ -38,7 +39,7 @@ func Decompress(tarFile, dest string) error {
 	for {
 		header, err := tr.Next()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				if currentDir.Name != "" {
 					remodifyTime(currentDir.Name, currentDir.ModTime)
 				}
@@ -48,7 +49,7 @@ func Decompress(tarFile, dest string) error {
 			}
 		}
 		fi := header.FileInfo()
-		fileName := filepath.Join(dest, header.Name)
+		fileName := path.Join(dest, header.Name)
 		if !strings.HasPrefix(fileName, currentDir.Name) {
 			remodifyTime(currentDir.Name, currentDir.ModTime)
 		}
@@ -65,48 +66,50 @@ func Decompress(tarFile, dest string) error {
 		}
 		file, err := createFile(fileName)
 		if err != nil {
-			return fmt.Errorf("can not create file %v: %v", fileName, err)
+			return fmt.Errorf("can not create file %v: %w", fileName, err)
 		}
 		_, err = io.Copy(file, tr)
 		if err != nil {
 			return err
 		}
-		file.Close()
+		err = file.Close()
+		if err != nil {
+			log.Fatal().Msg(err.Error())
+		}
 		remodifyTime(fileName, header.ModTime)
 	}
 	return nil
 }
 
-func makeTarReader(filename string) (*tar.Reader, func(), error) {
+func makeTarReader(filename string) (*tar.Reader, error) {
 	srcFile, err := os.Open(filename)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	content, err := ioutil.ReadAll(srcFile)
 	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
+		return nil, err
+	}
+	err = srcFile.Close()
+	if err != nil {
+		return nil, err
 	}
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
 	_, err = w.Write(content)
 	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
+		return nil, err
 	}
-	w.Close()
+	err = w.Close()
+	if err != nil {
+		return nil, err
+	}
 	gr, err := gzip.NewReader(&b)
 	if err != nil {
-		srcFile.Close()
-		return nil, nil, err
-	}
-
-	closeFunc := func() {
-		srcFile.Close()
-		gr.Close()
+		return nil, err
 	}
 	tr := tar.NewReader(gr)
-	return tr, closeFunc, nil
+	return tr, nil
 }
 
 func remodifyTime(name string, modTime time.Time) {
@@ -121,9 +124,9 @@ func makeDir(name string) (string, error) {
 	if name != "" {
 		_, err := os.Stat(name)
 		if err != nil {
-			err = os.MkdirAll(name, 0755)
+			err = os.MkdirAll(name, 0750)
 			if err != nil {
-				return "", fmt.Errorf("can not make directory: %v", err)
+				return "", fmt.Errorf("can not make directory: %w", err)
 			}
 			return name, nil
 		}
@@ -137,7 +140,7 @@ func createFile(name string) (*os.File, error) {
 	if dir != "" {
 		_, err := os.Lstat(dir)
 		if err != nil {
-			err := os.MkdirAll(dir, 0755)
+			err := os.MkdirAll(dir, 0750)
 			if err != nil {
 				return nil, err
 			}

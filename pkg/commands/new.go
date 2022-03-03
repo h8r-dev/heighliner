@@ -1,15 +1,16 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 
 	"github.com/h8r-dev/heighliner/pkg/clientcmd/state"
 	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -32,61 +33,53 @@ func init() {
 }
 
 func newProj(c *cobra.Command, args []string) error {
-	if val, ok := state.Stacks[projStack]; !ok {
-		panic("no such stack")
-	} else {
-		err := initProj(projStack, "", val.Url)
-		if err != nil {
-			return err
-		}
+	val, ok := state.Stacks[projStack]
+	if !ok {
+		return fmt.Errorf("no such stack")
+	}
+	err := initProj(projStack, "", val.URL)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func initProj(name, dst, src string) error {
-	if dst == "" {
+func initProj(name, dest, src string) error {
+	if dest == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get current working dir: %w", err)
 		}
-		dst = cwd
+		dest = cwd
 	}
-	// prepare hln dir
-	ds, err := state.Make(dst)
+	s := state.NewStack(name)
+	err := s.Check()
 	if err != nil {
-		return err
+		if errors.Is(err, state.ErrStackNotExist) {
+			err := s.Pull(src)
+			if err != nil {
+				return fmt.Errorf("failed to pull stack %s: %w", s.Name, err)
+			}
+		} else {
+			return err
+		}
 	}
-	s, err := ds.Find()
-	if err == state.ErrNoStack {
-		// prepare stack
-		dir := path.Join(dst, "hln")
-		s, err = state.New(name, dir, src)
-		if err != nil {
-			return err
-		}
-		err = s.Download()
-		if err != nil {
-			return err
-		}
-		err = s.Decompress()
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
+	err = s.Copy(dest)
+	if err != nil {
+		return fmt.Errorf("failed to copy stack %s: %w", s.Name, err)
 	}
 	// init project 1st step --dagger init
 	err = util.Exec("dagger",
-		"--project", dst,
+		"--project", dest,
 		"init")
 	if err != nil {
 		return err
 	}
 	// 2nd step --dagger new hln -p /path/to/plans
 	err = util.Exec("dagger",
-		"--project", dst,
+		"--project", dest,
 		"new", "hln",
-		"-p", path.Join(s.Path, s.Name, "plans"))
+		"-p", path.Join(dest, "plans"))
 	if err != nil {
 		return err
 	}

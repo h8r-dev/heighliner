@@ -1,8 +1,9 @@
 package commands
 
 import (
-	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 	"github.com/spf13/cobra"
+
+	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 )
 
 var (

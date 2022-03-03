@@ -1,6 +1,13 @@
 SHELL := bash# we want bash behaviour in all shell invocations
 
-GOLANGCILINT_VERSION=latest
+GOLANGCILINT_VERSION ?= latest
+
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
 
 # https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
 BOLD := \033[1m
@@ -31,21 +38,32 @@ server: # build server binary
 
 # Run tests
 .PHONY: test
-test: vet lint unit-test-core
+test: vet lint staticcheck unit-test-core
 	@$(OK) unit-tests pass
+
+
+reviewable: fmt vet lint staticcheck
+	go mod tidy
 
 # Run go vet against code
 vet:
 	go vet ./...
 
-lint: golangci
-	$(GOLANGCILINT) run ./...
-
 unit-test-core:
 	go test ./...
 
+lint: golangci
+	$(GOLANGCILINT) run ./...
+
+staticcheck: staticchecktool
+	$(STATICCHECK) ./...
+
+# Run go fmt against code
+fmt:
+	go fmt ./...
+
 .PHONY: golangci
-golangci: gobin
+golangci:
 ifneq ($(shell which golangci-lint),)
 	@$(OK) golangci-lint is already installed
 GOLANGCILINT=$(shell which golangci-lint)
@@ -62,10 +80,15 @@ else
 GOLANGCILINT=$(GOBIN)/golangci-lint
 endif
 
-.PHONY: gobin
-gobin:
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
+.PHONY: staticchecktool
+staticchecktool:
+ifeq (, $(shell which staticcheck))
+	@{ \
+	set -e ;\
+	echo 'installing honnef.co/go/tools/cmd/staticcheck ' ;\
+	GO111MODULE=off go get honnef.co/go/tools/cmd/staticcheck ;\
+	}
+STATICCHECK=$(GOBIN)/staticcheck
 else
-GOBIN=$(shell go env GOBIN)
+STATICCHECK=$(shell which staticcheck)
 endif

@@ -1,8 +1,9 @@
 package commands
 
 import (
-	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 	"github.com/spf13/cobra"
+
+	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 )
 
 var (
@@ -16,15 +17,28 @@ var (
 func init() {
 	inputCmd.AddCommand(
 		inputListCmd,
+		inputUnsetCmd,
 	)
 }
 
 func inputValue(c *cobra.Command, args []string) error {
+	if len(args) < 3 {
+		err := util.Exec(
+			"dagger",
+			"input",
+		)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	err := util.Exec(
 		"dagger",
 		"--project", "",
 		"-e", "hln",
-		"input", args[0], args[1], args[2])
+		"input",
+		args[0], args[1], args[2],
+	)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 )
 
+// Exec executes the command and prints the output into current terminal
 func Exec(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 
