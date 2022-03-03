@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -50,7 +49,7 @@ func Decompress(tarFile, dest string) error {
 			}
 		}
 		fi := header.FileInfo()
-		fileName := filepath.Join(dest, header.Name)
+		fileName := path.Join(dest, header.Name)
 		if !strings.HasPrefix(fileName, currentDir.Name) {
 			remodifyTime(currentDir.Name, currentDir.ModTime)
 		}

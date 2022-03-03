@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/otiai10/copy"
 	"github.com/rs/zerolog/log"
@@ -98,6 +97,8 @@ func (s *Stack) Check() error {
 		return fmt.Errorf("failed to get user home dir: %w", err)
 	}
 
+	s.Path = path.Join(uhd, ".hln")
+
 	dir := path.Join(uhd, ".hln", s.Name)
 
 	_, err = os.Stat(dir)
@@ -105,7 +106,6 @@ func (s *Stack) Check() error {
 		return ErrStackNotExist
 	}
 
-	s.Path = path.Join(uhd, ".hln")
 	return nil
 }
 
@@ -120,11 +120,7 @@ func (s *Stack) Copy(dest string) error {
 }
 
 func (s *Stack) download() error {
-	fp := filepath.Join(s.Path, s.Name+".tar.gz")
-	fp = filepath.Clean(fp)
-	if !strings.HasPrefix(fp, s.Path) {
-		log.Fatal().Msg("malicious code")
-	}
+	fp := path.Join(s.Path, "temp.tar.gz")
 	file, err := os.Create(fp)
 	if err != nil {
 		return err
@@ -154,7 +150,7 @@ func (s *Stack) download() error {
 }
 
 func (s *Stack) decompress() error {
-	src := filepath.Join(s.Path, s.Name+".tar.gz")
+	src := filepath.Join(s.Path, "temp.tar.gz")
 
 	err := util.Decompress(src, s.Path)
 	if err != nil {

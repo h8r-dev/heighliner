@@ -120,6 +120,10 @@ linters:
     - unconvert
     - misspell
     - nakedret
+  
+  disable:
+    - noctx
+    - gosec
 
   presets:
     - bugs
