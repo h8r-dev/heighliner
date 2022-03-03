@@ -41,6 +41,7 @@ func newProj(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Successfully create new project with stack: %s\n", projStack)
 	return nil
 }
 
