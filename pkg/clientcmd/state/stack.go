@@ -9,10 +9,9 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/hashicorp/go-getter/v2"
 	"github.com/otiai10/copy"
 	"github.com/rs/zerolog/log"
-
-	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
 )
 
 // Stack is a CloudNative app template
@@ -152,7 +151,8 @@ func (s *Stack) download() error {
 func (s *Stack) decompress() error {
 	src := filepath.Join(s.Path, "temp.tar.gz")
 
-	err := util.Decompress(src, s.Path)
+	tgz := getter.TarGzipDecompressor{}
+	err := tgz.Decompress(s.Path, src, true, 05)
 	if err != nil {
 		return err
 	}
