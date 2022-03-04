@@ -36,16 +36,14 @@ GIT_REVISION := $(shell git rev-parse --short HEAD)
 server: # build server binary
 	CGO_ENABLED=0 go build -o bin/server '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/server/main.go -ldflags
 
-# Run tests
 .PHONY: test
-test: vet lint staticcheck unit-test-core
+test: vet lint staticcheck unit-test-core # Run tests
 	@$(OK) unit-tests pass
 
 
-reviewable: fmt vet lint staticcheck
+reviewable: fmt vet lint staticcheck # Make your PR ready to review
 	go mod tidy
 
-# Run go vet against code
 vet:
 	go vet ./...
 
