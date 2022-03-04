@@ -2,8 +2,13 @@
 
 This document guides you through the process of creating a [pull request](https://help.github.com/en/articles/about-pull-requests/).
 
-
 ## Your first pull request
+
+Before you submit a PR, run this command to ensure it is ready:
+
+```shell
+make reviewable
+```
 
 If this is your first time contributing to an open-source project on GitHub, make sure you read about [Creating a pull request](https://help.github.com/en/articles/creating-a-pull-request).
 

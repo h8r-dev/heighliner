@@ -1,6 +1,7 @@
 SHELL := bash# we want bash behaviour in all shell invocations
 
 GOLANGCILINT_VERSION ?= latest
+ERR = echo ${TIME} ${RED}[FAIL]${CNone}
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -37,12 +38,16 @@ server: # build server binary
 	CGO_ENABLED=0 go build -o bin/server '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/server/main.go -ldflags
 
 .PHONY: test
-test: vet lint staticcheck unit-test-core # Run tests
+test: check-diff unit-test-core # Run tests
 	@$(OK) unit-tests pass
-
 
 reviewable: fmt vet lint staticcheck # Make your PR ready to review
 	go mod tidy
+
+check-diff: reviewable # Execute auto-gen code commands and ensure branch is clean
+	git --no-pager diff
+	git diff --quiet || ($(ERR) please run 'make reviewable' to include all changes && false)
+	@$(OK) branch is clean
 
 vet:
 	go vet ./...
