@@ -34,14 +34,14 @@ var (
 	SampleStack = &Stack{
 		Name:        "sample",
 		URL:         "https://stack.h8r.io/sample-latest.tar.gz",
-		Description: "This is an example stack",
+		Description: "Sample is a light-weight stack mainly used for test",
 		Version:     "1.0.0",
 	}
 	// GoGinStack is a go microservice architecture app
 	GoGinStack = &Stack{
 		Name:        "go-gin-stack",
 		URL:         "https://stack.h8r.io/go-gin-stack-latest.tar.gz",
-		Description: "This is an go-gin stack",
+		Description: "Go-gin-stack helps you configure many cloud native components including prometheus, grafana, nocalhost, etc.",
 		Version:     "1.0.0",
 	}
 )
