@@ -16,16 +16,24 @@ make hln
 export PATH="$PWD/bin:$PATH"
 ```
 
-Make priject dir
+Make project dir:
 
 ```shell
-mkdir hlnstack && cd hlnstack
+mkdir helloapp && cd helloapp
 ```
 
 List all heighliner stacks:
 
 ```shell
 hln stack list
+```
+
+Output:
+
+```shell
+NAME          VERSION  DESCRIPTION
+sample        1.0.0    Sample is a light-weight stack mainly used for test
+go-gin-stack  1.0.0    Go-gin-stack helps you configure many cloud native components including prometheus, grafana, nocalhost, etc.
 ```
 
 Choose a stack and create a project
@@ -40,6 +48,13 @@ List all input values:
 hln input list
 ```
 
+Output:
+
+```
+Input          Value   Set by user  Description
+hello.message  string  false        -
+```
+
 Config a input value
 
 ```shell
@@ -50,6 +65,17 @@ Spin up your application
 
 ```shell
 hln up
+```
+
+Output:
+
+```
+[✔] hello.createContainer                              0.0s
+[✔] hello.createFile.from                              0.0s
+[✔] hello.createFile.contents                          0.0s
+[✔] hello.outputMessage                                0.0s
+Output               Value  Description
+hello.outputMessage  """\n  Hello heighliner\n\n  """  -
 ```
 
 ## Contributing
