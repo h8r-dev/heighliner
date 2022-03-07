@@ -41,7 +41,7 @@ func newProj(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Successfully create new project with stack: %s\n", projStack)
+	log.Info().Msgf("successfully initialize project with stack: %s", projStack)
 	return nil
 }
 
@@ -53,8 +53,13 @@ func initProj(name, dest, src string) error {
 		}
 		dest = cwd
 	}
-	s := state.NewStack(name)
-	err := s.Check()
+
+	s, err := state.NewStack(name)
+	if err != nil {
+		return err
+	}
+
+	err = s.Check()
 	if err != nil {
 		if errors.Is(err, state.ErrStackNotExist) {
 			err := s.Pull(src)
