@@ -1,13 +1,13 @@
 package state
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
+	"os/signal"
 	"path"
-	"path/filepath"
+	"sync"
 
 	"github.com/hashicorp/go-getter/v2"
 	"github.com/otiai10/copy"
@@ -26,6 +26,11 @@ type Stack struct {
 var (
 	// ErrStackNotExist means heighliner can't find the stack in localstorage
 	ErrStackNotExist = errors.New("target stack doesn't exist")
+)
+
+var (
+	// HeighlinerCacheHome is the dir where stacks are stored locally
+	HeighlinerCacheHome string
 )
 
 var (
@@ -52,55 +57,73 @@ var Stacks = map[string]*Stack{
 }
 
 // NewStack returns a Stack struct
-func NewStack(name string) *Stack {
+func NewStack(name string) (*Stack, error) {
+	HeighlinerCacheHome = os.Getenv("HEIGHLINER_CACHE_HOME")
+	if HeighlinerCacheHome == "" {
+		cacheDir, err := os.UserCacheDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user cache dir: %w", err)
+		}
+		HeighlinerCacheHome = path.Join(cacheDir, "heighliner")
+	}
 	return &Stack{
 		Name: name,
-	}
+		Path: path.Join(HeighlinerCacheHome, "repository"),
+	}, nil
 }
 
 // Pull downloads and decompresses a stack
 func (s *Stack) Pull(url string) error {
-	s.URL = url
-
-	uhd, err := os.UserHomeDir()
+	pwd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get user home dir: %w", err)
+		return fmt.Errorf("failed to get working dir: %w", err)
 	}
 
-	dir := path.Join(uhd, ".hln")
-
-	err = os.MkdirAll(dir, 0750)
-	if err != nil {
-		return fmt.Errorf("failed to initialize local storage: %w", err)
+	ctx, cancel := context.WithCancel(context.Background())
+	client := &getter.Client{}
+	req := &getter.Request{
+		Src:              url,
+		Dst:              s.Path,
+		Pwd:              pwd,
+		ProgressListener: defaultProgressBar,
 	}
 
-	s.Path = dir
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	errChan := make(chan error, 2)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+		if _, err := client.Get(ctx, req); err != nil {
+			errChan <- err
+		}
+	}()
 
-	err = s.download()
-	if err != nil {
-		return fmt.Errorf("failed to download stack %s: %w", s.Name, err)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	select {
+	case sig := <-c:
+		signal.Reset(os.Interrupt)
+		cancel()
+		wg.Wait()
+		log.Info().Msgf("signal %s", sig)
+		return nil
+	case <-ctx.Done():
+		wg.Wait()
+		log.Info().Msgf("successfully pull stack %s", s.Name)
+		return nil
+	case err := <-errChan:
+		wg.Wait()
+		return fmt.Errorf("failed to pull stack %s: %w", s.Name, err)
 	}
-
-	err = s.decompress()
-	if err != nil {
-		return fmt.Errorf("failed to decompress stack %s: %w", s.Name, err)
-	}
-
-	return nil
 }
 
 // Check checks the status of target stack
 func (s *Stack) Check() error {
-	uhd, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("failed to get user home dir: %w", err)
-	}
+	dir := path.Join(s.Path, s.Name)
 
-	s.Path = path.Join(uhd, ".hln")
-
-	dir := path.Join(uhd, ".hln", s.Name)
-
-	_, err = os.Stat(dir)
+	_, err := os.Stat(dir)
 	if err != nil {
 		return ErrStackNotExist
 	}
@@ -115,52 +138,5 @@ func (s *Stack) Copy(dest string) error {
 	if err != nil {
 		return fmt.Errorf("failed to copy stack %s: %w", s.Name, err)
 	}
-	return nil
-}
-
-func (s *Stack) download() error {
-	fp := path.Join(s.Path, "temp.tar.gz")
-	file, err := os.Create(fp)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Fatal().Msg(err.Error())
-		}
-	}()
-
-	rsp, err := http.Get(s.URL)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := rsp.Body.Close(); err != nil {
-			log.Fatal().Msg(err.Error())
-		}
-	}()
-
-	_, err = io.Copy(file, rsp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Stack) decompress() error {
-	src := filepath.Join(s.Path, "temp.tar.gz")
-
-	tgz := getter.TarGzipDecompressor{}
-	err := tgz.Decompress(s.Path, src, true, 05)
-	if err != nil {
-		return err
-	}
-
-	err = os.Remove(src)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
