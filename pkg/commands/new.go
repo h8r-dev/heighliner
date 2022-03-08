@@ -41,7 +41,6 @@ func newProj(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("successfully initialize project with stack: %s", projStack)
 	return nil
 }
 
@@ -74,18 +73,41 @@ func initProj(name, dest, src string) error {
 	if err != nil {
 		return fmt.Errorf("failed to copy stack %s: %w", s.Name, err)
 	}
-	// init project 1st step --dagger init
+
+	// init dagger project --dagger init
 	err = util.Exec("dagger",
 		"--project", dest,
 		"init")
 	if err != nil {
 		return err
 	}
-	// 2nd step --dagger new hln -p /path/to/plans
+
+	// use hof to get cue mods
+	err = util.Exec("hof",
+		"mod", "vendor", "cue")
+	if err != nil {
+		return fmt.Errorf("failed to get cue mods: %w", err)
+	}
+	log.Info().Msg("successfully fetch cue mods")
+
+	// create dagger plan --dagger new hln -p /path/to/plans
 	err = util.Exec("dagger",
 		"--project", dest,
 		"new", "hln",
 		"-p", path.Join(dest, "plans"))
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("successfully initialize project with stack: %s", projStack)
+
+	fmt.Printf("\n\033[0;32mPlease provide the following values to continue:\033[0m\n")
+	fmt.Printf("\033[0;32mUse hln input [type] [name] [value] to input a value.\033[0m\n")
+	fmt.Printf("\033[0;32mUse hln input to view all available types.\033[0m\n\n")
+
+	err = util.Exec("dagger",
+		"--project", dest,
+		"-e", "hln",
+		"input", "list")
 	if err != nil {
 		return err
 	}
