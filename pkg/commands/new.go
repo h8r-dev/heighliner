@@ -82,13 +82,10 @@ func initProj(name, dest, src string) error {
 		return err
 	}
 
-	// use hof to get cue mods
-	err = util.Exec("hof",
-		"mod", "vendor", "cue")
+	err = state.PrePareCueMod(dest)
 	if err != nil {
-		return fmt.Errorf("failed to get cue mods: %w", err)
+		return fmt.Errorf("failed to prepare CueMod: %w", err)
 	}
-	log.Info().Msg("successfully fetch cue mods")
 
 	// create dagger plan --dagger new hln -p /path/to/plans
 	err = util.Exec("dagger",
