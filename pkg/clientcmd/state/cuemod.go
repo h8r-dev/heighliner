@@ -31,26 +31,18 @@ var (
 	}
 )
 
-// NewCueMod creates a *CueMod struct and returns it
-func NewCueMod(name, src string) (*CueMod, error) {
-	HeighlinerCacheHome = os.Getenv("HEIGHLINER_CACHE_HOME")
-	if HeighlinerCacheHome == "" {
-		cacheDir, err := os.UserCacheDir()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get user cache dir: %w", err)
-		}
-		HeighlinerCacheHome = path.Join(cacheDir, "heighliner")
-	}
-	pr, err := url.Parse(src)
+// CleanCueMods cleans all cached cuemods
+func CleanCueMods() error {
+	err := initHeighlinerCache()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &CueMod{
-		Name:   name,
-		URL:    src,
-		Path:   path.Join(HeighlinerCacheHome, "cuemod"),
-		Subdir: path.Join(pr.Host, path.Dir(pr.Path)),
-	}, nil
+	dir := path.Join(HeighlinerCacheHome, "cuemod")
+	err = os.RemoveAll(dir)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // PrePareCueMod pull the cue mod from github repo if necessary and copy it into dst dir
@@ -64,7 +56,7 @@ func PrePareCueMod(dst string) error {
 	if err != nil && errors.Is(err, ErrCueModNotExist) {
 		err := c.Pull()
 		if err != nil {
-			return fmt.Errorf("failed to pull cuemod:%s,%w", c.Name, err)
+			return fmt.Errorf("failed to pull cuemod: %s, %w", c.Name, err)
 		}
 	} else if err != nil {
 		return err
@@ -78,6 +70,24 @@ func PrePareCueMod(dst string) error {
 	return nil
 }
 
+// NewCueMod creates a *CueMod struct and returns it
+func NewCueMod(name, src string) (*CueMod, error) {
+	err := initHeighlinerCache()
+	if err != nil {
+		return nil, err
+	}
+	pr, err := url.Parse(src)
+	if err != nil {
+		return nil, err
+	}
+	return &CueMod{
+		Name:   name,
+		URL:    src,
+		Path:   path.Join(HeighlinerCacheHome, "cuemod"),
+		Subdir: path.Join(pr.Host, path.Dir(pr.Path)),
+	}, nil
+}
+
 // Pull downloads a cuemod from it's github repo
 func (c *CueMod) Pull() error {
 	req := &getter.Request{
@@ -86,7 +96,7 @@ func (c *CueMod) Pull() error {
 	}
 	err := getWithTracker(req)
 	if err != nil {
-		return fmt.Errorf("failed to download stack: %w", err)
+		return fmt.Errorf("failed to download cuemod: %w", err)
 	}
 	return nil
 }

@@ -74,17 +74,17 @@ func initProj(name, dest, src string) error {
 		return fmt.Errorf("failed to copy stack %s: %w", s.Name, err)
 	}
 
+	err = state.PrePareCueMod(dest)
+	if err != nil {
+		return fmt.Errorf("failed to prepare CueMod: %w", err)
+	}
+
 	// init dagger project --dagger init
 	err = util.Exec("dagger",
 		"--project", dest,
 		"init")
 	if err != nil {
 		return err
-	}
-
-	err = state.PrePareCueMod(dest)
-	if err != nil {
-		return fmt.Errorf("failed to prepare CueMod: %w", err)
 	}
 
 	// create dagger plan --dagger new hln -p /path/to/plans
