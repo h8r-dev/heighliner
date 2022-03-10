@@ -14,6 +14,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(
+		cleanCmd,
 		stackCmd,
 		newCmd,
 		inputCmd,

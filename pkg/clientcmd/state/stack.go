@@ -47,15 +47,25 @@ var Stacks = map[string]*Stack{
 	"go-gin-stack": GoGinStack,
 }
 
+// CleanStacks cleans all cached stacks
+func CleanStacks() error {
+	err := initHeighlinerCache()
+	if err != nil {
+		return err
+	}
+	dir := path.Join(HeighlinerCacheHome, "repository")
+	err = os.RemoveAll(dir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // NewStack returns a Stack struct
 func NewStack(name string) (*Stack, error) {
-	HeighlinerCacheHome = os.Getenv("HEIGHLINER_CACHE_HOME")
-	if HeighlinerCacheHome == "" {
-		cacheDir, err := os.UserCacheDir()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get user cache dir: %w", err)
-		}
-		HeighlinerCacheHome = path.Join(cacheDir, "heighliner")
+	err := initHeighlinerCache()
+	if err != nil {
+		return nil, err
 	}
 	return &Stack{
 		Name: name,

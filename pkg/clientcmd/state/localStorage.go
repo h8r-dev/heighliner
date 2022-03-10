@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path"
 	"sync"
 
 	"github.com/hashicorp/go-getter/v2"
@@ -15,6 +16,31 @@ var (
 	// HeighlinerCacheHome is the dir where stacks are stored locally
 	HeighlinerCacheHome string
 )
+
+func initHeighlinerCache() error {
+	HeighlinerCacheHome = os.Getenv("HEIGHLINER_CACHE_HOME")
+	if HeighlinerCacheHome == "" {
+		cacheDir, err := os.UserCacheDir()
+		if err != nil {
+			return fmt.Errorf("failed to get user cache dir: %w", err)
+		}
+		HeighlinerCacheHome = path.Join(cacheDir, "heighliner")
+	}
+	return nil
+}
+
+// CleanHeighlinerCaches cleans all cached cuemods and stacks
+func CleanHeighlinerCaches() error {
+	err := CleanStacks()
+	if err != nil {
+		return err
+	}
+	err = CleanCueMods()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func getWithTracker(req *getter.Request) error {
 	pwd, err := os.Getwd()
