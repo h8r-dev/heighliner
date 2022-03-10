@@ -41,6 +41,9 @@ Choose a stack and create a project
 ```shell
 hln new -s=sample
 ```
+> note:
+> If you have troube when initialize new project, please clean caches and try again:
+> `hln clean`
 
 List all input values:
 
@@ -59,6 +62,12 @@ Config a input value
 
 ```shell
 hln input text hello.message "Hello heighliner"
+```
+
+Or if you want to read value from file
+
+```shell
+hln input text hello.message -f hello.txt
 ```
 
 Spin up your application
