@@ -19,7 +19,6 @@ func inputList(c *cobra.Command, args []string) error {
 	err := util.Exec(
 		"dagger",
 		"--project", "",
-		"-e", "hln",
 		"input", "list",
 	)
 	if err != nil {

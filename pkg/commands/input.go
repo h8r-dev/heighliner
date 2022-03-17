@@ -37,7 +37,6 @@ func inputValue(c *cobra.Command, args []string) error {
 		err = util.Exec(
 			"dagger",
 			"--project", "",
-			"-e", "hln",
 			"input",
 			args[0], args[1],
 			"-f", srcFile,
@@ -46,7 +45,6 @@ func inputValue(c *cobra.Command, args []string) error {
 		err = util.Exec(
 			"dagger",
 			"--project", "",
-			"-e", "hln",
 			"input",
 			args[0], args[1], args[2],
 		)
