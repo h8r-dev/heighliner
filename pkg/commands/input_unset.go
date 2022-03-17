@@ -19,7 +19,6 @@ func inputUnset(c *cobra.Command, args []string) error {
 	err := util.Exec(
 		"dagger",
 		"--project", "",
-		"-e", "hln",
 		"input", "unset",
 		args[0],
 	)
