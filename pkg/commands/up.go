@@ -7,25 +7,22 @@ import (
 )
 
 var (
-	logFormat string
-	upCmd     = &cobra.Command{
-		Use:   "up",
-		Short: "Run an application",
-		Args:  cobra.NoArgs,
-		RunE:  upStack,
+	upCmd = &cobra.Command{
+		Use:                "up",
+		Short:              "Run an application",
+		Args:               cobra.ArbitraryArgs,
+		DisableFlagParsing: true,
+		RunE:               upStack,
 	}
 )
 
-func init() {
-	upCmd.Flags().StringVarP(&logFormat, "log-format", "", "auto", `Log format (auto, plain, tty, json) (default "auto")`)
-}
-
 func upStack(c *cobra.Command, args []string) error {
+	newArgs := make([]string, 0)
+	newArgs = append(newArgs, "up", "--project", "")
+	newArgs = append(newArgs, args...)
 	err := util.Exec(
 		"dagger",
-		"--project", "",
-		"--log-format", logFormat,
-		"up",
+		newArgs...,
 	)
 	return err
 }
