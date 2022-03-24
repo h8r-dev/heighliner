@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().String("log-format", "auto", "Log format (auto, plain, tty, json)")
+	rootCmd.PersistentFlags().String("log-format", "auto", "Log format (auto, plain, json)")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
 
 	rootCmd.AddCommand(
