@@ -1,4 +1,4 @@
-package commands
+package cmd
 
 import (
 	"strings"
@@ -22,11 +22,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
 
 	rootCmd.AddCommand(
-		cleanCmd,
-		stackCmd,
+		listCmd,
 		newCmd,
-		inputCmd,
 		upCmd,
+		downCmd,
 	)
 
 	// Hide 'completion' command
@@ -40,13 +39,12 @@ func init() {
 	viper.AutomaticEnv()
 }
 
-// Execute executes the root command.
+// Execute executes the root command with context
 func Execute() {
 	var (
 		ctx = appcontext.Context()
 		lg  = logger.New()
 	)
-
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		lg.Fatal().Err(err).Msg("failed to execute command")
 	}
