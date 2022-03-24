@@ -3,10 +3,11 @@ package commands
 import (
 	"strings"
 
-	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/moby/buildkit/util/appcontext"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/h8r-dev/heighliner/pkg/logger"
 )
 
 var (

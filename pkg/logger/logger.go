@@ -9,6 +9,7 @@ import (
 	"golang.org/x/term"
 )
 
+// New creates a logger with the corresponding format and level
 func New() zerolog.Logger {
 	logger := zerolog.
 		New(os.Stderr).
