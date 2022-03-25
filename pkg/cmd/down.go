@@ -21,6 +21,5 @@ func downProj(c *cobra.Command, args []string) error {
 	newArgs := make([]string, 0)
 	newArgs = append(newArgs, "do", "down", "-p", "plans")
 	newArgs = append(newArgs, args...)
-	err := util.Exec("dagger", newArgs...)
-	return err
+	return util.Exec("dagger", newArgs...)
 }

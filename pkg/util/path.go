@@ -11,7 +11,6 @@ import (
 // clean path.
 // FIXME Doesn't work on windows.
 func Abs(path string) string {
-
 	var user *u.User
 	var err error
 

@@ -39,9 +39,5 @@ func initCache() error {
 
 // CleanCache cleans all cached cuemods and stacks
 func CleanCache(s *stack.Stack) error {
-	err := os.RemoveAll(path.Join(Cache, s.Name))
-	if err != nil {
-		return err
-	}
-	return nil
+	return os.RemoveAll(path.Join(Cache, s.Name))
 }
