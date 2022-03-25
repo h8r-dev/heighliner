@@ -1,9 +1,9 @@
-package commands
+package cmd
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/h8r-dev/heighliner/pkg/clientcmd/util"
+	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
 var (
@@ -12,17 +12,14 @@ var (
 		Short:              "Run an application",
 		Args:               cobra.ArbitraryArgs,
 		DisableFlagParsing: true,
-		RunE:               upStack,
+		RunE:               upProj,
 	}
 )
 
-func upStack(c *cobra.Command, args []string) error {
+func upProj(c *cobra.Command, args []string) error {
+	// TODO switch to passing args
 	newArgs := make([]string, 0)
-	newArgs = append(newArgs, "up", "--project", "")
+	newArgs = append(newArgs, "do", "up", "-p", "plans")
 	newArgs = append(newArgs, args...)
-	err := util.Exec(
-		"dagger",
-		newArgs...,
-	)
-	return err
+	return util.Exec("dagger", newArgs...)
 }
