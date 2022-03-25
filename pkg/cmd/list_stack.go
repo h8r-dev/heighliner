@@ -13,7 +13,7 @@ import (
 
 var (
 	listStackCmd = &cobra.Command{
-		Use:   "list",
+		Use:   "list stack",
 		Short: "List stacks",
 		Args:  cobra.NoArgs,
 		RunE:  listStacks,

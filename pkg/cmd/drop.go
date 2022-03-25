@@ -11,10 +11,10 @@ var (
 		Use:   "drop",
 		Short: "Drop the current heighliner project",
 		Args:  cobra.NoArgs,
-		RunE:  dropProj,
+		Run:   dropProj,
 	}
 )
 
-func dropProj(cmd *cobra.Command, args []string) error {
-	return state.CleanTemp()
+func dropProj(cmd *cobra.Command, args []string) {
+	state.CleanTemp()
 }

@@ -43,6 +43,8 @@ func EnterTemp() error {
 }
 
 // CleanTemp removes all things in Temp dir
-func CleanTemp() error {
-	return os.RemoveAll(Temp)
+func CleanTemp() {
+	if err := os.RemoveAll(Temp); err != nil {
+		panic(err)
+	}
 }

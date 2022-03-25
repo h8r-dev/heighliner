@@ -40,12 +40,12 @@ func newProj(c *cobra.Command, args []string) {
 	// Check if target stack exists or not
 	stackName := viper.GetString("stack")
 	if stackName == "" {
-		_ = state.CleanTemp()
+		state.CleanTemp()
 		lg.Fatal().Msg("Please specify a stack with -s flag")
 	}
 	s, err := stack.New(stackName)
 	if err != nil {
-		_ = state.CleanTemp()
+		state.CleanTemp()
 		lg.Fatal().Err(err).Msgf("failed to create project with stack \"%s\"", stackName)
 	}
 
