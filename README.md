@@ -19,7 +19,7 @@ export PATH="$PWD/bin:$PATH"
 List all heighliner stacks:
 
 ```shell
-hln list
+hln list stack
 ```
 
 Output:
@@ -38,6 +38,8 @@ hln new -s=sample
 ```
 
 Set up envs
+
+> note: Please apply for a [Githubtoken](https://github.com/settings/tokens)
 
 ```
 export GITHUB_TOKEN=$(cat githubtoken.txt)

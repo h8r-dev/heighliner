@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"path"
+
 	"github.com/hofstadter-io/hof/lib/mod"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
-	"github.com/h8r-dev/heighliner/pkg/proj"
 	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
@@ -32,25 +33,41 @@ func init() {
 func newProj(c *cobra.Command, args []string) {
 	var lg = logger.New()
 
+	if err := state.InitTemp(); err != nil {
+		lg.Fatal().Err(err).Msg("There is already a project. Consider drop it?")
+	}
+
+	// Check if target stack exists or not
 	stackName := viper.GetString("stack")
 	if stackName == "" {
+		_ = state.CleanTemp()
 		lg.Fatal().Msg("Please specify a stack with -s flag")
 	}
-
 	s, err := stack.New(stackName)
 	if err != nil {
-		lg.Fatal().Err(err).Msgf("failed to create project with stack %s", stackName)
+		_ = state.CleanTemp()
+		lg.Fatal().Err(err).Msgf("failed to create project with stack \"%s\"", stackName)
 	}
 
-	p := proj.New(s, state.NewTemp())
-	if err := p.Init(); err != nil {
-		lg.Fatal().Err(err).Msgf("failed to initialize project")
+	// Fetch target stack
+	if err := state.CleanCache(s); err != nil {
+		lg.Fatal().Err(err).Msg("failed to clean stack cache")
+	}
+	if err := s.Pull(state.Cache); err != nil {
+		lg.Fatal().Err(err).Msgf("failed to pull stack %s", s.Name)
+	}
+	if err := s.Copy(path.Join(state.Cache, s.Name), state.Temp); err != nil {
+		lg.Fatal().Err(err).Msg("failed to copy stack")
+	}
+
+	// Change diretory
+	if err := state.EnterTemp(); err != nil {
+		lg.Fatal().Err(err).Msg("failed to enter project dir")
 	}
 
 	// $ hof mod vendor cue
 	mod.InitLangs()
-	err = mod.ProcessLangs("vendor", []string{"cue"})
-	if err != nil {
+	if err := mod.ProcessLangs("vendor", []string{"cue"}); err != nil {
 		lg.Warn().Err(err).Msg("failed to fetch cuemods")
 	}
 

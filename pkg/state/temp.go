@@ -1,55 +1,48 @@
 package state
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
+
+	"github.com/pkg/errors"
 )
 
-// Temp is the place to store and execute our project
-type Temp struct {
-	Path string
-}
+var (
+	// Temp is the place to store and execute our project
+	Temp string
+)
 
-// NewTemp creates and returns a Temp object
-func NewTemp() *Temp {
-	t := &Temp{}
-	t.Path = os.Getenv("HLN_TEMP_HOME")
-	if t.Path == "" {
+func init() {
+	Temp = os.Getenv("HLN_TEMP_HOME")
+	if Temp == "" {
 		tempDir := os.TempDir()
-		t.Path = path.Join(tempDir, "heighliner")
+		Temp = path.Join(tempDir, "heighliner")
 	}
-	return t
 }
 
-// Init initializes the temporary localstorage
-func (t *Temp) Init() error {
-	if err := t.Detect(); err == nil {
-		return errors.New("tmp dir already exists")
+// InitTemp creates and returns a Temp object
+func InitTemp() error {
+	if err := EnterTemp(); err == nil {
+		return errors.New("failed to initialize temp dir")
 	}
-	if err := os.MkdirAll(t.Path, 0755); err != nil {
-		return fmt.Errorf("failed to create dir %s: %w", t.Path, err)
+	if err := os.MkdirAll(Temp, 0755); err != nil {
+		return fmt.Errorf("failed to create dir %s: %w", Temp, err)
 	}
 	return nil
 }
 
-// GetPath fetches the path of localstorage
-func (t *Temp) GetPath() string {
-	return t.Path
-}
-
-// Clean deletes the temporary localstorage
-func (t *Temp) Clean() error {
-	return os.RemoveAll(t.Path)
-}
-
-// Detect detects if the temporary exists.
-// If it does exist, then enter it.
-func (t *Temp) Detect() error {
-	_, err := os.Stat(t.Path)
+// EnterTemp tries to enter the Temp dir
+// and returns an error if it doesn't exist.
+func EnterTemp() error {
+	_, err := os.Stat(Temp)
 	if err != nil {
 		return err
 	}
-	return os.Chdir(t.GetPath())
+	return os.Chdir(Temp)
+}
+
+// CleanTemp removes all things in Temp dir
+func CleanTemp() error {
+	return os.RemoveAll(Temp)
 }

@@ -16,6 +16,5 @@ var (
 )
 
 func dropProj(cmd *cobra.Command, args []string) error {
-	t := state.NewTemp()
-	return t.Clean()
+	return state.CleanTemp()
 }

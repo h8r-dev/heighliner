@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-getter/v2"
+	"github.com/otiai10/copy"
 
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
@@ -74,4 +75,9 @@ func (s *Stack) Pull(dst string) error {
 		return fmt.Errorf("failed to pull stack: %w", err)
 	}
 	return nil
+}
+
+// Copy the stack into dst dir
+func (s *Stack) Copy(src, dst string) error {
+	return copy.Copy(src, dst)
 }

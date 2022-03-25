@@ -18,8 +18,7 @@ var (
 )
 
 func upProj(c *cobra.Command, args []string) error {
-	t := state.NewTemp()
-	if err := t.Detect(); err != nil {
+	if err := state.EnterTemp(); err != nil {
 		return err
 	}
 	newArgs := make([]string, 0)
