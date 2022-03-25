@@ -16,16 +16,10 @@ make hln
 export PATH="$PWD/bin:$PATH"
 ```
 
-Make project dir:
-
-```shell
-mkdir helloapp && cd helloapp
-```
-
 List all heighliner stacks:
 
 ```shell
-hln stack list
+hln list stack
 ```
 
 Output:
@@ -33,7 +27,8 @@ Output:
 ```shell
 NAME          VERSION  DESCRIPTION
 sample        1.0.0    Sample is a light-weight stack mainly used for test
-go-gin-stack  1.0.0    Go-gin-stack helps you configure many cloud native components including prometheus, grafana, nocalhost, etc.
+go-gin-stack  1.0.0    go-gin-stack helps you configure many cloud native components including prometheus, grafana, nocalhost, etc.
+gin-vue       1.0.0    gin-vue is a new version of go-gin-stack
 ```
 
 Choose a stack and create a project
@@ -41,50 +36,20 @@ Choose a stack and create a project
 ```shell
 hln new -s=sample
 ```
-> note:
-> If you have troube when initialize new project, please clean caches and try again:
-> `hln clean`
 
-List all input values:
+Set up envs
 
-```shell
-hln input list
-```
-
-Output:
+> note: Please apply for a [Githubtoken](https://github.com/settings/tokens)
 
 ```
-Input          Value   Set by user  Description
-hello.message  string  false        -
-```
-
-Config a input value
-
-```shell
-hln input text hello.message "Hello heighliner"
-```
-
-Or if you want to read value from file
-
-```shell
-hln input text hello.message -f hello.txt
+export GITHUB_TOKEN=$(cat githubtoken.txt)
+export KUBECONFIG=~/.kube/config
 ```
 
 Spin up your application
 
 ```shell
 hln up
-```
-
-Output:
-
-```
-[✔] hello.createContainer                              0.0s
-[✔] hello.createFile.from                              0.0s
-[✔] hello.createFile.contents                          0.0s
-[✔] hello.outputMessage                                0.0s
-Output               Value  Description
-hello.outputMessage  """\n  Hello heighliner\n\n  """  -
 ```
 
 ## Contributing

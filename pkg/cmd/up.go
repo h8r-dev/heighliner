@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
@@ -17,9 +18,11 @@ var (
 )
 
 func upProj(c *cobra.Command, args []string) error {
-	// TODO switch to passing args
+	if err := state.EnterTemp(); err != nil {
+		return err
+	}
 	newArgs := make([]string, 0)
-	newArgs = append(newArgs, "do", "up", "-p", "plans")
+	newArgs = append(newArgs, "do", "up", "-p", "./plans")
 	newArgs = append(newArgs, args...)
 	return util.Exec("dagger", newArgs...)
 }

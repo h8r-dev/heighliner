@@ -17,7 +17,7 @@ var (
 
 func init() {
 	if err := initCache(); err != nil {
-		log.Fatal().Err(err).Msg("failed to initialize localstorage")
+		log.Fatal().Err(err).Msg("failed to initialize cache home")
 	}
 }
 

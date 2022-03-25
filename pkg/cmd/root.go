@@ -26,6 +26,7 @@ func init() {
 		newCmd,
 		upCmd,
 		downCmd,
+		dropCmd,
 	)
 
 	// Hide 'completion' command

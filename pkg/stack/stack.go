@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-getter/v2"
+	"github.com/otiai10/copy"
 
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
@@ -54,17 +55,19 @@ var Stacks = map[string]*Stack{
 }
 
 // New returns a Stack struct
-func New(name string) *Stack {
-	s := &Stack{
-		Name: name,
+func New(name string) (*Stack, error) {
+	// Check if specified stack exist or not
+	val, ok := Stacks[name]
+	if !ok {
+		return nil, ErrNoSuchStack
 	}
-	return s
+	return val, nil
 }
 
 // Pull downloads and decompresses a stack
-func (s *Stack) Pull(url, dst string) error {
+func (s *Stack) Pull(dst string) error {
 	req := &getter.Request{
-		Src: url,
+		Src: s.URL,
 		Dst: dst,
 	}
 	err := util.GetWithTracker(req)
@@ -72,4 +75,9 @@ func (s *Stack) Pull(url, dst string) error {
 		return fmt.Errorf("failed to pull stack: %w", err)
 	}
 	return nil
+}
+
+// Copy the stack into dst dir
+func (s *Stack) Copy(src, dst string) error {
+	return copy.Copy(src, dst)
 }
