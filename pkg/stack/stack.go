@@ -54,17 +54,19 @@ var Stacks = map[string]*Stack{
 }
 
 // New returns a Stack struct
-func New(name string) *Stack {
-	s := &Stack{
-		Name: name,
+func New(name string) (*Stack, error) {
+	// Check if specified stack exist or not
+	val, ok := Stacks[name]
+	if !ok {
+		return nil, ErrNoSuchStack
 	}
-	return s
+	return val, nil
 }
 
 // Pull downloads and decompresses a stack
-func (s *Stack) Pull(url, dst string) error {
+func (s *Stack) Pull(dst string) error {
 	req := &getter.Request{
-		Src: url,
+		Src: s.URL,
 		Dst: dst,
 	}
 	err := util.GetWithTracker(req)
