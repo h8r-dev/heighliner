@@ -53,12 +53,12 @@ func newProj(c *cobra.Command, args []string) error {
 
 	// Prepare stack files, Could be optimized with version function
 	{
-		err = os.RemoveAll(state.HeighlinerCacheHome)
+		err = state.CleanCache(s)
 		if err != nil {
 			return err
 		}
 
-		err = s.Pull(val.URL, state.HeighlinerCacheHome)
+		err = s.Pull(val.URL, state.Cache)
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func newProj(c *cobra.Command, args []string) error {
 	// if err != nil {
 	// 	panic(err)
 	// }
-	err = copy.Copy(path.Join(state.HeighlinerCacheHome, stackName), pwd)
+	err = copy.Copy(path.Join(state.Cache, stackName), pwd)
 	if err != nil {
 		return err
 	}

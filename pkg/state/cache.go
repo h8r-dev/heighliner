@@ -6,38 +6,40 @@ import (
 	"path"
 
 	"github.com/rs/zerolog/log"
+
+	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
 var (
-	// HeighlinerCacheHome is the dir where stacks are stored locally
-	HeighlinerCacheHome string
+	// Cache is the dir where stacks are stored locally
+	Cache string
 )
 
 func init() {
-	if err := initHeighlinerCache(); err != nil {
+	if err := initCache(); err != nil {
 		log.Fatal().Err(err).Msg("failed to initialize localstorage")
 	}
 }
 
-func initHeighlinerCache() error {
-	HeighlinerCacheHome = os.Getenv("HEIGHLINER_CACHE_HOME")
-	if HeighlinerCacheHome == "" {
+func initCache() error {
+	Cache = os.Getenv("HLN_CACHE_HOME")
+	if Cache == "" {
 		cacheDir, err := os.UserCacheDir()
 		if err != nil {
 			return fmt.Errorf("failed to get user cache dir: %w", err)
 		}
-		HeighlinerCacheHome = path.Join(cacheDir, "heighliner")
+		Cache = path.Join(cacheDir, "heighliner")
 	}
-	err := os.MkdirAll(HeighlinerCacheHome, 0755)
+	err := os.MkdirAll(Cache, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create dir %s: %w", HeighlinerCacheHome, err)
+		return fmt.Errorf("failed to create dir %s: %w", Cache, err)
 	}
 	return nil
 }
 
-// CleanHeighlinerCaches cleans all cached cuemods and stacks
-func CleanHeighlinerCaches() error {
-	err := os.RemoveAll(HeighlinerCacheHome)
+// CleanCache cleans all cached cuemods and stacks
+func CleanCache(s *stack.Stack) error {
+	err := os.RemoveAll(path.Join(Cache, s.Name))
 	if err != nil {
 		return err
 	}

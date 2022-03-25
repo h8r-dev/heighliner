@@ -12,7 +12,6 @@ import (
 // Stack is a CloudNative app template
 type Stack struct {
 	Name        string `json:"name" yaml:"name"`
-	Path        string `json:"path"`
 	URL         string `json:"url"`
 	Version     string `json:"version" yaml:"version"`
 	Description string `json:"description" yaml:"description"`
