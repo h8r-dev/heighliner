@@ -7,13 +7,14 @@ import (
 	"github.com/hashicorp/go-getter/v2"
 	"github.com/otiai10/copy"
 
+	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
 // Stack is a CloudNative app template
 type Stack struct {
 	Name        string `json:"name" yaml:"name"`
-	URL         string `json:"url"`
+	URL         string `json:"url" yaml:"url"`
 	Version     string `json:"version" yaml:"version"`
 	Description string `json:"description" yaml:"description"`
 }
@@ -23,52 +24,38 @@ var (
 	ErrNoSuchStack = errors.New("target stack doesn't exist")
 )
 
-var (
-	// SampleStack is a demo stack that echoes your input
-	SampleStack = &Stack{
-		Name:        "sample",
-		URL:         "https://stack.h8r.io/sample-latest.tar.gz",
-		Description: "Sample is a light-weight stack mainly used for test",
-		Version:     "1.0.0",
-	}
-	// GoGinStack is a go microservice architecture app
-	GoGinStack = &Stack{
-		Name:        "go-gin-stack",
-		URL:         "https://stack.h8r.io/go-gin-stack-latest.tar.gz",
-		Description: "go-gin-stack helps you configure many cloud native components including prometheus, grafana, nocalhost, etc.",
-		Version:     "1.0.0",
-	}
-	// GinVueStack is new version of go-gin-stack
-	GinVueStack = &Stack{
-		Name:        "gin-vue",
-		URL:         "https://stack.h8r.io/gin-vue-latest.tar.gz",
-		Description: "gin-vue is a new version of go-gin-stack",
-		Version:     "1.0.0",
-	}
-)
-
 // Stacks stores all stacks that currently usable
-var Stacks = map[string]*Stack{
-	"sample":       SampleStack,
-	"go-gin-stack": GoGinStack,
-	"gin-vue":      GinVueStack,
+var Stacks = map[string]bool{
+	"sample":       true,
+	"go-gin-stack": true,
+	"gin-vue":      true,
 }
 
 // New returns a Stack struct
 func New(name string) (*Stack, error) {
-	// Check if specified stack exist or not
-	val, ok := Stacks[name]
+	const defaultVersion = "latest"
+
+	// Check if specified stack exists or not
+	_, ok := Stacks[name]
 	if !ok {
 		return nil, ErrNoSuchStack
 	}
-	return val, nil
+
+	version := defaultVersion
+	url := fmt.Sprintf("https://stack.h8r.io/%s-%s.tar.gz", name, version)
+	s := &Stack{
+		Name:    name,
+		URL:     url,
+		Version: version,
+	}
+	return s, nil
 }
 
-// Pull downloads and decompresses a stack
-func (s *Stack) Pull(dst string) error {
+// Pull downloads and extracts the stack
+func (s *Stack) Pull() error {
 	req := &getter.Request{
 		Src: s.URL,
-		Dst: dst,
+		Dst: state.Cache,
 	}
 	err := util.GetWithTracker(req)
 	if err != nil {

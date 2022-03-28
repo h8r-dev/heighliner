@@ -6,8 +6,6 @@ import (
 	"path"
 
 	"github.com/rs/zerolog/log"
-
-	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
 var (
@@ -38,6 +36,6 @@ func initCache() error {
 }
 
 // CleanCache cleans all cached cuemods and stacks
-func CleanCache(s *stack.Stack) error {
-	return os.RemoveAll(path.Join(Cache, s.Name))
+func CleanCache() error {
+	return os.RemoveAll(Cache)
 }
