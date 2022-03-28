@@ -36,6 +36,8 @@ func initCache() error {
 }
 
 // CleanCache cleans all cached cuemods and stacks
-func CleanCache() error {
-	return os.RemoveAll(Cache)
+func CleanCache() {
+	if err := os.RemoveAll(Cache); err != nil {
+		panic(err)
+	}
 }

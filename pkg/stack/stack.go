@@ -59,6 +59,7 @@ func (s *Stack) Pull() error {
 	}
 	err := util.GetWithTracker(req)
 	if err != nil {
+		state.CleanCache()
 		return fmt.Errorf("failed to pull stack: %w", err)
 	}
 	return nil
