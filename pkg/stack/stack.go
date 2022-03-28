@@ -25,10 +25,10 @@ var (
 )
 
 // Stacks stores all stacks that currently usable
-var Stacks = map[string]bool{
-	"sample":       true,
-	"go-gin-stack": true,
-	"gin-vue":      true,
+var Stacks = map[string]struct{}{
+	"sample":       {},
+	"go-gin-stack": {},
+	"gin-vue":      {},
 }
 
 // New returns a Stack struct
