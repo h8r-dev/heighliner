@@ -50,10 +50,10 @@ func newProj(c *cobra.Command, args []string) {
 	}
 
 	// Fetch target stack
-	if err := state.CleanCache(s); err != nil {
+	if err := state.CleanCache(); err != nil {
 		lg.Fatal().Err(err).Msg("failed to clean stack cache")
 	}
-	if err := s.Pull(state.Cache); err != nil {
+	if err := s.Pull(); err != nil {
 		lg.Fatal().Err(err).Msgf("failed to pull stack %s", s.Name)
 	}
 	if err := s.Copy(path.Join(state.Cache, s.Name), state.Temp); err != nil {
