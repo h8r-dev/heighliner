@@ -3,7 +3,10 @@ module github.com/h8r-dev/heighliner
 go 1.17
 
 require (
+	github.com/charmbracelet/bubbles v0.10.3
+	github.com/charmbracelet/bubbletea v0.20.0
 	github.com/cheggaaa/pb v1.0.29
+	github.com/fatih/color v1.13.0
 	github.com/hashicorp/go-getter/v2 v2.0.1
 	github.com/hofstadter-io/hof v0.6.1
 	github.com/moby/buildkit v0.10.0
@@ -19,10 +22,13 @@ require (
 
 require (
 	cuelang.org/go v0.4.0 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymerick/raymond v2.0.2+incompatible // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bmatcuk/doublestar v1.3.1 // indirect
+	github.com/charmbracelet/lipgloss v0.4.0 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
+	github.com/containerd/console v1.0.3 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -49,16 +55,21 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/ktrysmt/go-bitbucket v0.9.24 // indirect
 	github.com/lib/pq v1.2.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/mattn/go-runewidth v0.0.7 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
+	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739 // indirect
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect

@@ -9,12 +9,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Schema represents a input schema of a stack
+// Schema represents a input schema of a stack.
 type Schema struct {
 	Parameters []Parameter `yaml:"parameters"`
 }
 
-// Parameter is a field in the schema
+// Parameter is a field in the schema.
 type Parameter struct {
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
@@ -24,12 +24,13 @@ type Parameter struct {
 	Default     string `yaml:"default"`
 }
 
-// New creates and returns a schema
+// New creates and returns a schema.
 func New() *Schema {
 	return &Schema{}
 }
 
-// Load loads the schema from src file
+// Load loads the schema from src file.
+// NOTE: Make sure you are already in the project dir.
 func (s *Schema) Load() error {
 	file, err := os.Open(path.Join("schemas", "schema.yaml"))
 	if err != nil {
@@ -50,9 +51,10 @@ func (s *Schema) Load() error {
 	return nil
 }
 
-// SetEnv sets up input values
-func (s *Schema) SetEnv(m map[string]interface{}) error {
+// SetEnv sets up input values.
+func (s *Schema) SetEnv(m map[string]interface{}, interactive bool) error {
 	for _, v := range s.Parameters {
+		// Try to fetch value from --set flag
 		val, ok := m[v.Key]
 		if ok && val != nil {
 			if err := os.Setenv(v.Key, val.(string)); err != nil {
@@ -60,14 +62,26 @@ func (s *Schema) SetEnv(m map[string]interface{}) error {
 			}
 			continue
 		}
+		// Try to fetch value from env
 		val = os.Getenv(v.Key)
-		if val == "" && v.Default != "" {
-			if err := os.Setenv(v.Key, v.Default); err != nil {
-				panic(err)
-			}
+		if val != "" {
 			continue
 		}
-		return fmt.Errorf("couldn't find value of %s, which is required", v.Title)
+		// Promt interactively or look for default values
+		if interactive {
+			if err := startui(v); err != nil {
+				return err
+			}
+		} else {
+			if v.Default != "" {
+				if err := os.Setenv(v.Key, v.Default); err != nil {
+					panic(err)
+				}
+				continue
+			} else {
+				return fmt.Errorf("couldn't find value of %s, which is required", v.Title)
+			}
+		}
 	}
 	return nil
 }
