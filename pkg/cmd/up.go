@@ -23,6 +23,7 @@ var (
 
 func init() {
 	upCmd.Flags().StringArray("set", []string{}, "The input values of your project")
+	upCmd.Flags().BoolP("interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
 	if err := viper.BindPFlags(upCmd.Flags()); err != nil {
 		log.Fatal().Err(err).Msg("failed to bind flags")
 	}
@@ -50,7 +51,7 @@ func upProj(c *cobra.Command, args []string) error {
 	if err := s.Load(); err != nil {
 		lg.Fatal().Err(err).Msg("failed to load input schema")
 	}
-	if err := s.SetEnv(base); err != nil {
+	if err := s.SetEnv(base, viper.GetBool("interactive")); err != nil {
 		lg.Fatal().Err(err).Msg("failed to set input values")
 	}
 
