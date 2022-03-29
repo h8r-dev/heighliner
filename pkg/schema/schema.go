@@ -69,7 +69,7 @@ func (s *Schema) SetEnv(m map[string]interface{}, interactive bool) error {
 		}
 		// Promt interactively or look for default values
 		if interactive {
-			if err := startui(v); err != nil {
+			if err := startUI(v); err != nil {
 				return err
 			}
 		} else {

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -9,14 +10,14 @@ import (
 	"github.com/fatih/color"
 )
 
-func startui(pm Parameter) error {
+func startUI(pm Parameter) error {
 	p := tea.NewProgram(initialModel(pm))
 
 	return p.Start()
 }
 
 // setval will be called when user presses enter.
-func setVal(p Parameter, val string) {
+func setVal(p Parameter, val string) error {
 	switch {
 	case val != "":
 		if err := os.Setenv(p.Key, val); err != nil {
@@ -27,9 +28,9 @@ func setVal(p Parameter, val string) {
 			panic(err)
 		}
 	default:
-		color.Red("\nvalue couldn't be empty")
-		os.Exit(1)
+		return errors.New("this value is required")
 	}
+	return nil
 }
 
 // ------
@@ -71,7 +72,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyEsc:
 			return m, tea.Quit
 		case tea.KeyEnter:
-			setVal(m.parameter, m.textInput.Value())
+			if err := setVal(m.parameter, m.textInput.Value()); err != nil {
+				m.err = err
+				return m, nil
+			}
 			return m, tea.Quit
 		default:
 		}
@@ -87,11 +91,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return fmt.Sprintf(
-		"Please input %s (%s):\n\n%s\n\n%s",
+	s := ""
+	s += fmt.Sprintf(
+		"Please input %s :\n%s\n\n%s\n\n%s",
 		m.parameter.Title,
 		m.parameter.Description,
 		m.textInput.View(),
 		"(esc to quit)",
-	) + "\n"
+	) + "\n\n"
+	if m.err != nil {
+		s += color.RedString(m.err.Error())
+	}
+	return s
 }
