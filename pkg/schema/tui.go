@@ -12,8 +12,14 @@ import (
 
 func startUI(pm Parameter) error {
 	p := tea.NewProgram(initialModel(pm))
-
-	return p.Start()
+	m, err := p.StartReturningModel()
+	if err != nil {
+		return err
+	}
+	if m, ok := m.(model); ok && errors.Is(m.err, ErrCancelInput) {
+		return m.err
+	}
+	return nil
 }
 
 // setval will be called when user presses enter.
@@ -30,7 +36,7 @@ func setVal(p Parameter, val string) error {
 	case !p.Required:
 		return nil
 	default:
-		return errors.New("this value is required")
+		return errValueMissed
 	}
 	return nil
 }
@@ -38,6 +44,12 @@ func setVal(p Parameter, val string) error {
 // ------
 // Logic of Terminal UI
 // ------
+
+var (
+	errValueMissed = errors.New("this value is required")
+	// ErrCancelInput is a signal to break the interactive inputing process.
+	ErrCancelInput = errors.New("cancel interactive inputing process")
+)
 
 type errMsg error
 
@@ -71,7 +83,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
-		case tea.KeyEsc:
+		case tea.KeyCtrlC:
+			m.err = ErrCancelInput
 			return m, tea.Quit
 		case tea.KeyEnter:
 			if err := setVal(m.parameter, m.textInput.Value()); err != nil {
@@ -93,15 +106,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := ""
+	s := fmt.Sprintf("Please input %s", color.CyanString(m.parameter.Title))
+	if m.parameter.Required {
+		s += color.YellowString(" (required)")
+	}
 	s += fmt.Sprintf(
-		"Please input %s :\n%s\n\n%s\n\n%s",
-		m.parameter.Title,
+		": \n(%s)\n\n%s\n\n",
 		m.parameter.Description,
 		m.textInput.View(),
-		"(esc to quit)",
-	) + "\n\n"
-	if m.err != nil {
+	)
+	if errors.Is(m.err, errValueMissed) {
 		s += color.RedString(m.err.Error())
 	}
 	return s
