@@ -22,6 +22,7 @@ type Parameter struct {
 	Key         string `yaml:"key"`
 	Value       string `yaml:"value"`
 	Default     string `yaml:"default"`
+	Required    bool   `yaml:"required"`
 }
 
 // New creates and returns a schema.
@@ -73,12 +74,15 @@ func (s *Schema) SetEnv(m map[string]interface{}, interactive bool) error {
 				return err
 			}
 		} else {
-			if v.Default != "" {
+			switch {
+			case v.Default != "":
 				if err := os.Setenv(v.Key, v.Default); err != nil {
 					panic(err)
 				}
 				continue
-			} else {
+			case !v.Required:
+				continue
+			default:
 				return fmt.Errorf("couldn't find value of %s, which is required", v.Title)
 			}
 		}

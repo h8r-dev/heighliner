@@ -27,6 +27,8 @@ func setVal(p Parameter, val string) error {
 		if err := os.Setenv(p.Key, val); err != nil {
 			panic(err)
 		}
+	case !p.Required:
+		return nil
 	default:
 		return errors.New("this value is required")
 	}
