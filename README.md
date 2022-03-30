@@ -37,20 +37,15 @@ Choose a stack and create a project
 hln new -s=sample
 ```
 
-Set up envs
-
-> note: Please apply for a [Githubtoken](https://github.com/settings/tokens)
-
-```
-export GITHUB_TOKEN=$(cat githubtoken.txt)
-export KUBECONFIG=~/.kube/config
-```
+> note: Please prepare a [kubeconfig file](https://rancher.com/docs/rke/latest/en/kubeconfig/) and apply for a [github access token](https://github.com/settings/tokens) to continue.
 
 Spin up your application
 
 ```shell
-hln up
+hln up -i
 ```
+
+Input the value one by one according to the promt. Your application will be set up automatically.
 
 ## Contributing
 
