@@ -46,7 +46,7 @@ func setVal(p Parameter, val string) error {
 // ------
 
 var (
-	errValueMissed = errors.New("This value is required")
+	errValueMissed = errors.New("this value is required")
 	// ErrCancelInput is a signal to break the interactive inputing process.
 	ErrCancelInput = errors.New("cancel interactive inputing process")
 )
@@ -118,7 +118,7 @@ func (m model) View() string {
 		m.textInput.View(),
 	)
 	if errors.Is(m.err, errValueMissed) {
-		s += color.RedString(m.err.Error())
+		s += color.RedString("Warn: %s", m.err.Error())
 	}
 	return s
 }
