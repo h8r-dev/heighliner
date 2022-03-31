@@ -106,7 +106,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := fmt.Sprintf("%s", m.parameter.Description)
+	s := m.parameter.Description
 	if m.parameter.Default != "" {
 		s += fmt.Sprintf(" (default: %s)", m.parameter.Default)
 	}
