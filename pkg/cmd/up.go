@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -55,9 +58,17 @@ func upProj(c *cobra.Command, args []string) error {
 		lg.Fatal().Err(err).Msg("failed to set input values")
 	}
 
-	return util.Exec("dagger",
+	if err := util.Exec("dagger",
 		"--log-format", viper.GetString("log-format"),
 		"--log-level", viper.GetString("log-level"),
 		"-p", "./plans",
-		"do", "up")
+		"do", "up"); err != nil {
+		return err
+	}
+	b, err := os.ReadFile("output")
+	if err != nil {
+		return fmt.Errorf("can't read output: %w", err)
+	}
+	fmt.Printf("\n%s", b)
+	return nil
 }

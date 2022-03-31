@@ -46,7 +46,7 @@ func setVal(p Parameter, val string) error {
 // ------
 
 var (
-	errValueMissed = errors.New("this value is required")
+	errValueMissed = errors.New("This value is required")
 	// ErrCancelInput is a signal to break the interactive inputing process.
 	ErrCancelInput = errors.New("cancel interactive inputing process")
 )
@@ -106,13 +106,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := fmt.Sprintf("Please input %s", color.CyanString(m.parameter.Title))
+	s := fmt.Sprintf("%s", m.parameter.Description)
+	if m.parameter.Default != "" {
+		s += fmt.Sprintf(" (default: %s)", m.parameter.Default)
+	}
 	if m.parameter.Required {
 		s += color.YellowString(" (required)")
 	}
 	s += fmt.Sprintf(
-		": \n(%s)\n\n%s\n\n",
-		m.parameter.Description,
+		": \n\n%s\n\n",
 		m.textInput.View(),
 	)
 	if errors.Is(m.err, errValueMissed) {
