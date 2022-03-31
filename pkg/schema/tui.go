@@ -106,17 +106,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := fmt.Sprintf("Please input %s", color.CyanString(m.parameter.Title))
+	s := m.parameter.Description
+	if m.parameter.Default != "" {
+		s += fmt.Sprintf(" (default: %s)", m.parameter.Default)
+	}
 	if m.parameter.Required {
 		s += color.YellowString(" (required)")
 	}
 	s += fmt.Sprintf(
-		": \n(%s)\n\n%s\n\n",
-		m.parameter.Description,
+		": \n\n%s\n\n",
 		m.textInput.View(),
 	)
 	if errors.Is(m.err, errValueMissed) {
-		s += color.RedString(m.err.Error())
+		s += color.RedString("Warn: %s", m.err.Error())
 	}
 	return s
 }
