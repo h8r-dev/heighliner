@@ -19,7 +19,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    permissions: write-all
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -37,7 +36,7 @@ jobs:
         with:
           args: release --rm-dist --debug
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
           BUCKET_ID: dl-1309519128
