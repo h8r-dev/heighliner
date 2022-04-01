@@ -57,7 +57,6 @@ func upProj(c *cobra.Command, args []string) error {
 	if err := s.SetEnv(base, viper.GetBool("interactive")); err != nil {
 		lg.Fatal().Err(err).Msg("failed to set input values")
 	}
-
 	if err := util.Exec("dagger",
 		"--log-format", viper.GetString("log-format"),
 		"--log-level", viper.GetString("log-level"),
