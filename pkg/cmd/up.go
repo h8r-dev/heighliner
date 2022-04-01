@@ -27,6 +27,7 @@ var (
 func init() {
 	upCmd.Flags().StringArray("set", []string{}, "The input values of your project")
 	upCmd.Flags().BoolP("interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
+	upCmd.Flags().Bool("no-cache", false, "Don't cache")
 	if err := viper.BindPFlags(upCmd.Flags()); err != nil {
 		log.Fatal().Err(err).Msg("failed to bind flags")
 	}
@@ -57,11 +58,17 @@ func upProj(c *cobra.Command, args []string) error {
 	if err := s.SetEnv(base, viper.GetBool("interactive")); err != nil {
 		lg.Fatal().Err(err).Msg("failed to set input values")
 	}
-	if err := util.Exec("dagger",
+
+	newArgs := []string{}
+	newArgs = append(newArgs,
 		"--log-format", viper.GetString("log-format"),
 		"--log-level", viper.GetString("log-level"),
 		"-p", "./plans",
-		"do", "up"); err != nil {
+		"do", "up")
+	if viper.GetBool("no-cache") {
+		newArgs = append(newArgs, "--no-cache")
+	}
+	if err := util.Exec("dagger", newArgs...); err != nil {
 		return err
 	}
 	b, err := os.ReadFile("output.yaml")
