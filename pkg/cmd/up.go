@@ -65,7 +65,7 @@ func upProj(c *cobra.Command, args []string) error {
 		"do", "up"); err != nil {
 		return err
 	}
-	b, err := os.ReadFile("output")
+	b, err := os.ReadFile("output.yaml")
 	if err != nil {
 		return fmt.Errorf("can't read output: %w", err)
 	}
