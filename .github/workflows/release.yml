@@ -35,6 +35,7 @@ jobs:
         run: |
           pip install coscmd
           coscmd config -a $TENCENT_SECRET_ID -s $TENCENT_SECRET_KEY -b $BUCKET_ID -r $BUCKET_REGION --retry 5
+          coscmd upload ./scripts/install_hln/install.sh hln/install.sh
         env:
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
