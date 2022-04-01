@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/fatih/color"
+
+	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
 func startUI(pm Parameter) error {
@@ -26,11 +29,7 @@ func startUI(pm Parameter) error {
 func setVal(p Parameter, val string) error {
 	switch {
 	case val != "":
-		if err := os.Setenv(p.Key, val); err != nil {
-			panic(err)
-		}
-	case p.Default != "":
-		if err := os.Setenv(p.Key, val); err != nil {
+		if err := os.Setenv(p.Key, util.Abs(strings.TrimSpace(val))); err != nil {
 			panic(err)
 		}
 	case !p.Required:
@@ -64,7 +63,7 @@ func initialModel(p Parameter) model {
 	ti.Placeholder = p.Default
 	ti.Focus()
 	ti.CharLimit = 156
-	ti.Width = 20
+	ti.Width = 50
 
 	return model{
 		textInput: ti,
@@ -86,6 +85,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyCtrlC:
 			m.err = ErrCancelInput
 			return m, tea.Quit
+		case tea.KeyTab:
+			m.textInput.SetValue(m.parameter.Default)
+			return m, nil
 		case tea.KeyEnter:
 			if err := setVal(m.parameter, m.textInput.Value()); err != nil {
 				m.err = err
@@ -107,9 +109,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	s := m.parameter.Description
-	if m.parameter.Default != "" {
-		s += fmt.Sprintf(" (default: %s)", m.parameter.Default)
-	}
 	if m.parameter.Required {
 		s += color.YellowString(" (required)")
 	}
