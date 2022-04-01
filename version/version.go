@@ -1,6 +1,7 @@
 package version
 
 const (
+	// DevelopmentVersion is unstable
 	DevelopmentVersion = "devel"
 )
 

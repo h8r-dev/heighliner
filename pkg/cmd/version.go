@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/h8r-dev/heighliner/pkg/version"
 	"github.com/spf13/cobra"
+
+	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
 var (
