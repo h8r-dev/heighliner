@@ -1,30 +1,24 @@
-name: "Auto Release"
+# Release:
+# - Github release
+# - binaries and tarballs
+# - homebrew
+name: "Release"
 
 # Only a single job with this concurrency can run at any given time
 concurrency: release
 
 on:
-  # https://crontab.guru/#6_17_*_*_2
-  # Every Tuesday at 5:06pm UTC & 9:06am US West Coast.
-  # GitHub Actions defaults to UTC:
-  # There is high load on GitHub Actions at the top of the hour:
-  #
-  #     Note: The schedule event can be delayed during periods of high loads of
-  #     GitHub Actions workflow runs. High load times include the start of every
-  #     hour. To decrease the chance of delay, schedule your workflow to run at a
-  #     different time of the hour.
-  # schedule:
-  #   - cron: "6 17 * * 2"
-
   push:
-    branches:
-      - release
     tags:
-      - "*"
+      - "v*"
 
 jobs:
-  goreleaser:
+  release:
+    name: "Release"
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     permissions: write-all
     steps:
       - name: Checkout
