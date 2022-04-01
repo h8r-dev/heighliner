@@ -1,0 +1,70 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
+builds:
+  - env:
+      - CGO_ENABLED=0
+    main: ./cmd/
+    binary: hln
+    ldflags:
+      - -s -w
+      - -X github.com/h8r-dev/heighliner/pkg/version.Version={{.Version}}
+      - -X github.com/h8r-dev/heighliner/pkg/version.Revision={{.ShortCommit}}
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
+    replacements:
+    files:
+      - LICENSE
+      - examples/**/*
+    format_overrides:
+      - goos: windows
+        format: zip
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^doc:"
+      - "^test:"
+      - "^tests:"
+      - "^ci:"
+      - "^website:"
+      - "^infra:"
+      - "^build\\(deps\\):"
+      - "^Merge pull request"
+
+brews:
+  - tap:
+      owner: h8r-dev
+      name: homebrew-tap
+    commit_author:
+      name: Hongchao Deng
+      email: hongchaodeng1@gmail.com
+    url_template: "https://dl.h8r.io/hln-cli/releases/{{ .Version }}/{{ .ArtifactName }}"
+    homepage: "https://github.com/h8r-dev/heighliner"
+    description: "Heighliner is an application development platform with the state-of-the-art cloud native stacks"
+    test: |
+      system "#{bin}/hln version"
+
+# publishers:
+#   - name: publish-latest-artifact
+#   - name: publish-latest-version
+#     cmd: sh -c "echo {{ .Version }} | aws s3 cp - s3://dagger-io/dagger/latest_version"
+#     env:
+#       - PATH={{ .Env.PATH }}
