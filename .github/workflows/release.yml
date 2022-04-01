@@ -35,6 +35,11 @@ jobs:
         run: |
           pip install coscmd
           coscmd config -a $TENCENT_SECRET_ID -s $TENCENT_SECRET_KEY -b $BUCKET_ID -r $BUCKET_REGION --retry 5
+        env:
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          BUCKET_ID: dl-1309519128
+          BUCKET_REGION: ap-hongkong
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
@@ -42,7 +47,3 @@ jobs:
           args: release --rm-dist --debug
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
-          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
-          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
-          BUCKET_ID: dl-1309519128
-          BUCKET_REGION: ap-hongkong
