@@ -2,7 +2,7 @@
 
 set -e
 
-name="hln-cli"
+name="hln"
 base="https://dl.h8r.io/"
 
 cat /dev/null <<EOF
