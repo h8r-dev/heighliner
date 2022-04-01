@@ -2,8 +2,9 @@
 
 set -e
 
+project="heighliner"
 name="hln"
-base="https://dl.h8r.io/"
+base="https://dl.h8r.io"
 
 cat /dev/null <<EOF
 ------------------------------------------------------------------------
@@ -261,12 +262,10 @@ uname_arch() {
 }
 
 latest_version() {
-    curl -sfL "${base}/${name}/latest_version"
+    curl -sfL "${base}/${name}/releases/latest_version"
 }
 
 base_url() {
-    os="$(uname_os)"
-    arch="$(uname_arch)"
     version="${HLN_VERSION:-$(latest_version)}"
     url="${base}/${name}/releases/${version}"
     echo "$url"
@@ -276,7 +275,7 @@ tarball() {
     os="$(uname_os)"
     arch="$(uname_arch)"
     version="${HLN_VERSION:-$(latest_version)}"
-    name="${name}_v${version}_${os}_${arch}"
+    name="${project}_v${version}_${os}_${arch}"
     if [ "$os" = "windows" ]; then
         name="${name}.zip"
     else
@@ -289,16 +288,12 @@ execute() {
     base_url="$(base_url)"
     tarball="$(tarball)"
     tarball_url="${base_url}/${tarball}"
-    checksum="checksums.txt"
-    checksum_url="${base_url}/${checksum}"
     bin_dir="./bin"
-    binexe="dagger"
+    binexe="hln"
 
     tmpdir=$(mktemp -d)
     log_debug "downloading files into ${tmpdir}"
     http_download "${tmpdir}/${tarball}" "${tarball_url}"
-    http_download "${tmpdir}/${checksum}" "${checksum_url}"
-    hash_sha256_verify "${tmpdir}/${tarball}" "${tmpdir}/${checksum}"
     srcdir="${tmpdir}"
     (cd "${tmpdir}" && untar "${tarball}")
     test ! -d "${bin_dir}" && install -d "${bin_dir}"
