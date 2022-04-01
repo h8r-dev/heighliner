@@ -22,3 +22,5 @@ vendor/
 .hln/
 .dagger/
 cue.mod/
+
+dist/
