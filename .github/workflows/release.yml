@@ -31,6 +31,11 @@ jobs:
         with:
           go-version: 1.18
 
+      - name: Install coscmd
+        run: |
+          pip install coscmd
+          coscmd config -a $TENCENT_SECRET_ID -s $TENCENT_SECRET_KEY -b $BUCKET_ID -r $BUCKET_REGION --retry 5
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -40,4 +45,4 @@ jobs:
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
           BUCKET_ID: dl-1309519128
-          BUCKET_REGION: us-ap-hongkong-1
+          BUCKET_REGION: ap-hongkong
