@@ -65,8 +65,8 @@ brews:
 
 publishers:
   - name: upload-artifact
-    cmd: sh -c "coscmd upload -r --delete -y dist/ hln/releases/{{ .Version }}/"
+    cmd: sh -c "mkdir dist/tars/ && mv dist/*.tar.gz dist/tars/ && coscmd upload -r --delete -y dist/tars/ hln/releases/{{ .Version }}/"
   - name: publish-latest-version
-    cmd: sh -c "echo {{ .Version }} | coscmd upload - hln/releases/latest_version"
+    cmd: sh -c "echo {{ .Version }} > latest_version | coscmd upload latest_version hln/releases/latest_version"
     env:
       - PATH={{ .Env.PATH }}
