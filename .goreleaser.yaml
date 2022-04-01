@@ -56,7 +56,7 @@ brews:
     commit_author:
       name: Hongchao Deng
       email: hongchaodeng1@gmail.com
-    url_template: "https://dl.h8r.io/hln-cli/releases/{{ .Version }}/{{ .ArtifactName }}"
+    url_template: "https://dl.h8r.io/hln/releases/{{ .Version }}/{{ .ArtifactName }}"
     homepage: "https://github.com/h8r-dev/heighliner"
     description: "Heighliner is an application development platform with the state-of-the-art cloud native stacks"
     test: |
