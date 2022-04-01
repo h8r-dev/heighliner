@@ -15,21 +15,12 @@ on:
   #     different time of the hour.
   # schedule:
   #   - cron: "6 17 * * 2"
+
   push:
     branches:
       - release
-
-  # And it also supports manual triggering:
-  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
-  workflow_dispatch:
-    inputs:
-      release_type:
-        description: "major|minor|patch|release|prerel"
-        default: "patch"
-        required: true
-      release_version:
-        description: "Optional release version, e.g. 0.2.0"
-        required: false
+    tags:
+      - "*"
 
 jobs:
   goreleaser:
