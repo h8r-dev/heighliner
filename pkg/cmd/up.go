@@ -75,6 +75,6 @@ func upProj(c *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("can't read output: %w", err)
 	}
-	fmt.Printf("\n%s", b)
+	fmt.Fprintf(os.Stdout, "\n%s", b)
 	return nil
 }
