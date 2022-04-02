@@ -32,7 +32,6 @@ func setVal(p Parameter, val string) error {
 		if err := os.Setenv(p.Key, util.Abs(strings.TrimSpace(val))); err != nil {
 			panic(err)
 		}
-		fmt.Println(os.Getenv(p.Key))
 	case !p.Required:
 		return nil
 	default:
