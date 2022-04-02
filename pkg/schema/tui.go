@@ -32,6 +32,7 @@ func setVal(p Parameter, val string) error {
 		if err := os.Setenv(p.Key, util.Abs(strings.TrimSpace(val))); err != nil {
 			panic(err)
 		}
+		fmt.Println(os.Getenv(p.Key))
 	case !p.Required:
 		return nil
 	default:
@@ -62,7 +63,7 @@ func initialModel(p Parameter) model {
 	ti := textinput.New()
 	ti.Placeholder = p.Default
 	ti.Focus()
-	ti.CharLimit = 156
+	ti.CharLimit = 0
 	ti.Width = 50
 
 	return model{

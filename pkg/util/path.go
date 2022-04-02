@@ -17,7 +17,7 @@ func Abs(path string) string {
 		log.Fatalf("Unable to identify current user")
 	}
 
-	if !p.IsAbs(path) {
+	if strings.HasPrefix(path, "~/") {
 		return p.Join(user.HomeDir, strings.TrimPrefix(path, "~/"))
 	}
 
