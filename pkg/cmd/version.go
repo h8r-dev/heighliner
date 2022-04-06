@@ -12,7 +12,7 @@ import (
 var (
 	versionCmd = &cobra.Command{
 		Use:   "version",
-		Short: "Drop the current heighliner project",
+		Short: "Print the version",
 		Args:  cobra.NoArgs,
 		Run:   printVersion,
 	}

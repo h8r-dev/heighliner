@@ -18,7 +18,7 @@ import (
 var (
 	upCmd = &cobra.Command{
 		Use:   "up",
-		Short: "Run an application",
+		Short: "Spin up your application",
 		Args:  cobra.ArbitraryArgs,
 		RunE:  upProj,
 	}
