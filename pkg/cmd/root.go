@@ -10,14 +10,13 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/logger"
 )
 
-var (
-	rootCmd = &cobra.Command{
+// NewRootCmd makes and returns the root comman of heighliner
+func NewRootCmd() *cobra.Command {
+	var rootCmd = &cobra.Command{
 		Use:   "hln",
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
 	}
-)
 
-func init() {
 	rootCmd.PersistentFlags().String("log-format", "auto", "Log format (auto, plain, json)")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
 
@@ -39,10 +38,12 @@ func init() {
 	viper.SetEnvPrefix("hln")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
+
+	return rootCmd
 }
 
 // Execute executes the root command with context
-func Execute() {
+func Execute(rootCmd *cobra.Command) {
 	var (
 		ctx = appcontext.Context()
 		lg  = logger.New()
