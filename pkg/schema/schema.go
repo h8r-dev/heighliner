@@ -44,7 +44,7 @@ func (s *Schema) Load() error {
 	}()
 	b, err := ioutil.ReadAll(file)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to read schema file %w", err)
 	}
 	if err = yaml.Unmarshal(b, s); err != nil {
 		return fmt.Errorf("syntax error in schema: %w", err)

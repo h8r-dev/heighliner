@@ -11,14 +11,17 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
-var (
-	listStackCmd = &cobra.Command{
+// NewListStackCmd creates and returns the list stack command of hln
+func NewListStackCmd() *cobra.Command {
+	listStackCmd := &cobra.Command{
 		Use:   "stack",
 		Short: "List stacks",
 		Args:  cobra.NoArgs,
 		RunE:  listStacks,
 	}
-)
+
+	return listStackCmd
+}
 
 func listStacks(c *cobra.Command, args []string) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.TabIndent)

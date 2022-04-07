@@ -4,37 +4,41 @@ import (
 	"strings"
 
 	"github.com/moby/buildkit/util/appcontext"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
 )
 
-// NewRootCmd makes and returns the root comman of heighliner
+// NewRootCmd creates and returns the root command of hln
 func NewRootCmd() *cobra.Command {
-	var rootCmd = &cobra.Command{
+	var err error
+
+	rootCmd := &cobra.Command{
 		Use:   "hln",
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
 	}
 
+	rootCmd.AddCommand(
+		NewListCmd(),
+		newCmd,
+		NewUpCmd(),
+		NewDownCmd(),
+		dropCmd,
+		NewVersionCmd(),
+	)
+
 	rootCmd.PersistentFlags().String("log-format", "auto", "Log format (auto, plain, json)")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
-
-	rootCmd.AddCommand(
-		listCmd,
-		newCmd,
-		upCmd,
-		downCmd,
-		dropCmd,
-		versionCmd,
-	)
+	// Bind flags to viper
+	if err = viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
+		log.Fatal().Err(err).Msg("failed to bind flags")
+	}
 
 	// Hide 'completion' command
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
-	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
-		panic(err)
-	}
 	viper.SetEnvPrefix("hln")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
@@ -48,6 +52,7 @@ func Execute(rootCmd *cobra.Command) {
 		ctx = appcontext.Context()
 		lg  = logger.New()
 	)
+
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		lg.Fatal().Err(err).Msg("failed to execute command")
 	}

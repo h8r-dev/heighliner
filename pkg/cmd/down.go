@@ -9,14 +9,17 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
-var (
-	downCmd = &cobra.Command{
+// NewDownCmd creates and returns the down command of hln
+func NewDownCmd() *cobra.Command {
+	downCmd := &cobra.Command{
 		Use:   "down",
 		Short: "Shut down the application and clear resources",
 		Args:  cobra.ArbitraryArgs,
 		RunE:  downProj,
 	}
-)
+
+	return downCmd
+}
 
 func downProj(c *cobra.Command, args []string) error {
 	lg := logger.New()
