@@ -4,13 +4,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	listCmd = &cobra.Command{
+// NewListCmd creates and returns the list command of hln
+func NewListCmd() *cobra.Command {
+	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List items",
+		Short: "Parent command of list stack",
 	}
-)
 
-func init() {
-	listCmd.AddCommand(listStackCmd)
+	listCmd.AddCommand(NewListStackCmd())
+
+	return listCmd
 }

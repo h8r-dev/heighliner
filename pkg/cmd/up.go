@@ -15,22 +15,25 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
-var (
-	upCmd = &cobra.Command{
+// NewUpCmd creates and returns the up command of hln
+func NewUpCmd() *cobra.Command {
+	var err error
+
+	upCmd := &cobra.Command{
 		Use:   "up",
 		Short: "Spin up your application",
 		Args:  cobra.ArbitraryArgs,
 		RunE:  upProj,
 	}
-)
 
-func init() {
 	upCmd.Flags().StringArray("set", []string{}, "The input values of your project")
 	upCmd.Flags().BoolP("interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
 	upCmd.Flags().Bool("no-cache", false, "Don't cache")
-	if err := viper.BindPFlags(upCmd.Flags()); err != nil {
+	if err = viper.BindPFlags(upCmd.Flags()); err != nil {
 		log.Fatal().Err(err).Msg("failed to bind flags")
 	}
+
+	return upCmd
 }
 
 func upProj(c *cobra.Command, args []string) error {
