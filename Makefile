@@ -65,3 +65,45 @@ staticcheck:
 fmt:
 	go fmt ./...
 
+.PHONY: golangci
+golangci: install-golamnci
+ifneq ($(shell which golangci-lint),)
+GOLANGCILINT=$(shell which golangci-lint)
+else ifeq ($(shell which $(GOBIN)/golangci-lint),)
+GOLANGCILINT=$(GOBIN)/golangci-lint
+else
+GOLANGCILINT=$(GOBIN)/golangci-lint
+endif
+
+.PHONY: install-golamnci
+install-golamnci:
+ifneq ($(shell which golangci-lint),)
+	@$(OK) golangci-lint is already installed
+else ifeq ($(shell which $(GOBIN)/golangci-lint),)
+	@{\
+	set -e ;\
+	echo 'installing golangci-lint-$(GOLANGCILINT_VERSION)' ;\
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) $(GOLANGCILINT_VERSION) ;\
+	echo 'Successfully installed' ;\
+	}
+else
+	@$(OK) golangci-lint is already installed
+endif
+
+.PHONY: staticchecktool
+staticchecktool: install-staticchecktool
+ifeq (, $(shell which staticcheck))
+STATICCHECK=$(GOBIN)/staticcheck
+else
+STATICCHECK=$(shell which staticcheck)
+endif
+
+.PHONY: install-staticchecktool
+install-staticchecktool:
+ifeq ($(shell which staticcheck),)
+	@{ \
+	set -e ;\
+	echo 'installing honnef.co/go/tools/cmd/staticcheck ' ;\
+	GO111MODULE=off go get honnef.co/go/tools/cmd/staticcheck ;\
+	}
+endif
