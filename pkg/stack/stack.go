@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-getter/v2"
-	"github.com/otiai10/copy"
 
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
@@ -26,9 +25,7 @@ var (
 
 // Stacks stores all stacks that currently usable
 var Stacks = map[string]struct{}{
-	"sample":       {},
-	"go-gin-stack": {},
-	"gin-vue":      {},
+	"gin-vue": {},
 }
 
 // New returns a Stack struct
@@ -48,6 +45,7 @@ func New(name string) (*Stack, error) {
 		URL:     url,
 		Version: version,
 	}
+
 	return s, nil
 }
 
@@ -55,7 +53,7 @@ func New(name string) (*Stack, error) {
 func (s *Stack) Pull() error {
 	req := &getter.Request{
 		Src: s.URL,
-		Dst: state.Cache,
+		Dst: state.GetCache(),
 	}
 	err := util.GetWithTracker(req)
 	if err != nil {
@@ -63,9 +61,4 @@ func (s *Stack) Pull() error {
 		return fmt.Errorf("failed to pull stack: %w", err)
 	}
 	return nil
-}
-
-// Copy the stack into dst dir
-func (s *Stack) Copy(src, dst string) error {
-	return copy.Copy(src, dst)
 }

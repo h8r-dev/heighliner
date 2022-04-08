@@ -11,16 +11,16 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
-// NewListStackCmd creates and returns the list stack command of hln
-func NewListStackCmd() *cobra.Command {
-	listStackCmd := &cobra.Command{
-		Use:   "stack",
+// NewListStacksCmd creates and returns the list stack command of hln
+func NewListStacksCmd() *cobra.Command {
+	listStacksCmd := &cobra.Command{
+		Use:   "stacks",
 		Short: "List stacks",
 		Args:  cobra.NoArgs,
 		RunE:  listStacks,
 	}
 
-	return listStackCmd
+	return listStacksCmd
 }
 
 func listStacks(c *cobra.Command, args []string) error {

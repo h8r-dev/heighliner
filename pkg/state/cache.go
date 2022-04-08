@@ -1,43 +1,31 @@
 package state
 
 import (
-	"fmt"
 	"os"
 	"path"
 
-	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
-var (
-	// Cache is the dir where stacks are stored locally
-	Cache string
-)
-
-func init() {
-	if err := initCache(); err != nil {
-		log.Fatal().Err(err).Msg("failed to initialize cache home")
-	}
-}
-
-func initCache() error {
-	Cache = os.Getenv("HLN_CACHE_HOME")
-	if Cache == "" {
-		cacheDir, err := os.UserCacheDir()
+// GetCache returns the path to the cache directory.
+func GetCache() string {
+	var cache string
+	cacheDir := viper.GetString("cache_home")
+	if cacheDir == "" {
+		userCache, err := os.UserCacheDir()
 		if err != nil {
-			return fmt.Errorf("failed to get user cache dir: %w", err)
+			panic(err)
 		}
-		Cache = path.Join(cacheDir, "heighliner")
+		cache = path.Join(userCache, "heighliner")
+	} else {
+		cache = path.Join(cacheDir, "heighliner")
 	}
-	err := os.MkdirAll(Cache, 0755)
-	if err != nil {
-		return fmt.Errorf("failed to create dir %s: %w", Cache, err)
-	}
-	return nil
+	return cache
 }
 
-// CleanCache cleans all cached cuemods and stacks
+// CleanCache removes all cached resources.
 func CleanCache() {
-	if err := os.RemoveAll(Cache); err != nil {
+	if err := os.RemoveAll(GetCache()); err != nil {
 		panic(err)
 	}
 }

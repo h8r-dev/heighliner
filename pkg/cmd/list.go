@@ -8,10 +8,10 @@ import (
 func NewListCmd() *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "Parent command of list stack",
+		Short: "List apps or stacks",
 	}
 
-	listCmd.AddCommand(NewListStackCmd())
+	listCmd.AddCommand(NewListStacksCmd())
 
 	return listCmd
 }

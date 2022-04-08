@@ -20,13 +20,13 @@ func NewRootCmd() *cobra.Command {
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
 	}
 
+	testCmd := ActionGenerator("test", "Test your application")
+	testCmd.Hidden = true
 	rootCmd.AddCommand(
 		NewListCmd(),
-		newCmd,
-		NewUpCmd(),
-		NewDownCmd(),
-		dropCmd,
 		NewVersionCmd(),
+		ActionGenerator("up", "Spin up your application"),
+		testCmd,
 	)
 
 	rootCmd.PersistentFlags().String("log-format", "auto", "Log format (auto, plain, json)")

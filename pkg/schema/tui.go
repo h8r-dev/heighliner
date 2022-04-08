@@ -64,6 +64,9 @@ func initialModel(p Parameter) model {
 	ti.Focus()
 	ti.CharLimit = 0
 	ti.Width = 50
+	if p.Type == "secret" {
+		ti.EchoMode = textinput.EchoPassword
+	}
 
 	return model{
 		textInput: ti,
