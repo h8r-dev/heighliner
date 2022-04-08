@@ -1,5 +1,6 @@
 SHELL := bash# we want bash behaviour in all shell invocations
 
+GIT_REVISION := $(shell git rev-parse --short HEAD)
 GOLANGCILINT_VERSION ?= latest
 ERR = echo ${TIME} ${RED}[FAIL]${CNone}
 
@@ -15,7 +16,7 @@ BOLD := \033[1m
 NORMAL := \033[0m
 GREEN := \033[1;32m
 
-OK		= echo [ OK ]
+OK = echo [ OK ]
 
 XDG_CONFIG_HOME ?= $(CURDIR)/.config
 export XDG_CONFIG_HOME
@@ -32,10 +33,6 @@ hln: # build client binary
 	CGO_ENABLED=0 go build -o bin/hln -ldflags '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/main.go
 	@echo "Saved to bin/hln"
 
-GIT_REVISION := $(shell git rev-parse --short HEAD)
-.PHONY: server
-server: # build server binary
-	CGO_ENABLED=0 go build -o bin/server '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/server/main.go -ldflags
 
 .PHONY: test
 test: check-diff unit-test-core # Run tests
@@ -55,43 +52,36 @@ vet:
 unit-test-core:
 	go test ./...
 
-lint: golangci
+lint:
+	ifeq ($(shell which golangci-lint),)
+		@{ \
+		set -e ;\
+		echo 'installing golangci-lint-$(GOLANGCILINT_VERSION)' ;\
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) $(GOLANGCILINT_VERSION) ;\
+		echo 'Successfully installed' ;\
+		}
+	GOLANGCILINT=$(GOBIN)/golangci-lint
+	else
+		@$(OK) golangci-lint is already installed
+	GOLANGCILINT=$(shell which golangci-lint)
+	endif
+
 	$(GOLANGCILINT) run ./...
 
-staticcheck: staticchecktool
+staticcheck:
+	ifeq ($(shell which staticcheck),)
+		@{ \
+		set -e ;\
+		echo 'installing honnef.co/go/tools/cmd/staticcheck ' ;\
+		GO111MODULE=off go get honnef.co/go/tools/cmd/staticcheck ;\
+		}
+	STATICCHECK=$(GOBIN)/staticcheck
+	else
+	STATICCHECK=$(shell which staticcheck)
+	endif
 	$(STATICCHECK) ./...
 
 # Run go fmt against code
 fmt:
 	go fmt ./...
 
-.PHONY: golangci
-golangci:
-ifneq ($(shell which golangci-lint),)
-	@$(OK) golangci-lint is already installed
-GOLANGCILINT=$(shell which golangci-lint)
-else ifeq (, $(shell which $(GOBIN)/golangci-lint))
-	@{ \
-	set -e ;\
-	echo 'installing golangci-lint-$(GOLANGCILINT_VERSION)' ;\
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) $(GOLANGCILINT_VERSION) ;\
-	echo 'Successfully installed' ;\
-	}
-GOLANGCILINT=$(GOBIN)/golangci-lint
-else
-	@$(OK) golangci-lint is already installed
-GOLANGCILINT=$(GOBIN)/golangci-lint
-endif
-
-.PHONY: staticchecktool
-staticchecktool:
-ifeq (, $(shell which staticcheck))
-	@{ \
-	set -e ;\
-	echo 'installing honnef.co/go/tools/cmd/staticcheck ' ;\
-	GO111MODULE=off go get honnef.co/go/tools/cmd/staticcheck ;\
-	}
-STATICCHECK=$(GOBIN)/staticcheck
-else
-STATICCHECK=$(shell which staticcheck)
-endif
