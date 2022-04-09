@@ -19,14 +19,13 @@ import (
 // ActionGenerator generates a command with a description and a callback.
 func ActionGenerator(name, desc string) *cobra.Command {
 	actionCmd := &cobra.Command{
-		Use:   name + " [APPLICATION]",
+		Use:   name,
 		Short: desc,
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.NoArgs,
 		RunE:  actionFunc(name),
 	}
 
 	actionCmd.Flags().StringP("stack", "s", "", "Stack name or path")
-	actionCmd.Flags().StringP("plan", "p", "./plans", "Relative path to your plan")
 	actionCmd.Flags().StringArray("set", []string{}, "The input values of your project")
 	actionCmd.Flags().BoolP("interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
 	actionCmd.Flags().Bool("no-cache", false, "Disable caching")
@@ -37,7 +36,6 @@ func ActionGenerator(name, desc string) *cobra.Command {
 func actionFunc(action string) func(c *cobra.Command, args []string) error {
 	return func(c *cobra.Command, args []string) error {
 		var err error
-
 		lg := logger.New()
 
 		stackSrc := c.Flags().Lookup("stack").Value.String()
@@ -87,6 +85,9 @@ func actionFunc(action string) func(c *cobra.Command, args []string) error {
 
 		// Execute the action.
 		plan := c.Flags().Lookup("plan").Value.String()
+		if plan == "" {
+			plan = "./plans"
+		}
 		newArgs := []string{}
 		newArgs = append(newArgs,
 			"--log-format", viper.GetString("log-format"),

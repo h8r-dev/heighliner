@@ -21,7 +21,9 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	testCmd := ActionGenerator("test", "Test your application")
+	testCmd.Flags().StringP("plan", "p", "", "Path to your test plan")
 	testCmd.Hidden = true
+
 	rootCmd.AddCommand(
 		NewListCmd(),
 		NewVersionCmd(),
