@@ -53,13 +53,9 @@ unit-test-core:
 	go test ./...
 
 lint:
-	GOBIN=$(GOBIN) ./scripts/ci/install_golangci.sh
-	GOLANGCILINT=$(shell which golangci-lint)
 	$(GOLANGCILINT) run ./...
 
 staticcheck:
-	./scripts/ci/install_staticcheck.sh
-	STATICCHECK=$(shell which staticcheck)
 	$(STATICCHECK) ./...
 
 # Run go fmt against code
