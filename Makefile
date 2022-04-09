@@ -1,6 +1,7 @@
 SHELL := bash# we want bash behaviour in all shell invocations
 
 GIT_REVISION := $(shell git rev-parse --short HEAD)
+GOLANGCILINT_VERSION ?= latest
 ERR = echo ${TIME} ${RED}[FAIL]${CNone}
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
