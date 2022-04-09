@@ -52,10 +52,10 @@ vet:
 unit-test-core:
 	go test ./...
 
-lint:
+lint: golangci
 	$(GOLANGCILINT) run ./...
 
-staticcheck:
+staticcheck: staticchecktool
 	$(STATICCHECK) ./...
 
 # Run go fmt against code
@@ -63,7 +63,7 @@ fmt:
 	go fmt ./...
 
 .PHONY: golangci
-golangci: install-golamnci
+golangci: install-golangci
 ifneq ($(shell which golangci-lint),)
 GOLANGCILINT=$(shell which golangci-lint)
 else ifeq ($(shell which $(GOBIN)/golangci-lint),)
@@ -72,12 +72,12 @@ else
 GOLANGCILINT=$(GOBIN)/golangci-lint
 endif
 
-.PHONY: install-golamnci
-install-golamnci:
+.PHONY: install-golangci
+install-golangci:
 ifneq ($(shell which golangci-lint),)
 	@$(OK) golangci-lint is already installed
 else ifeq ($(shell which $(GOBIN)/golangci-lint),)
-	@{\
+	@{ \
 	set -e ;\
 	echo 'installing golangci-lint-$(GOLANGCILINT_VERSION)' ;\
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) $(GOLANGCILINT_VERSION) ;\
