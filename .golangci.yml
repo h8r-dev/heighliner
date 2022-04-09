@@ -110,6 +110,7 @@ linters-settings:
 linters:
   enable:
     - megacheck
+    - exportloopref
     - govet
     - gocyclo
     - gocritic
@@ -124,6 +125,7 @@ linters:
   disable:
     - noctx
     - gosec
+    - scopelint
 
   presets:
     - bugs
