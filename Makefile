@@ -42,8 +42,8 @@ reviewable: fmt vet lint staticcheck # Make your PR ready to review
 	go mod tidy
 
 check-diff: reviewable # Execute auto-gen code commands and ensure branch is clean
-	git --no-pager diff
-	git diff --quiet || ($(ERR) please run 'make reviewable' to include all changes && false)
+	@git --no-pager diff
+	@git diff --quiet || ($(ERR) please run 'git add .' to include all changes && false)
 	@$(OK) branch is clean
 
 vet:
