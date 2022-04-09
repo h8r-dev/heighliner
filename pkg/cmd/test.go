@@ -11,30 +11,27 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/project"
 	"github.com/h8r-dev/heighliner/pkg/schema"
-	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
 // ActionGenerator generates a command with a description and a callback.
-func ActionGenerator(name, desc string) *cobra.Command {
-	actionCmd := &cobra.Command{
-		Use:   name,
-		Short: desc,
+func newTestCmd() *cobra.Command {
+	var interactive bool
+
+	testCmd := &cobra.Command{
+		Use:   "test",
+		Short: "Test your stack",
 		Args:  cobra.NoArgs,
-		RunE:  actionFunc(name),
 	}
 
-	actionCmd.Flags().StringP("stack", "s", "", "Stack name or path")
-	actionCmd.Flags().StringArray("set", []string{}, "The input values of your project")
-	actionCmd.Flags().BoolP("interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
-	actionCmd.Flags().Bool("no-cache", false, "Disable caching")
+	testCmd.Flags().StringP("stack", "s", "", "Path to your stack directory")
+	testCmd.Flags().StringP("plan", "p", "", "Relative path to your test plan")
+	testCmd.Flags().StringArray("set", []string{}, "The input values of your project")
+	testCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
+	testCmd.Flags().Bool("no-cache", false, "Disable caching")
 
-	return actionCmd
-}
-
-func actionFunc(action string) func(c *cobra.Command, args []string) error {
-	return func(c *cobra.Command, args []string) error {
+	testCmd.RunE = func(c *cobra.Command, args []string) error {
 		var err error
 		lg := logger.New()
 
@@ -49,19 +46,14 @@ func actionFunc(action string) func(c *cobra.Command, args []string) error {
 		}
 
 		// Create a project object.
-		if _, ok := stack.Stacks[stackSrc]; ok {
-			lg.Info().Msgf("Using official stack %s", stackSrc)
-			stackSrc = path.Join(state.GetCache(), stackSrc)
-		} else {
-			stackSrc = util.Abs(stackSrc)
-			lg.Info().Msgf("Using local stack %s", stackSrc)
-			fi, err := os.Stat(stackSrc)
-			if err != nil {
-				lg.Fatal().Err(err).Msgf("failed to find stack in %s", stackSrc)
-			}
-			if !fi.IsDir() {
-				lg.Fatal().Msgf("%s is not a directory", stackSrc)
-			}
+		stackSrc = util.Abs(stackSrc)
+		lg.Info().Msgf("Using local stack %s", stackSrc)
+		fi, err := os.Stat(stackSrc)
+		if err != nil {
+			lg.Fatal().Err(err).Msgf("failed to find stack in %s", stackSrc)
+		}
+		if !fi.IsDir() {
+			lg.Fatal().Msgf("%s is not a directory", stackSrc)
 		}
 		p := project.New(stackSrc, path.Join(state.GetTemp(), path.Base(stackSrc)))
 
@@ -84,16 +76,14 @@ func actionFunc(action string) func(c *cobra.Command, args []string) error {
 		}
 
 		// Execute the action.
-		plan := c.Flags().Lookup("plan").Value.String()
-		if plan == "" {
-			plan = "./plans"
-		}
 		newArgs := []string{}
 		newArgs = append(newArgs,
 			"--log-format", viper.GetString("log-format"),
 			"--log-level", viper.GetString("log-level"),
-			"-p", plan,
-			"do", action)
+			"do", "test")
+		if plan := c.Flags().Lookup("plan").Value.String(); plan != "" {
+			newArgs = append(newArgs, "--plan", plan)
+		}
 		if c.Flags().Lookup("no-cache").Value.String() == "true" {
 			newArgs = append(newArgs, "--no-cache")
 		}
@@ -104,10 +94,12 @@ func actionFunc(action string) func(c *cobra.Command, args []string) error {
 		// Print the output.
 		b, err := os.ReadFile("output.yaml")
 		if err != nil {
-			lg.Warn().Err(err).Msg("no output information")
+			lg.Info().Err(err).Msg("no output information")
 		} else {
 			fmt.Fprintf(os.Stdout, "\n%s", b)
 		}
 		return nil
 	}
+
+	return testCmd
 }
