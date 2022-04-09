@@ -25,7 +25,7 @@ func newUpCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	upCmd.Flags().StringP("stack", "s", "", "Stack name or path")
+	upCmd.Flags().StringP("stack", "s", "", "Name of your stack")
 	upCmd.Flags().StringArray("set", []string{}, "The input values of your project")
 	upCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
 	upCmd.Flags().Bool("no-cache", false, "Disable caching")

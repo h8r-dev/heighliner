@@ -9,7 +9,6 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
-// NewVersionCmd creates and returns the version command of hln
 func newVersionCmd() *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:   "version",

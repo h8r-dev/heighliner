@@ -11,7 +11,6 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
-// NewListStacksCmd creates and returns the list stack command of hln
 func newListStacksCmd() *cobra.Command {
 	listStacksCmd := &cobra.Command{
 		Use:   "stacks",

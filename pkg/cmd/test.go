@@ -15,7 +15,6 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
-// ActionGenerator generates a command with a description and a callback.
 func newTestCmd() *cobra.Command {
 	var interactive bool
 
