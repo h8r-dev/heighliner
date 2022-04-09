@@ -6,7 +6,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
+	"helm.sh/helm/pkg/strvals"
 )
 
 // Schema represents a input schema of a stack.
@@ -30,33 +32,25 @@ func New() *Schema {
 	return &Schema{}
 }
 
-// Load loads the schema from src file.
-// NOTE: Make sure you are already in the project dir.
-func (s *Schema) Load() error {
-	file, err := os.Open(path.Join("schemas", "schema.yaml"))
+// AutomaticEnv sets envs automatically.
+func (s *Schema) AutomaticEnv(interactive bool) error {
+	var err = s.load()
 	if err != nil {
-		return fmt.Errorf("couldn't find schema :%w", err)
+		return err
 	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
-		return fmt.Errorf("failed to read schema file %w", err)
-	}
-	if err = yaml.Unmarshal(b, s); err != nil {
-		return fmt.Errorf("syntax error in schema: %w", err)
-	}
-	return nil
-}
 
-// SetEnv sets up input values.
-func (s *Schema) SetEnv(m map[string]interface{}, interactive bool) error {
+	// Parse --set flag
+	values := viper.GetStringSlice("set")
+	sets := map[string]interface{}{}
+	for _, value := range values {
+		if err := strvals.ParseInto(value, sets); err != nil {
+			return fmt.Errorf("failed to parse --set flag: %w", err)
+		}
+	}
+
 	for _, v := range s.Parameters {
 		// Try to fetch value from --set flag
-		val, ok := m[v.Key]
+		val, ok := sets[v.Key]
 		if ok && val != nil {
 			if err := os.Setenv(v.Key, val.(string)); err != nil {
 				panic(err)
@@ -86,6 +80,28 @@ func (s *Schema) SetEnv(m map[string]interface{}, interactive bool) error {
 				return fmt.Errorf("couldn't find value of %s, which is required", v.Title)
 			}
 		}
+	}
+
+	return nil
+}
+
+// NOTE: Make sure you are already in the project dir.
+func (s *Schema) load() error {
+	file, err := os.Open(path.Join("schemas", "schema.yaml"))
+	if err != nil {
+		return fmt.Errorf("couldn't find schema :%w", err)
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("failed to read schema file %w", err)
+	}
+	if err = yaml.Unmarshal(b, s); err != nil {
+		return fmt.Errorf("syntax error in schema: %w", err)
 	}
 	return nil
 }
