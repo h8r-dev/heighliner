@@ -9,14 +9,31 @@ It is also built in a modular approach and you can extend it with more developer
 
 ## Quickstart
 
-Build client binary:
+### Build client binary:
 
 ```shell
 make hln
 export PATH="$PWD/bin:$PATH"
 ```
 
-> Requirements:
+### Choose a stack
+
+List all heighliner stacks:
+
+```shell
+hln list stacks
+```
+
+Output:
+
+```shell
+NAME          VERSION  DESCRIPTION
+gin-vue       1.0.0    
+```
+
+At present `gin-vue` is the only available stack.
+
+> Requirements of gin-vue stack:
 > - Install a [Kubernetes Cluster](https://heighliner.cloud/docs/getting_started/installation#2-install-kubernetes-cluster) and export the kubeconfig file.
 > - Create a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with the following scopes selected.
 >   - `repo`
@@ -27,39 +44,12 @@ export PATH="$PWD/bin:$PATH"
 >   - `user`
 >   - `delete_repo`
 
-## Choose a stack
-
-List all heighliner stacks:
-
-```shell
-hln list stack
-```
-
-Output:
-
-```shell
-NAME          VERSION  DESCRIPTION
-gin-vue       1.0.0    gin-vue helps you configure many cloud native components including prometheus, grafana, nocalhost, etc.
-```
-
-At present `gin-vue` is the only available stack.
-
-## Create a project
-
-Use the stack you have chosen previously to create a heighliner project.
-
-```shell
-hln new -s=gin-vue
-```
-
-> If you have an existed project, then `hln` will prevent you from creating a new one. You can run `hln drop` to drop the old one.
-
-## Spin up your application
+### Spin up your application
 
 Spin up your application interactively:
 
 ```shell
-hln up -i
+hln -s gin-vue -i up
 ```
 
 Input the values one by one according to the promt and your application will be set up automatically.
@@ -102,6 +92,12 @@ infra:
 ```
 
 Congrats! You have initialized your application with `hln` successfully. Click the github url to start developing your new application. All of the Cloud-Native infrastructure and CI/CD pipelines have been set up properly. Feel free to click these links and input the account and password of each component to see its dashboard.
+
+## Test stacks
+
+```
+hln -s /path/to/your/stack -p ./relative/path/to/your/plan test
+```
 
 ## Contributing
 
