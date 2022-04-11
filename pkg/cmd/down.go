@@ -21,8 +21,8 @@ func newDownCmd() *cobra.Command {
 	var interactive bool
 
 	downCmd := &cobra.Command{
-		Use:   "up",
-		Short: "Spin up your application",
+		Use:   "down",
+		Short: "Take down your application",
 		Args:  cobra.NoArgs,
 	}
 
