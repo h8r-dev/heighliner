@@ -59,11 +59,11 @@ func (p *Project) init() error {
 	}
 
 	// Initialize & update dagger project
-	err = util.Exec("dagger", "project", "init")
+	err = util.Exec(util.Dagger, "project", "init")
 	if err != nil {
 		return err
 	}
-	err = util.Exec("dagger", "project", "update")
+	err = util.Exec(util.Dagger, "project", "update")
 	if err != nil {
 		return err
 	}

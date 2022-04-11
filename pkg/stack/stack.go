@@ -56,6 +56,7 @@ func New(name string) (*Stack, error) {
 func (s *Stack) Update() error {
 	ok := s.check()
 	if !ok {
+		s.clean()
 		if err := s.pull(); err != nil {
 			s.clean()
 			return err
