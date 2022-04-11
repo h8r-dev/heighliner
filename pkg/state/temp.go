@@ -17,10 +17,3 @@ func GetTemp() string {
 	temp = path.Join(tempDir, "heighliner")
 	return temp
 }
-
-// CleanTemp removes all temporary resources.
-func CleanTemp() {
-	if err := os.RemoveAll(GetTemp()); err != nil {
-		panic(err)
-	}
-}
