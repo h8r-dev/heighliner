@@ -21,7 +21,7 @@ Check out the [documentation](https://heighliner.dev/docs/getting_started/first_
 ## Test stacks
 
 ```shell
-hln -s /path/to/your/stack -p ./relative/path/to/your/plan test
+hln test -p ./relative/path/to/your/plan
 ```
 
 ## Contributing

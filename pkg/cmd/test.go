@@ -30,7 +30,7 @@ func newTestCmd() *cobra.Command {
 	testCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
 	testCmd.Flags().Bool("no-cache", false, "Disable caching")
 
-	testCmd.RunE = func(c *cobra.Command, args []string) error {
+	testCmd.Run = func(c *cobra.Command, args []string) {
 		var err error
 		lg := logger.New()
 
@@ -58,20 +58,16 @@ func newTestCmd() *cobra.Command {
 
 		// Initialize the project.
 		// Enter the project dir automatically.
-		state.CleanTemp()
 		err = p.Init()
-		defer p.Clean()
 		if err != nil {
-			p.Clean()
 			lg.Fatal().Err(err).Msg("failed to initialize project")
 		}
 
 		// Set input values.
 		sch := schema.New()
-		interactive := c.Flags().Lookup("interactive").Value.String()
-		err = sch.AutomaticEnv(interactive == "true")
+		err = sch.AutomaticEnv(interactive)
 		if err != nil {
-			return fmt.Errorf("failed to set env: %w", err)
+			lg.Fatal().Err(err).Msg("failed to set automatic env")
 		}
 
 		// Execute the action.
@@ -86,8 +82,9 @@ func newTestCmd() *cobra.Command {
 		if c.Flags().Lookup("no-cache").Value.String() == "true" {
 			newArgs = append(newArgs, "--no-cache")
 		}
-		if err := util.Exec("dagger", newArgs...); err != nil {
-			return err
+		err = util.Exec("dagger", newArgs...)
+		if err != nil {
+			lg.Fatal().Err(err).Msg("failed to execute stack")
 		}
 
 		// Print the output.
@@ -97,7 +94,6 @@ func newTestCmd() *cobra.Command {
 		} else {
 			fmt.Fprintf(os.Stdout, "\n%s", b)
 		}
-		return nil
 	}
 
 	return testCmd

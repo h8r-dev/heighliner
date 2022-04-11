@@ -3,6 +3,8 @@ package stack
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path"
 
 	"github.com/hashicorp/go-getter/v2"
 
@@ -10,7 +12,7 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
-// Stack is a CloudNative app template
+// Stack is a CloudNative application template.
 type Stack struct {
 	Name        string `json:"name" yaml:"name"`
 	URL         string `json:"url" yaml:"url"`
@@ -19,16 +21,17 @@ type Stack struct {
 }
 
 var (
-	// ErrNoSuchStack means heighliner can't find the stack in localstorage
+	// ErrNoSuchStack means heighliner can't find the stack in localstorage.
 	ErrNoSuchStack = errors.New("target stack doesn't exist")
 )
 
-// Stacks stores all stacks that currently usable
+// Stacks stores all available stacks.
 var Stacks = map[string]struct{}{
-	"gin-vue": {},
+	"gin-vue":  {},
+	"gin-next": {},
 }
 
-// New returns a Stack struct
+// New returns a Stack object.
 func New(name string) (*Stack, error) {
 	const defaultVersion = "latest"
 
@@ -49,16 +52,37 @@ func New(name string) (*Stack, error) {
 	return s, nil
 }
 
-// Pull downloads and extracts the stack
-func (s *Stack) Pull() error {
+// Update upgrades the stack if necessary.
+func (s *Stack) Update() error {
+	ok := s.check()
+	if !ok {
+		if err := s.pull(); err != nil {
+			s.clean()
+			return err
+		}
+	}
+	return nil
+}
+
+// check checks if the stack is up to date.
+func (s *Stack) check() bool {
+	return false
+}
+
+func (s *Stack) pull() error {
 	req := &getter.Request{
 		Src: s.URL,
 		Dst: state.GetCache(),
 	}
 	err := util.GetWithTracker(req)
 	if err != nil {
-		state.CleanCache()
-		return fmt.Errorf("failed to pull stack: %w", err)
+		return err
 	}
 	return nil
+}
+
+func (s *Stack) clean() {
+	if err := os.RemoveAll(path.Join(state.GetCache(), s.Name)); err != nil {
+		panic(err)
+	}
 }

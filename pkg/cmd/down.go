@@ -17,25 +17,25 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
-func newUpCmd() *cobra.Command {
+func newDownCmd() *cobra.Command {
 	var interactive bool
 
-	upCmd := &cobra.Command{
+	downCmd := &cobra.Command{
 		Use:   "up",
 		Short: "Spin up your application",
 		Args:  cobra.NoArgs,
 	}
 
-	upCmd.Flags().StringP("stack", "s", "", "Name of your stack")
-	upCmd.Flags().StringArray("set", []string{}, "The input values of your project")
-	upCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
-	upCmd.Flags().Bool("no-cache", false, "Disable caching")
+	downCmd.Flags().StringP("stack", "s", "", "Name of your stack")
+	downCmd.Flags().StringArray("set", []string{}, "The input values of your project")
+	downCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
+	downCmd.Flags().Bool("no-cache", false, "Disable caching")
 
-	if err := upCmd.MarkFlagRequired("stack"); err != nil {
+	if err := downCmd.MarkFlagRequired("stack"); err != nil {
 		log.Fatal().Err(err).Msg("Failed to mark flag required")
 	}
 
-	upCmd.Run = func(c *cobra.Command, args []string) {
+	downCmd.Run = func(c *cobra.Command, args []string) {
 		var err error
 		lg := logger.New()
 
@@ -73,7 +73,7 @@ func newUpCmd() *cobra.Command {
 		newArgs = append(newArgs,
 			"--log-format", viper.GetString("log-format"),
 			"--log-level", viper.GetString("log-level"),
-			"do", "up",
+			"do", "down",
 			"-p", "./plans")
 		if c.Flags().Lookup("no-cache").Value.String() == "true" {
 			newArgs = append(newArgs, "--no-cache")
@@ -92,5 +92,5 @@ func newUpCmd() *cobra.Command {
 		}
 	}
 
-	return upCmd
+	return downCmd
 }

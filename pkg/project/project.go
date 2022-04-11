@@ -29,8 +29,7 @@ func New(src, home string) *Project {
 func (p *Project) Init() error {
 	var err error
 
-	p.Clean()
-
+	p.clean()
 	err = copy.Copy(p.Src, p.Home)
 	if err != nil {
 		return err
@@ -42,13 +41,6 @@ func (p *Project) Init() error {
 	}
 
 	return nil
-}
-
-// Clean cleans the project
-func (p *Project) Clean() {
-	if err := os.RemoveAll(p.Home); err != nil {
-		panic(err)
-	}
 }
 
 func (p *Project) init() error {
@@ -77,4 +69,10 @@ func (p *Project) init() error {
 	}
 
 	return nil
+}
+
+func (p *Project) clean() {
+	if err := os.RemoveAll(p.Home); err != nil {
+		panic(err)
+	}
 }

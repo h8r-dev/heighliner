@@ -22,10 +22,3 @@ func GetCache() string {
 	}
 	return cache
 }
-
-// CleanCache removes all cached resources.
-func CleanCache() {
-	if err := os.RemoveAll(GetCache()); err != nil {
-		panic(err)
-	}
-}
