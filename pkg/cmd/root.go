@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
+	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
 // NewRootCmd creates and returns the root command of hln
@@ -18,6 +19,12 @@ func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "hln",
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
+	}
+
+	rootCmd.PersistentPreRun = func(c *cobra.Command, _ []string) {
+		if err := util.CheckDagger(); err != nil {
+			log.Fatal().Err(err).Msg("failed to install dagger")
+		}
 	}
 
 	rootCmd.AddCommand(

@@ -19,9 +19,10 @@ func newTestCmd() *cobra.Command {
 	var interactive bool
 
 	testCmd := &cobra.Command{
-		Use:   "test",
-		Short: "Test your stack",
-		Args:  cobra.NoArgs,
+		Use:    "test",
+		Short:  "Test your stack",
+		Args:   cobra.NoArgs,
+		Hidden: true,
 	}
 
 	testCmd.Flags().StringP("stack", "s", "", "Path to your stack directory")
@@ -82,7 +83,9 @@ func newTestCmd() *cobra.Command {
 		if c.Flags().Lookup("no-cache").Value.String() == "true" {
 			newArgs = append(newArgs, "--no-cache")
 		}
-		err = util.Exec("dagger", newArgs...)
+		err = util.Exec(
+			util.Dagger,
+			newArgs...)
 		if err != nil {
 			lg.Fatal().Err(err).Msg("failed to execute stack")
 		}
