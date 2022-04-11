@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	// Dagger represents the path to the dagger binary.
 	Dagger           = path.Join(state.GetHln(), "bin", "dagger")
 	installDaggerSrc = "https://dl.dagger.io/dagger/install.sh"
 )
