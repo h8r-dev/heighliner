@@ -95,6 +95,7 @@ require (
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/xanzy/go-gitlab v0.50.3 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
+	go.uber.org/zap v1.19.0 // indirect
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
 	golang.org/x/mod v0.5.0 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
