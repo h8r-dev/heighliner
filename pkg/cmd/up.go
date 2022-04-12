@@ -86,7 +86,7 @@ func newUpCmd() *cobra.Command {
 		}
 
 		// Print the output.
-		b, err := os.ReadFile("output.yaml")
+		b, err := os.ReadFile(appOutputPath)
 		if err != nil {
 			lg.Warn().Err(err).Msg("no output information")
 		} else {
