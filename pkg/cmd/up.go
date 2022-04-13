@@ -41,9 +41,10 @@ func newUpCmd() *cobra.Command {
 		// Validate args
 		stackName := c.Flags().Lookup("stack").Value.String()
 		dir := c.Flags().Lookup("dir").Value.String()
-		if dir != "" && stackName != "" {
+		switch {
+		case dir != "" && stackName != "":
 			lg.Fatal().Msg("please do not specify both stack and dir at the same time")
-		} else if stackName != "" {
+		case stackName != "":
 			// Update the stack.
 			s, err := stack.New(stackName)
 			if err != nil {
@@ -56,7 +57,7 @@ func newUpCmd() *cobra.Command {
 			p = project.New(
 				path.Join(state.GetCache(), path.Base(stackName)),
 				path.Join(state.GetTemp(), path.Base(stackName)))
-		} else {
+		default:
 			stackSrc := util.Abs(dir)
 			lg.Info().Msgf("Using local stack %s", stackSrc)
 			fi, err := os.Stat(stackSrc)
