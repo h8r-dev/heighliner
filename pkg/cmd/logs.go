@@ -26,7 +26,7 @@ type LogsOptions struct {
 	Follow    bool
 	Container string
 
-	ClientSet *kubernetes.Clientset
+	Kubecli *kubernetes.Clientset
 }
 
 func newLogsCmd() *cobra.Command {
@@ -39,7 +39,7 @@ func newLogsCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 			kubeconfigPath := cmd.Flags().Lookup("kubeconfig").Value.String()
-			o.ClientSet, err = k8sutil.MakeKubeClient(kubeconfigPath)
+			o.Kubecli, err = k8sutil.MakeKubeClient(kubeconfigPath)
 			if err != nil {
 				return fmt.Errorf("failed to make kube client: %w", err)
 			}
@@ -63,7 +63,7 @@ func (o *LogsOptions) addFlags(cmd *cobra.Command) {
 }
 
 func (o *LogsOptions) getPodLogs() error {
-	request := o.ClientSet.CoreV1().Pods(o.Namespace).GetLogs(o.Pod, &v1.PodLogOptions{
+	request := o.Kubecli.CoreV1().Pods(o.Namespace).GetLogs(o.Pod, &v1.PodLogOptions{
 		Container: o.Container,
 		Follow:    o.Follow,
 	})

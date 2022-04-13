@@ -9,9 +9,8 @@ type Output struct {
 
 // Application defines the application specific information.
 type Application struct {
-	Namespace string `json:"namespace,omitempty"`
-	Domain    string `json:"domain,omitempty"`
-	Ingress   string `json:"ingress,omitempty"`
+	Domain  string `json:"domain,omitempty"`
+	Ingress string `json:"ingress,omitempty"`
 }
 
 // Repository defines the repository specific information.
