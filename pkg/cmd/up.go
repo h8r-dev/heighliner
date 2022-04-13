@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -27,35 +26,53 @@ func newUpCmd() *cobra.Command {
 	}
 
 	upCmd.Flags().StringP("stack", "s", "", "Name of your stack")
+	upCmd.Flags().String("dir", "", "Path to your local stack")
 	upCmd.Flags().StringArray("set", []string{}, "The input values of your project")
 	upCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
 	upCmd.Flags().Bool("no-cache", false, "Disable caching")
 
-	if err := upCmd.MarkFlagRequired("stack"); err != nil {
-		log.Fatal().Err(err).Msg("Failed to mark flag required")
-	}
-
 	upCmd.Run = func(c *cobra.Command, args []string) {
-		var err error
+		var (
+			err error
+			p   *project.Project
+		)
 		lg := logger.New()
 
+		// Validate args
 		stackName := c.Flags().Lookup("stack").Value.String()
-
-		// Update the stack.
-		s, err := stack.New(stackName)
-		if err != nil {
-			lg.Fatal().Err(err)
-		}
-		err = s.Update()
-		if err != nil {
-			lg.Fatal().Err(err).Msg("failed to update stack")
+		dir := c.Flags().Lookup("dir").Value.String()
+		switch {
+		case dir != "" && stackName != "":
+			lg.Fatal().Msg("please do not specify both stack and dir at the same time")
+		case stackName != "":
+			// Update the stack.
+			s, err := stack.New(stackName)
+			if err != nil {
+				lg.Fatal().Err(err).Msg("no such stack")
+			}
+			err = s.Update()
+			if err != nil {
+				lg.Fatal().Err(err).Msg("failed to update stack")
+			}
+			p = project.New(
+				path.Join(state.GetCache(), path.Base(stackName)),
+				path.Join(state.GetTemp(), path.Base(stackName)))
+		default:
+			stackSrc := util.Abs(dir)
+			lg.Info().Msgf("Using local stack %s", stackSrc)
+			fi, err := os.Stat(stackSrc)
+			if err != nil {
+				lg.Fatal().Err(err).Msgf("failed to find stack in %s", stackSrc)
+			}
+			if !fi.IsDir() {
+				lg.Fatal().Msgf("%s is not a directory", stackSrc)
+			}
+			p = project.New(stackSrc, path.Join(state.GetTemp(), path.Base(stackSrc)))
 		}
 
 		// Initialize the project.
 		// Enter the project dir automatically.
-		p := project.New(
-			path.Join(state.GetCache(), path.Base(stackName)),
-			path.Join(state.GetTemp(), path.Base(stackName)))
+
 		err = p.Init()
 		if err != nil {
 			lg.Fatal().Err(err).Msg("failed to initialize project")
