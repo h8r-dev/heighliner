@@ -12,6 +12,15 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util/dagger"
 )
 
+const greetBanner = `
+██╗  ██╗███████╗██╗ ██████╗ ██╗  ██╗██╗     ██╗███╗   ██╗███████╗██████╗ 
+██║  ██║██╔════╝██║██╔════╝ ██║  ██║██║     ██║████╗  ██║██╔════╝██╔══██╗
+███████║█████╗  ██║██║  ███╗███████║██║     ██║██╔██╗ ██║█████╗  ██████╔╝
+██╔══██║██╔══╝  ██║██║   ██║██╔══██║██║     ██║██║╚██╗██║██╔══╝  ██╔══██╗
+██║  ██║███████╗██║╚██████╔╝██║  ██║███████╗██║██║ ╚████║███████╗██║  ██║
+╚═╝  ╚═╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+`
+
 // NewRootCmd creates and returns the root command of hln
 func NewRootCmd() *cobra.Command {
 	var err error
@@ -19,6 +28,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "hln",
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
+		Long:  greetBanner,
 	}
 
 	rootCmd.PersistentPreRun = func(c *cobra.Command, _ []string) {
