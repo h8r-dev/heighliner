@@ -1,22 +1,25 @@
-package util
+package dagger
 
 import (
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/hashicorp/go-getter/v2"
 
 	"github.com/h8r-dev/heighliner/pkg/state"
+	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
-var (
-	// Dagger represents the path to the dagger binary.
-	Dagger           = path.Join(state.GetHln(), "bin", "dagger")
-	installDaggerSrc = "https://dl.dagger.io/dagger/install.sh"
-)
+const installDaggerSrc = "https://dl.dagger.io/dagger/install.sh"
 
-// CheckDagger install dagger binary if necessary.
-func CheckDagger() error {
+// GetPath represents the path to the dagger binary.
+func GetPath() string {
+	return filepath.Join(state.GetHln(), "bin", "dagger")
+}
+
+// Check install dagger binary if necessary.
+func Check() error {
 	var (
 		err        error
 		hln        = state.GetHln()
@@ -25,12 +28,12 @@ func CheckDagger() error {
 
 	_, err = os.Stat(daggerFile)
 	if err != nil {
-		return updateDagger(hln)
+		return update(hln)
 	}
 	return nil
 }
 
-func updateDagger(dir string) error {
+func update(dir string) error {
 	var err error
 	err = os.MkdirAll(dir, 0755)
 	if err != nil {
@@ -44,11 +47,11 @@ func updateDagger(dir string) error {
 		Src: installDaggerSrc,
 		Dst: path.Join(dir, "dagger"),
 	}
-	err = GetWithTracker(req)
+	err = util.GetWithTracker(req)
 	if err != nil {
 		return err
 	}
-	err = Exec("/bin/sh", path.Join("dagger", "install.sh"))
+	err = util.Exec("/bin/sh", path.Join("dagger", "install.sh"))
 	if err != nil {
 		return err
 	}
