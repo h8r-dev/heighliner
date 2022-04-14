@@ -13,20 +13,18 @@ import (
 
 const installDaggerSrc = "https://dl.dagger.io/dagger/install.sh"
 
-// GetPath represents the path to the dagger binary.
+// GetPath returns the path to the dagger binary.
 func GetPath() string {
 	return filepath.Join(state.GetHln(), "bin", "dagger")
 }
 
 // Check install dagger binary if necessary.
 func Check() error {
-	var (
-		err        error
-		hln        = state.GetHln()
-		daggerFile = path.Join(hln, "bin", "dagger")
-	)
+	var err error
+	hln := state.GetHln()
+	dagger := GetPath()
 
-	_, err = os.Stat(daggerFile)
+	_, err = os.Stat(dagger)
 	if err != nil {
 		return update(hln)
 	}
@@ -45,7 +43,7 @@ func update(dir string) error {
 	}
 	req := &getter.Request{
 		Src: installDaggerSrc,
-		Dst: path.Join(dir, "dagger"),
+		Dst: filepath.Join(dir, "dagger"),
 	}
 	err = util.GetWithTracker(req)
 	if err != nil {
