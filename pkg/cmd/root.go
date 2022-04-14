@@ -38,7 +38,7 @@ func NewRootCmd() *cobra.Command {
 		newMetricsCmd(),
 	)
 
-	rootCmd.PersistentFlags().String("log-format", "auto", "Log format (auto, plain, json)")
+	rootCmd.PersistentFlags().String("log-format", "plain", "Log format (auto, plain, json)")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
 	// Bind flags to viper
 	if err = viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
