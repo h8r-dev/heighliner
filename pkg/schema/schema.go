@@ -6,9 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
-	"helm.sh/helm/pkg/strvals"
 )
 
 // Schema represents a input schema of a stack.
@@ -39,26 +37,9 @@ func (s *Schema) AutomaticEnv(interactive bool) error {
 		return err
 	}
 
-	// Parse --set flag
-	values := viper.GetStringSlice("set")
-	sets := map[string]interface{}{}
-	for _, value := range values {
-		if err := strvals.ParseInto(value, sets); err != nil {
-			return fmt.Errorf("failed to parse --set flag: %w", err)
-		}
-	}
-
 	for _, v := range s.Parameters {
-		// Try to fetch value from --set flag
-		val, ok := sets[v.Key]
-		if ok && val != nil {
-			if err := os.Setenv(v.Key, val.(string)); err != nil {
-				panic(err)
-			}
-			continue
-		}
 		// Try to fetch value from env
-		val = os.Getenv(v.Key)
+		val := os.Getenv(v.Key)
 		if val != "" {
 			continue
 		}

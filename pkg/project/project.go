@@ -5,7 +5,6 @@ package project
 import (
 	"os"
 
-	"github.com/hofstadter-io/hof/lib/mod"
 	"github.com/otiai10/copy"
 
 	"github.com/h8r-dev/heighliner/pkg/util"
@@ -48,13 +47,6 @@ func (p *Project) init() error {
 	var err error
 
 	err = os.Chdir(p.Home)
-	if err != nil {
-		return err
-	}
-
-	// $ hof mod vendor cue
-	mod.InitLangs()
-	err = mod.ProcessLangs("vendor", []string{"cue"})
 	if err != nil {
 		return err
 	}
