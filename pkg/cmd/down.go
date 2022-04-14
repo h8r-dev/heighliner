@@ -15,6 +15,7 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/dagger"
 )
 
 func newDownCmd() *cobra.Command {
@@ -79,7 +80,7 @@ func newDownCmd() *cobra.Command {
 			newArgs = append(newArgs, "--no-cache")
 		}
 		err = util.Exec(
-			util.Dagger,
+			dagger.GetPath(),
 			newArgs...)
 		if err != nil {
 			lg.Fatal().Err(err).Msg("failed to execute stack")

@@ -9,6 +9,7 @@ import (
 	"github.com/otiai10/copy"
 
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/dagger"
 )
 
 // Project is a dir where dagger plan is executed.
@@ -59,11 +60,11 @@ func (p *Project) init() error {
 	}
 
 	// Initialize & update dagger project
-	err = util.Exec(util.Dagger, "project", "init")
+	err = util.Exec(dagger.GetPath(), "project", "init")
 	if err != nil {
 		return err
 	}
-	err = util.Exec(util.Dagger, "project", "update")
+	err = util.Exec(dagger.GetPath(), "project", "update")
 	if err != nil {
 		return err
 	}
