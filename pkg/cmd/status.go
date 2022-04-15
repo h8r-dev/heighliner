@@ -112,7 +112,7 @@ func (o *statusOption) loadWorkload(name, ns string) (*appsv1.Deployment, error)
 
 func loadAppOutput() (*app.Output, error) {
 	ao := &app.Output{}
-	b, err := ioutil.ReadFile(appOutputPath)
+	b, err := ioutil.ReadFile(appInfo)
 	if err != nil {
 		return nil, err
 	}

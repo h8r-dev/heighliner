@@ -1,12 +1,18 @@
 package schema
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	// ErrNoSchema means no input schema for interactive prompt.
+	ErrNoSchema = errors.New("no schema found in current satck")
 )
 
 // Schema represents a input schema of a stack.
@@ -70,7 +76,7 @@ func (s *Schema) AutomaticEnv(interactive bool) error {
 func (s *Schema) load() error {
 	file, err := os.Open(path.Join("schemas", "schema.yaml"))
 	if err != nil {
-		return fmt.Errorf("couldn't find schema :%w", err)
+		return fmt.Errorf("%w: %s", ErrNoSchema, err.Error())
 	}
 	defer func() {
 		if err := file.Close(); err != nil {

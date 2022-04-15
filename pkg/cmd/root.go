@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
-	"github.com/h8r-dev/heighliner/pkg/util/dagger"
 )
 
 const greetBanner = `
@@ -23,18 +22,10 @@ const greetBanner = `
 
 // NewRootCmd creates and returns the root command of hln
 func NewRootCmd() *cobra.Command {
-	var err error
-
 	rootCmd := &cobra.Command{
 		Use:   "hln",
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
 		Long:  greetBanner,
-	}
-
-	rootCmd.PersistentPreRun = func(c *cobra.Command, _ []string) {
-		if err := dagger.Check(); err != nil {
-			log.Fatal().Err(err).Msg("failed to install dagger")
-		}
 	}
 
 	rootCmd.AddCommand(
@@ -52,7 +43,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().String("log-format", "plain", "Log format (auto, plain, json)")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
 	// Bind flags to viper
-	if err = viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
+	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
 		log.Fatal().Err(err).Msg("failed to bind flags")
 	}
 
