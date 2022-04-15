@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	// ErrNoSchema means no input schema for interactive prompt.
 	ErrNoSchema = errors.New("no schema found in current satck")
 )
 

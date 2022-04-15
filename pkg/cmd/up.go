@@ -23,7 +23,8 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util/dagger"
 )
 
-type UpOptions struct {
+// upOptions controls the behavior of up command.
+type upOptions struct {
 	Stack string
 	Path  string
 
@@ -33,7 +34,7 @@ type UpOptions struct {
 	NoCache     bool
 }
 
-func (o *UpOptions) BindFlags(f *pflag.FlagSet) {
+func (o *upOptions) BindFlags(f *pflag.FlagSet) {
 	f.StringVarP(&o.Stack, "stack", "s", "", "Name of your stack")
 	f.StringVar(&o.Path, "dir", "", "Path to your local stack")
 	f.StringArrayVar(&o.Values, "set", []string{}, "The input values of your project")
@@ -41,7 +42,7 @@ func (o *UpOptions) BindFlags(f *pflag.FlagSet) {
 	f.BoolVar(&o.NoCache, "no-cache", false, "Disable caching")
 }
 
-func (o *UpOptions) Validate(cmd *cobra.Command, args []string) error {
+func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 	if o.Stack != "" && o.Path != "" {
 		return errors.New("please do not specify both stack and dir")
 	}
@@ -52,7 +53,7 @@ func (o *UpOptions) Validate(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
-func (o *UpOptions) Run() error {
+func (o *upOptions) Run() error {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -141,7 +142,7 @@ func (o *UpOptions) Run() error {
 }
 
 func newUpCmd() *cobra.Command {
-	o := &UpOptions{}
+	o := &upOptions{}
 	cmd := &cobra.Command{
 		Use:   "up",
 		Short: "Spin up your application",
