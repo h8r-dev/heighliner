@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/fatih/color"
-
-	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/mitchellh/go-homedir"
 )
 
 func startUI(pm Parameter) error {
@@ -29,7 +27,12 @@ func startUI(pm Parameter) error {
 func setVal(p Parameter, val string) error {
 	switch {
 	case val != "":
-		if err := os.Setenv(p.Key, util.Abs(strings.TrimSpace(val))); err != nil {
+		var err error
+		val, err = homedir.Expand(val)
+		if err != nil {
+			return err
+		}
+		if err := os.Setenv(p.Key, val); err != nil {
 			panic(err)
 		}
 	case !p.Required:

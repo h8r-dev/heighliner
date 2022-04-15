@@ -34,7 +34,7 @@ func newMetricsCmd() *cobra.Command {
 	cmd.Run = func(c *cobra.Command, args []string) {
 		lg := logger.New()
 		printTarget := os.Stdout
-		b, err := os.ReadFile(appOutputPath)
+		b, err := os.ReadFile(appInfo)
 		if err != nil {
 			lg.Fatal().Err(err).Msg("failed to read app state")
 		}
