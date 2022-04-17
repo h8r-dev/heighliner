@@ -25,8 +25,6 @@ If the pull request fixes a bug:
 - The pull request description must include `Closes #<issue number>` or `Fixes #<issue number>`.
 - To avoid regressions, the pull request should include tests that replicate the fixed bug.
 
-Please refer to the [code conventions](/contribute/coding-conventions.md) for better code style and conventions.
-
 ## Code review
 
 Once you've created a pull request, the next step is to have someone review your change.
