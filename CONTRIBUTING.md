@@ -44,7 +44,7 @@ These guidelines help you write good commit messages and descriptions for your p
 
 ### Commit message format
 
-Ths project follows the [conventional-commits](https://www.conventionalcommits.org/en/v1.0.0/) and [commit messages best practices](https://chris.beams.io/posts/git-commit/) to improve better history information.
+This project follows the [conventional-commits](https://www.conventionalcommits.org/en/v1.0.0/) and [commit messages best practices](https://chris.beams.io/posts/git-commit/) to improve better history information.
 
 The commit message should be structured as follows:
 
