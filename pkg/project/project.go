@@ -7,8 +7,8 @@ import (
 
 	"github.com/otiai10/copy"
 
+	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/util"
-	"github.com/h8r-dev/heighliner/pkg/util/dagger"
 )
 
 // Project is a dir where dagger plan is executed.
