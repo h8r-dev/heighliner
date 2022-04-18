@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -13,37 +12,40 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
+	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/project"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/h8r-dev/heighliner/pkg/state"
-	"github.com/h8r-dev/heighliner/pkg/util"
-	"github.com/h8r-dev/heighliner/pkg/util/dagger"
 )
 
 // upOptions controls the behavior of up command.
 type upOptions struct {
 	Stack string
-	Path  string
+	Dir   string
+	Local bool
 
 	Values []string
 
 	Interactive bool
 	NoCache     bool
+
+	genericclioptions.IOStreams
 }
 
 func (o *upOptions) BindFlags(f *pflag.FlagSet) {
 	f.StringVarP(&o.Stack, "stack", "s", "", "Name of your stack")
-	f.StringVar(&o.Path, "dir", "", "Path to your local stack")
+	f.StringVar(&o.Dir, "dir", "", "Path to your local stack")
 	f.StringArrayVar(&o.Values, "set", []string{}, "The input values of your project")
 	f.BoolVarP(&o.Interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
 	f.BoolVar(&o.NoCache, "no-cache", false, "Disable caching")
 }
 
 func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
-	if o.Stack != "" && o.Path != "" {
+	if o.Stack != "" && o.Dir != "" {
 		return errors.New("please do not specify both stack and dir")
 	}
 	for _, v := range o.Values {
@@ -53,7 +55,16 @@ func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
 func (o *upOptions) Run() error {
+	if o.Dir != "" {
+		var err error
+		o.Dir, err = homedir.Expand(o.Dir)
+		if err != nil {
+			return err
+		}
+		o.Local = true
+	}
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -72,15 +83,11 @@ func (o *upOptions) Run() error {
 			return err
 		}
 		p = project.New(
-			path.Join(state.GetCache(), s.Name),
-			path.Join(state.GetTemp(), s.Name))
+			filepath.Join(state.GetCache(), s.Name),
+			filepath.Join(state.GetTemp(), s.Name))
 
-	case o.Path != "":
-		sp, err := homedir.Expand(o.Path)
-		if err != nil {
-			return err
-		}
-		p = project.New(sp, filepath.Join(state.GetTemp(), filepath.Base(sp)))
+	case o.Dir != "":
+		p = project.New(o.Dir, filepath.Join(state.GetTemp(), filepath.Base(o.Dir)))
 	default:
 		p = project.New(pwd, filepath.Join(state.GetTemp(), filepath.Base("hln")))
 	}
@@ -109,18 +116,20 @@ func (o *upOptions) Run() error {
 	}
 
 	// Execute the action.
-	newArgs := []string{}
-	newArgs = append(newArgs,
-		"--log-format", viper.GetString("log-format"),
-		"--log-level", viper.GetString("log-level"),
-		"do", "up",
-		"-p", "./plans")
-	if o.NoCache {
-		newArgs = append(newArgs, "--no-cache")
+	cli, err := dagger.NewClient(
+		viper.GetString("log-format"),
+		viper.GetString("log-level"),
+		o.IOStreams,
+	)
+	if err != nil {
+		return err
 	}
-	err = util.Exec(
-		dagger.GetPath(),
-		newArgs...)
+	err = cli.Do(&dagger.ActionOptions{
+		Name:    "up",
+		Dir:     o.Dir,
+		Plan:    "./plans",
+		NoCache: o.NoCache,
+	})
 	if err != nil {
 		return err
 	}
@@ -130,7 +139,7 @@ func (o *upOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(os.Stdout, "%s\n", b)
+	fmt.Fprintf(o.IOStreams.Out, "%s\n", b)
 
 	// Keep the output info.
 	err = copy.Copy(stackOutput, filepath.Join(pwd, appInfo))
@@ -141,8 +150,10 @@ func (o *upOptions) Run() error {
 	return nil
 }
 
-func newUpCmd() *cobra.Command {
-	o := &upOptions{}
+func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
+	o := &upOptions{
+		IOStreams: streams,
+	}
 	cmd := &cobra.Command{
 		Use:   "up",
 		Short: "Spin up your application",
