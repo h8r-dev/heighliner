@@ -1,16 +1,18 @@
 package util
 
 import (
-	"os"
 	"os/exec"
+
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // Exec executes the command and prints the output into current terminal
-func Exec(name string, args ...string) error {
+func Exec(streams genericclioptions.IOStreams, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdin = streams.In
+	cmd.Stdout = streams.Out
+	cmd.Stderr = streams.ErrOut
 
 	err := cmd.Run()
 	if err != nil {

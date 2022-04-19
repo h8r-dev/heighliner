@@ -13,3 +13,10 @@ var (
 	// the program at linking time.
 	Revision = ""
 )
+
+const (
+	// DaggerConstraint defines all acceptable versions of dagger.
+	DaggerConstraint = ">=0.2.5, <=0.2.6"
+	// DaggerDefault is the default version of dagger to download.
+	DaggerDefault = "0.2.6"
+)
