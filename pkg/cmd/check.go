@@ -21,15 +21,15 @@ func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		if err != nil {
 			lg.Fatal().Err(err)
 		}
-		err = dc.InstallOrUpgrade()
+		err = dc.Check()
 		if err != nil {
-			lg.Fatal().Err(err).Msg("failed to install or upgrade dagger")
+			lg.Fatal().Err(err).Msg("failed to check dagger version")
 		}
 		err = nhctl.Check()
 		if err != nil {
 			lg.Fatal().Err(err).Msg("failed to install nhctl")
 		}
-		err = util.Exec(nhctl.GetPath(), "version")
+		err = util.Exec(streams, nhctl.GetPath(), "version")
 		if err != nil {
 			lg.Fatal().Err(err).Msg("failed to execute nhctl version")
 		}

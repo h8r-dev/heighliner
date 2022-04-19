@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/otiai10/copy"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/util"
@@ -51,12 +52,13 @@ func (p *Project) init() error {
 		return err
 	}
 
-	// Initialize & update dagger project
-	err = util.Exec(dagger.GetPath(), "project", "init")
+	// Initialize & update dagger project.
+	// TODO move this to dagger client package.
+	err = util.Exec(genericclioptions.NewTestIOStreamsDiscard(), dagger.GetPath(), "project", "init")
 	if err != nil {
 		return err
 	}
-	err = util.Exec(dagger.GetPath(), "project", "update")
+	err = util.Exec(genericclioptions.NewTestIOStreamsDiscard(), dagger.GetPath(), "project", "update")
 	if err != nil {
 		return err
 	}
