@@ -134,11 +134,10 @@ func (c *Client) Check() error {
 		return err
 	}
 	msg := buf.String()
-	if strings.Contains(msg, "up to date") {
-		return nil
-	} else {
+	if !strings.Contains(msg, "up to date") {
 		return c.installOrUpgrade()
 	}
+	return nil
 }
 
 // installOrUpgrade run the dagger install.sh script.
