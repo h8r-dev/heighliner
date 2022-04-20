@@ -8,8 +8,6 @@ import (
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
-
-	"github.com/h8r-dev/heighliner/pkg/logger"
 )
 
 // Metrics represents the monitoring metrics.
@@ -31,17 +29,15 @@ func newMetricsCmd() *cobra.Command {
 		Short: "Show dashboard of monitoring metrics",
 	}
 
-	cmd.Run = func(c *cobra.Command, args []string) {
-		lg := logger.New()
+	cmd.RunE = func(c *cobra.Command, args []string) error {
 		printTarget := os.Stdout
 		b, err := os.ReadFile(appInfo)
 		if err != nil {
-			lg.Fatal().Err(err).Msg("failed to read app state")
+			return err
 		}
 		m := new(Metrics)
-		err = yaml.Unmarshal(b, m)
-		if err != nil {
-			lg.Fatal().Err(err).Msg("failed to marsahl app state")
+		if err := yaml.Unmarshal(b, m); err != nil {
+			return err
 		}
 		for _, infra := range m.Infras {
 			if infra.Type == "grafana" {
@@ -52,12 +48,12 @@ func newMetricsCmd() *cobra.Command {
 					RawQuery: `left={"datasource"="Loki"}`,
 				}
 				fmt.Fprintf(printTarget, "URL: %s\nUsername: %s\nPassword: %s\n", u.String(), infra.Username, infra.Password)
-				err := browser.OpenURL(u.String())
-				if err != nil {
-					lg.Fatal().Err(err).Msg("failed to open browser")
+				if err := browser.OpenURL(u.String()); err != nil {
+					return err
 				}
 			}
 		}
+		return nil
 	}
 
 	return cmd

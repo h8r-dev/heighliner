@@ -13,7 +13,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
-	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/project"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
@@ -143,16 +142,11 @@ func newDownCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		Use:   "down",
 		Short: "Take down your application",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			lg := logger.New()
-			err := o.Validate(cmd, args)
-			if err != nil {
-				lg.Fatal().Err(err).Msg("invalid args")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := o.Validate(cmd, args); err != nil {
+				return err
 			}
-			err = o.Run()
-			if err != nil {
-				lg.Fatal().Err(err).Msg("failed to run")
-			}
+			return o.Run()
 		},
 	}
 	o.BindFlags(cmd.Flags())
