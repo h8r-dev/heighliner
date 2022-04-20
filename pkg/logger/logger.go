@@ -1,40 +1,58 @@
 package logger
 
 import (
-	"os"
-
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // New creates a logger with the corresponding format and level
-func New() *zap.Logger {
-	debugEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
-		return lev == zap.DebugLevel
-	})
-	infoEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
-		return lev == zap.InfoLevel
-	})
-	warnEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
-		return lev == zap.WarnLevel
-	})
-	errorEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
-		return lev >= zap.ErrorLevel
-	})
-
+func New(streams genericclioptions.IOStreams) *zap.Logger {
 	// High-priority output should go to standard error, and low-priority
 	// output should go to standard out.
-	consoleDebugging := zapcore.Lock(os.Stdout)
-	consoleErrors := zapcore.Lock(os.Stderr)
-	coreTree := zapcore.NewTee(
-		zapcore.NewCore(getZapEncoder(), consoleDebugging, debugEnabler),
-		zapcore.NewCore(getZapEncoder(), consoleDebugging, infoEnabler),
-		zapcore.NewCore(getZapEncoder(), consoleDebugging, warnEnabler),
-		zapcore.NewCore(getZapEncoder(), consoleErrors, errorEnabler),
-	)
-
-	logger := zap.New(coreTree, zap.AddCaller(), zap.AddStacktrace(errorEnabler))
-	return logger
+	consoleDebugging := zapcore.AddSync(streams.Out)
+	consoleErrors := zapcore.AddSync(streams.ErrOut)
+	cores := []zapcore.Core{}
+	ll := viper.GetString("log-level")
+	// Set default level to "info"
+	if ll != "debug" && ll != "warn" && ll != "error" {
+		ll = "info"
+	}
+	switch ll {
+	case "debug":
+		cores = append(cores,
+			zapcore.NewCore(getZapEncoder(),
+				consoleDebugging,
+				zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+					return lev == zapcore.DebugLevel
+				})))
+		fallthrough
+	case "info":
+		cores = append(cores,
+			zapcore.NewCore(getZapEncoder(),
+				consoleDebugging,
+				zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+					return lev == zapcore.InfoLevel
+				})))
+		fallthrough
+	case "warn":
+		cores = append(cores,
+			zapcore.NewCore(getZapEncoder(),
+				consoleDebugging,
+				zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+					return lev == zapcore.WarnLevel
+				})))
+		fallthrough
+	case "error":
+		cores = append(cores,
+			zapcore.NewCore(getZapEncoder(),
+				consoleErrors,
+				zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+					return lev >= zapcore.ErrorLevel
+				})))
+	}
+	return zap.New(zapcore.NewTee(cores...), zap.AddCaller())
 }
 
 // getZapEncodingConfig returns the configuration of zap encoder.
@@ -45,7 +63,7 @@ func getZapEncodingConfig() zapcore.EncoderConfig {
 		NameKey:        "logger",
 		CallerKey:      "caller",
 		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
+		StacktraceKey:  "",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 		EncodeTime:     zapcore.TimeEncoderOfLayout("15:04:05"),

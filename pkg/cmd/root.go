@@ -26,14 +26,12 @@ type configure struct {
 	genericclioptions.IOStreams
 }
 
-func newDefaultConfigure() *configure {
-	return &configure{
-		IOStreams: genericclioptions.IOStreams{
-			In:     os.Stdin,
-			Out:    os.Stdout,
-			ErrOut: os.Stderr,
-		},
-	}
+var cfg = configure{
+	IOStreams: genericclioptions.IOStreams{
+		In:     os.Stdin,
+		Out:    os.Stdout,
+		ErrOut: os.Stderr,
+	},
 }
 
 // NewRootCmd creates and returns the root command of hln
@@ -42,9 +40,12 @@ func NewRootCmd() *cobra.Command {
 		Use:   "hln",
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
 		Long:  greetBanner,
+		// Don't print usage message.
+		SilenceUsage: true,
+		// Logger will print the errors.
+		SilenceErrors: true,
 	}
 
-	cfg := newDefaultConfigure()
 	rootCmd.AddCommand(
 		newListCmd(),
 		newVersionCmd(),
@@ -78,7 +79,7 @@ func NewRootCmd() *cobra.Command {
 func Execute(rootCmd *cobra.Command) {
 	var (
 		ctx = appcontext.Context()
-		lg  = logger.New()
+		lg  = logger.New(cfg.IOStreams)
 	)
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
