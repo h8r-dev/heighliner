@@ -9,14 +9,20 @@ $ tree -L 1
 └── heighliner-website
 ```
 
-2. Run generate command in heighliner root dir.
+2. Clean up old docs
+
+```shell
+rm heighliner-website/docs/07-cli/hln/commands/*
+```
+
+3. Run generate command in heighliner root dir.
 
 ```shell
 cd heighliner/
 go run ./docs/gen.go
 ```
 
-3. Then you can check the difference in heighliner-website.
+4. Then you can check the difference in heighliner-website.
 
 ```shell
 cd ../heighliner-website
