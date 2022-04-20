@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -45,7 +46,12 @@ func (o *testOptions) Run() error {
 	// Set input values.
 	for _, val := range o.Values {
 		envvar := strings.Split(val, "=")
-		err := os.Setenv(envvar[0], envvar[1])
+		var err error
+		envvar[1], err = homedir.Expand(envvar[1])
+		if err != nil {
+			return err
+		}
+		err = os.Setenv(envvar[0], envvar[1])
 		if err != nil {
 			return err
 		}
