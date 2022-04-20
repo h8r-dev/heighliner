@@ -101,6 +101,10 @@ func (o *upOptions) Run() error {
 	// Set input values.
 	for _, val := range o.Values {
 		envvar := strings.Split(val, "=")
+		envvar[1], err = homedir.Expand(envvar[1])
+		if err != nil {
+			return err
+		}
 		err := os.Setenv(envvar[0], envvar[1])
 		if err != nil {
 			return err
