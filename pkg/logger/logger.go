@@ -1,47 +1,60 @@
 package logger
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/rs/zerolog"
-	"github.com/spf13/viper"
-	"golang.org/x/term"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // New creates a logger with the corresponding format and level
-func New() zerolog.Logger {
-	logger := zerolog.
-		New(os.Stderr).
-		With().
-		Timestamp().
-		Logger()
+func New() *zap.Logger {
+	debugEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+		return lev == zap.DebugLevel
+	})
+	infoEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+		return lev == zap.InfoLevel
+	})
+	warnEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+		return lev == zap.WarnLevel
+	})
+	errorEnabler := zap.LevelEnablerFunc(func(lev zapcore.Level) bool {
+		return lev >= zap.ErrorLevel
+	})
 
-	if !jsonLogs() {
-		logger = logger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	} else {
-		logger = logger.With().Timestamp().Caller().Logger()
-	}
+	// High-priority output should go to standard error, and low-priority
+	// output should go to standard out.
+	consoleDebugging := zapcore.Lock(os.Stdout)
+	consoleErrors := zapcore.Lock(os.Stderr)
+	coreTree := zapcore.NewTee(
+		zapcore.NewCore(getZapEncoder(), consoleDebugging, debugEnabler),
+		zapcore.NewCore(getZapEncoder(), consoleDebugging, infoEnabler),
+		zapcore.NewCore(getZapEncoder(), consoleDebugging, warnEnabler),
+		zapcore.NewCore(getZapEncoder(), consoleErrors, errorEnabler),
+	)
 
-	level := viper.GetString("log-level")
-	lvl, err := zerolog.ParseLevel(level)
-	if err != nil {
-		panic(err)
-	}
-	return logger.Level(lvl)
+	logger := zap.New(coreTree, zap.AddCaller(), zap.AddStacktrace(errorEnabler))
+	return logger
 }
 
-func jsonLogs() bool {
-	switch f := viper.GetString("log-format"); f {
-	case "json":
-		return true
-	case "plain":
-		return false
-	case "auto":
-		return !term.IsTerminal(int(os.Stdout.Fd()))
-	default:
-		fmt.Fprintf(os.Stderr, "invalid --log-format %q\n", f)
-		os.Exit(1)
+// getZapEncodingConfig returns the configuration of zap encoder.
+func getZapEncodingConfig() zapcore.EncoderConfig {
+	return zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+		EncodeTime:     zapcore.TimeEncoderOfLayout("15:04:05"),
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
-	return false
+}
+
+// getZapEncoder returns the zap encoder.
+func getZapEncoder() zapcore.Encoder {
+	return zapcore.NewConsoleEncoder(getZapEncodingConfig())
 }

@@ -82,6 +82,6 @@ func Execute(rootCmd *cobra.Command) {
 	)
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		lg.Fatal().Err(err).Msg("failed to execute command")
+		lg.Error(err.Error())
 	}
 }
