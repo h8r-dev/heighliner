@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
+	"github.com/h8r-dev/heighliner/pkg/checker"
 	"github.com/h8r-dev/heighliner/pkg/logger"
 )
 
@@ -36,7 +37,7 @@ var cfg = configure{
 
 // NewRootCmd creates and returns the root command of hln
 func NewRootCmd() *cobra.Command {
-	rootCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "hln",
 		Short: "Heighliner: Cloud native best practices to build and deploy your applications",
 		Long:  greetBanner,
@@ -46,7 +47,11 @@ func NewRootCmd() *cobra.Command {
 		SilenceErrors: true,
 	}
 
-	rootCmd.AddCommand(
+	cmd.PersistentPreRunE = func(c *cobra.Command, args []string) error {
+		return checker.PreFlight(cfg.IOStreams)
+	}
+
+	cmd.AddCommand(
 		newListCmd(),
 		newVersionCmd(),
 		newUpCmd(cfg.IOStreams),
@@ -58,21 +63,21 @@ func NewRootCmd() *cobra.Command {
 		newCheckCmd(cfg.IOStreams),
 	)
 
-	rootCmd.PersistentFlags().String("log-format", "plain", "Log format (auto, plain, json)")
-	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
+	cmd.PersistentFlags().String("log-format", "plain", "Log format (auto, plain, json)")
+	cmd.PersistentFlags().StringP("log-level", "l", "info", "Log level")
 	// Bind persistent flags to viper
-	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
+	if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
 		log.Fatal().Err(err).Msg("failed to bind flags")
 	}
 
 	// Hide 'completion' command
-	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+	cmd.CompletionOptions.HiddenDefaultCmd = true
 
 	viper.SetEnvPrefix("hln")
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 
-	return rootCmd
+	return cmd
 }
 
 // Execute executes the root command with context
