@@ -4,36 +4,35 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	"github.com/hashicorp/go-getter/v2"
 	gover "github.com/hashicorp/go-version"
+	"go.uber.org/zap"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
+	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
 const installScriptURL = "https://dl.dagger.io/dagger/install.sh"
 
-// Check checks the version of dagger binary.
+// Check checks if the version of dagger binary is available.
 func (c *Client) Check() error {
 	// Check if dagger binary exist.
 	if _, err := os.Stat(c.Binary); errors.Is(err, os.ErrNotExist) {
-		return c.install()
+		return errors.New("no dagger binary file found")
 	}
 	// Check if the version of dagger is the latest.
 	rex := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+`)
 	buf := &bytes.Buffer{}
-	omw := io.MultiWriter(buf, c.IOStreams.Out)
-	emw := io.MultiWriter(buf, c.IOStreams.ErrOut)
 	err := util.Exec(genericclioptions.IOStreams{
 		In:     buf,
-		Out:    omw,
-		ErrOut: emw,
+		Out:    buf,
+		ErrOut: buf,
 	}, GetPath(), "version")
 	if err != nil {
 		return err
@@ -48,7 +47,17 @@ func (c *Client) Check() error {
 		return err
 	}
 	if !constraints.Check(ver) {
-		fmt.Fprintln(c.IOStreams.ErrOut, "unavailable dagger version")
+		return fmt.Errorf("current dagger version: %s, expect %s",
+			ver, version.DaggerConstraint)
+	}
+	return nil
+}
+
+// CheckAndInstall installs dagger if necessary.
+func (c *Client) CheckAndInstall() error {
+	lg := logger.New(c.IOStreams)
+	if err := c.Check(); err != nil {
+		lg.Info("downloading dagger...", zap.NamedError("info", err))
 		return c.install()
 	}
 	return nil
