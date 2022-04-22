@@ -24,4 +24,4 @@ vendor/
 cue.mod/
 
 dist/
-docs/commands/
+docs/commands
