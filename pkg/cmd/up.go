@@ -21,6 +21,38 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/state"
 )
 
+const upDesc = `
+This command run a stack.
+
+You should use '-s' or '--stack' to specify the stack. Use 'list stacks' subcommand 
+to check all available stacks. Alternatively, you can use '--dir' flag 
+to specify a local directory as your stack source. If you don't specify both '-s' 
+and '--dir' flag, it will use current working directory by default:
+
+    $ hln up -s gin-next
+
+or
+
+    $ hln up --dir /path/to/your/stack
+
+To set values in a stack, use '-s' or '--stack' flag to specify a stack, use 
+the '--set' flag and pass configuration from the command line:
+
+    $ hln up -s gin-next --set foo=bar
+
+You can specify the '--set' flag multiple times. The priority will be given to the
+last (right-most) set specified. For example, if both 'bar' and 'newbar' values are
+set for a key called 'foo', the 'newbar' value would take precedence:
+
+    $ hln up -s gin-next --set foo=bar --set foo=newbar
+
+Simply set '-i' or '--interactive' flag and it will run the stack interactively. You can 
+fill your input values according to the prompts:
+
+    $ hln up -s gin-next -i
+
+`
+
 // upOptions controls the behavior of up command.
 type upOptions struct {
 	Stack string
@@ -160,6 +192,7 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "up",
 		Short: "Spin up your application",
+		Long:  upDesc,
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := o.Validate(cmd, args); err != nil {
