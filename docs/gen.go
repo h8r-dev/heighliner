@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra/doc"
 
@@ -10,13 +11,18 @@ import (
 )
 
 func main() {
-	rootPath := "../heighliner-website/docs/07-cli/hln/commands"
-	if len(os.Args) > 1 {
-		rootPath = os.Args[1]
-	}
-	hln := cmd.NewRootCmd()
-	err := doc.GenMarkdownTree(hln, rootPath)
+	pwd, err := os.Getwd()
 	if err != nil {
+		panic(err)
+	}
+	docPath := filepath.Join(pwd, "docs", "commands")
+	if err := os.RemoveAll(docPath); err != nil {
+		panic(err)
+	}
+	if err := os.MkdirAll(docPath, 0755); err != nil {
+		panic(err)
+	}
+	if err := doc.GenMarkdownTree(cmd.NewRootCmd(), docPath); err != nil {
 		log.Fatal(err)
 	}
 }
