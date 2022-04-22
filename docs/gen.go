@@ -11,11 +11,17 @@ import (
 )
 
 func main() {
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(err)
+	docPath := ""
+	if len(os.Args) > 1 {
+		docPath = os.Args[1]
 	}
-	docPath := filepath.Join(pwd, "docs", "commands")
+	if docPath == "" {
+		pwd, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+		docPath = filepath.Join(pwd, "docs", "commands")
+	}
 	if err := os.RemoveAll(docPath); err != nil {
 		panic(err)
 	}
