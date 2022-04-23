@@ -25,6 +25,7 @@ jobs:
 
     - name: Commit files
       run: |
+        git checkout -b website-docs
         git config --local user.email "heigliner-robot@h8r.io"
         git config --local user.name "heigliner-robot"
         git add .
@@ -34,4 +35,5 @@ jobs:
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        force: true
         branch: website-docs
