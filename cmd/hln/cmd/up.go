@@ -57,7 +57,7 @@ fill your input values according to the prompts:
 type upOptions struct {
 	Stack string
 	Dir   string
-	Local bool
+	local bool
 
 	Values []string
 
@@ -94,7 +94,7 @@ func (o *upOptions) Run() error {
 		if err != nil {
 			return err
 		}
-		o.Local = true
+		o.local = true
 	}
 	pwd, err := os.Getwd()
 	if err != nil {

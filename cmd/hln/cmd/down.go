@@ -50,6 +50,13 @@ func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
 			return errors.New("value format should be '--set key=value'")
 		}
 	}
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(filepath.Join(pwd, appInfo)); err != nil {
+		return err
+	}
 	return nil
 }
 

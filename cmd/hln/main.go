@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/h8r-dev/heighliner/pkg/cmd"
+	"github.com/h8r-dev/heighliner/cmd/hln/cmd"
 )
 
 func main() {

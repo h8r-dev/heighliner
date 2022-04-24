@@ -30,7 +30,7 @@ help: # Show how to get started & what targets are available
 
 .PHONY: hln
 hln: # build client binary
-	CGO_ENABLED=0 go build -o bin/hln -ldflags '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/main.go
+	CGO_ENABLED=0 go build -o bin/hln -ldflags '-s -w -X github.com/h8r-dev/heighliner/pkg/version.Revision=$(GIT_REVISION)' ./cmd/hln
 	@echo "Saved to bin/hln"
 
 
