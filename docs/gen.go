@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra/doc"
 
-	"github.com/h8r-dev/heighliner/pkg/cmd"
+	"github.com/h8r-dev/heighliner/cmd/hln/cmd"
 )
 
 func main() {
