@@ -39,7 +39,7 @@ func newLogsCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 			kubeconfigPath := cmd.Flags().Lookup("kubeconfig").Value.String()
-			o.Kubecli, err = k8sutil.MakeKubeClient(kubeconfigPath)
+			o.Kubecli, err = k8sutil.NewFactory(kubeconfigPath).KubernetesClientSet()
 			if err != nil {
 				return fmt.Errorf("failed to make kube client: %w", err)
 			}

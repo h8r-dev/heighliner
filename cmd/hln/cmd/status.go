@@ -46,7 +46,7 @@ func newStatusCmd() *cobra.Command {
 }
 
 func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
-	kubecli, err := k8sutil.MakeKubeClient(o.KubeconfigPath)
+	kubecli, err := k8sutil.NewFactory(o.KubeconfigPath).KubernetesClientSet()
 	if err != nil {
 		return fmt.Errorf("failed to make kube client: %w", err)
 	}
