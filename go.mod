@@ -14,6 +14,7 @@ require (
 	github.com/otiai10/copy v1.7.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/rs/zerolog v1.26.1
+	github.com/rwtodd/Go.Sed v0.0.0-20210816025313-55464686f9ef
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.0
