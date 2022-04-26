@@ -24,7 +24,7 @@ const installScriptURL = "https://dl.dagger.io/dagger/install.sh"
 func (c *Client) Check() error {
 	// Check if dagger binary exist.
 	if _, err := os.Stat(c.Binary); errors.Is(err, os.ErrNotExist) {
-		return errors.New("no dagger binary file found")
+		return errors.New(fmt.Sprintf("no dagger binary file found in %s", c.Binary))
 	}
 	// Check if the version of dagger is the latest.
 	rex := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+`)
