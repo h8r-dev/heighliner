@@ -8,6 +8,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/kube"
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 // upOptions controls the behavior of up command.
@@ -26,11 +27,11 @@ func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
 }
 
 func (o *downOptions) Run() error {
-	dclient, err := kube.NewDynamicClient()
+	dClient, err := k8sutil.NewFactory("").DynamicClient()
 	if err != nil {
 		return err
 	}
-	return kube.DeleteArgoCDApps(context.Background(), dclient, "argocd", o.IOStreams)
+	return kube.DeleteArgoCDApps(context.Background(), dClient, "argocd", o.IOStreams)
 }
 
 func newDownCmd(streams genericclioptions.IOStreams) *cobra.Command {
