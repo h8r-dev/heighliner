@@ -3,9 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"time"
 
+	"github.com/h8r-dev/heighliner/pkg/checker"
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -14,10 +15,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/homedir"
-
-	"github.com/h8r-dev/heighliner/pkg/checker"
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
@@ -32,8 +29,7 @@ func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
 			return err
 		}
 		if o.InstallBuildKit {
-			kubeconfigPath := cmd.Flags().Lookup("kubeconfig").Value.String()
-			o.Kubecli, err = k8sutil.NewFactory(kubeconfigPath).KubernetesClientSet()
+			o.Kubecli, err = k8sutil.NewFactory(k8sutil.GetKubeConfigPath()).KubernetesClientSet()
 			if err != nil {
 				return fmt.Errorf("failed to make kube client: %w", err)
 			}
@@ -44,11 +40,6 @@ func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	// Shadow the root PersistentPreRun
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {}
 
-	if home := homedir.HomeDir(); home != "" {
-		cmd.Flags().StringP("kubeconfig", "", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		cmd.Flags().StringP("kubeconfig", "", "", "(optional) absolute path to the kubeconfig file")
-	}
 	o.addFlags(cmd)
 	return cmd
 }
