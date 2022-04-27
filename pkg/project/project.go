@@ -12,6 +12,8 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
+// TODO move the contents and delete this package.
+
 // Project is a dir where dagger plan is executed.
 type Project struct {
 	Home string
@@ -54,11 +56,11 @@ func (p *Project) init() error {
 
 	// Initialize & update dagger project.
 	// TODO move this to dagger client package.
-	err = util.Exec(genericclioptions.NewTestIOStreamsDiscard(), dagger.GetPath(), "project", "init")
+	err = util.Exec(genericclioptions.NewTestIOStreamsDiscard(), dagger.GetBin(), "project", "init")
 	if err != nil {
 		return err
 	}
-	err = util.Exec(genericclioptions.NewTestIOStreamsDiscard(), dagger.GetPath(), "project", "update")
+	err = util.Exec(genericclioptions.NewTestIOStreamsDiscard(), dagger.GetBin(), "project", "update")
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,21 @@ var (
 
 const (
 	// DaggerConstraint defines all acceptable versions of dagger.
-	DaggerConstraint = ">=0.2.5, <=0.2.6"
+	DaggerConstraint = "=0.2.7"
 	// DaggerDefault is the default version of dagger to download.
-	DaggerDefault = "0.2.6"
+	DaggerDefault = "0.2.7"
+)
+
+const (
+	// NhctlConstraint defines all acceptable versions of nhctl.
+	NhctlConstraint = "=0.6.16"
+	// NhctlDefault is the default nhctl version to download.
+	NhctlDefault = "0.6.16"
+)
+
+const (
+	// TerraformConstraint defines all acceptable versions of terrafform.
+	TerraformConstraint = "=1.1.9"
+	// TerraformDefault is the default terraform version to use.
+	TerraformDefault = "1.1.9"
 )

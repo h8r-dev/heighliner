@@ -48,7 +48,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	cmd.PersistentPreRunE = func(c *cobra.Command, args []string) error {
-		return checker.PreFlight(cfg.IOStreams)
+		return checker.PreCheck(cfg.IOStreams)
 	}
 
 	cmd.AddCommand(

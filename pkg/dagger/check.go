@@ -22,18 +22,19 @@ const installScriptURL = "https://dl.dagger.io/dagger/install.sh"
 
 // Check checks if the version of dagger binary is available.
 func (c *Client) Check() error {
+	lg := logger.New(c.IOStreams)
 	// Check if dagger binary exist.
 	if _, err := os.Stat(c.Binary); errors.Is(err, os.ErrNotExist) {
 		return errors.New("no dagger binary file found")
 	}
-	// Check if the version of dagger is the latest.
+	// Check if the version of dagger is the available.
 	rex := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+`)
 	buf := &bytes.Buffer{}
 	err := util.Exec(genericclioptions.IOStreams{
 		In:     buf,
 		Out:    buf,
 		ErrOut: buf,
-	}, GetPath(), "version")
+	}, GetBin(), "version")
 	if err != nil {
 		return err
 	}
@@ -50,6 +51,7 @@ func (c *Client) Check() error {
 		return fmt.Errorf("current dagger version: %s, expect %s",
 			ver, version.DaggerConstraint)
 	}
+	lg.Info(fmt.Sprintf("dagger version %s", ver.Original()))
 	return nil
 }
 
