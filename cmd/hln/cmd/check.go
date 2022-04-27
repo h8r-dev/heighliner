@@ -58,23 +58,21 @@ func (o *checkOptions) addFlags(cmd *cobra.Command) {
 
 func (o *checkOptions) Run() error {
 	// Create namespace if not exist
-	buildKitNs := "heighliner"
-	_, err := o.Kubecli.CoreV1().Namespaces().Get(context.TODO(), buildKitNs, metav1.GetOptions{})
+	_, err := o.Kubecli.CoreV1().Namespaces().Get(context.TODO(), heighlinerNs, metav1.GetOptions{})
 	if err != nil {
 		if !k8serr.IsNotFound(err) {
 			return err
 		}
 		var ns corev1.Namespace
-		ns.Name = buildKitNs
+		ns.Name = heighlinerNs
 		_, err = o.Kubecli.CoreV1().Namespaces().Create(context.TODO(), &ns, metav1.CreateOptions{})
 		if err != nil {
 			return err
 		}
 	}
 
-	buildKitName := "buildkitd"
 	buildKitLabels := map[string]string{"app": "buildkitd"}
-	_, err = o.Kubecli.AppsV1().Deployments(buildKitNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
+	_, err = o.Kubecli.AppsV1().Deployments(heighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
 	if err == nil {
 		fmt.Println(buildKitName + " has already been installed, skip it")
 		return nil
@@ -103,7 +101,7 @@ func (o *checkOptions) Run() error {
 		SecurityContext: &corev1.SecurityContext{Privileged: &privileged},
 		Ports:           []corev1.ContainerPort{{ContainerPort: 1234}},
 	}}
-	_, err = o.Kubecli.AppsV1().Deployments(buildKitNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
+	_, err = o.Kubecli.AppsV1().Deployments(heighlinerNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -113,7 +111,7 @@ func (o *checkOptions) Run() error {
 	watchlist := cache.NewListWatchFromClient(
 		o.Kubecli.AppsV1().RESTClient(),
 		"deployments",
-		buildKitNs,
+		heighlinerNs,
 		f,
 	)
 
