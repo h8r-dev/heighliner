@@ -19,11 +19,11 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
-func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
-	o := &checkOptions{}
+func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
+	o := &initOptions{}
 	cmd := &cobra.Command{
-		Use:   "check",
-		Short: "Check if the infrastructures are available",
+		Use:   "init",
+		Short: "Initialize dependent tools and services",
 	}
 	cmd.RunE = func(c *cobra.Command, args []string) error {
 		err := checker.Check(streams)
@@ -46,17 +46,17 @@ func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-type checkOptions struct {
+type initOptions struct {
 	InstallBuildKit bool
 
 	Kubecli *kubernetes.Clientset
 }
 
-func (o *checkOptions) addFlags(cmd *cobra.Command) {
+func (o *initOptions) addFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&o.InstallBuildKit, "install-buildkit", false, "Install buildkit to cluster")
 }
 
-func (o *checkOptions) Run() error {
+func (o *initOptions) Run() error {
 	// Create namespace if not exist
 	_, err := o.Kubecli.CoreV1().Namespaces().Get(context.TODO(), heighlinerNs, metav1.GetOptions{})
 	if err != nil {
