@@ -60,7 +60,7 @@ func NewRootCmd() *cobra.Command {
 		newStatusCmd(),
 		newLogsCmd(),
 		newMetricsCmd(),
-		newCheckCmd(cfg.IOStreams),
+		newInitCmd(cfg.IOStreams),
 	)
 
 	cmd.PersistentFlags().String("log-format", "plain", "Log format (auto, plain, json)")
