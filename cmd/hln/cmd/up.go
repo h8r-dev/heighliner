@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,13 +14,19 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/project"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/h8r-dev/heighliner/pkg/state"
+	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 const upDesc = `
@@ -150,6 +158,28 @@ func (o *upOptions) Run() error {
 		}
 	}
 
+	// Forwarding port to buildkit
+	readyCh := make(chan struct{})
+	stopCh := make(chan struct{}, 1)
+	errChan := make(chan error)
+	port, err := util.GetAvailablePort()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		errChan <- forwardPortToBuildKit(fmt.Sprintf("%d:%d", port, 1234), readyCh, stopCh)
+	}()
+
+	select {
+	case <-readyCh:
+		fmt.Println("PortForward to buildkit is ready")
+	case err = <-errChan:
+		fmt.Printf("PortForward to buildkit is terminated unexpectedly: %v\n", err)
+		return err
+	}
+	_ = os.Setenv("BUILDKIT_HOST", fmt.Sprintf("tcp://127.0.0.1:%d", port))
+
 	// Execute the action.
 	cli, err := dagger.NewClient(
 		viper.GetString("log-format"),
@@ -204,4 +234,50 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	o.BindFlags(cmd.Flags())
 
 	return cmd
+}
+
+func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error {
+	fact := k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
+	client, err := fact.KubernetesClientSet()
+	if err != nil {
+		return err
+	}
+
+	// Find pod name of buildkit
+	deploy, err := client.AppsV1().Deployments(heighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	podList, err := client.CoreV1().Pods(heighlinerNs).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.Set(deploy.Spec.Selector.MatchLabels).AsSelector().String()})
+	if err != nil {
+		return err
+	}
+	if len(podList.Items) == 0 {
+		return errors.New("no pod found for buildkit")
+	}
+	podName := podList.Items[0].Name // One pod only in this case
+
+	restConfig, err := fact.ToRESTConfig()
+	if err != nil {
+		return err
+	}
+
+	req := client.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Namespace(heighlinerNs).
+		Name(podName).
+		SubResource("portforward")
+
+	iostream := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
+	transport, upgrader, err := spdy.RoundTripperFor(restConfig)
+	if err != nil {
+		return err
+	}
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", req.URL())
+	fw, err := portforward.NewOnAddresses(dialer, []string{"127.0.0.1"}, []string{portStr}, stopCh, readyCh, iostream.Out, iostream.ErrOut)
+	if err != nil {
+		return err
+	}
+	return fw.ForwardPorts()
 }
