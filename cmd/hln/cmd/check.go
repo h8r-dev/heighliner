@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/h8r-dev/heighliner/pkg/checker"
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/h8r-dev/heighliner/pkg/checker"
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
@@ -45,21 +47,34 @@ func newCheckCmd(streams genericclioptions.IOStreams) *cobra.Command {
 }
 
 type checkOptions struct {
-	Namespace       string
 	InstallBuildKit bool
 
 	Kubecli *kubernetes.Clientset
 }
 
 func (o *checkOptions) addFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVar(&o.Namespace, "namespace", "default", "Specify the namespace")
 	cmd.Flags().BoolVar(&o.InstallBuildKit, "install-buildkit", false, "Install buildkit to cluster")
 }
 
 func (o *checkOptions) Run() error {
+	// Create namespace if not exist
+	buildKitNs := "heighliner"
+	_, err := o.Kubecli.CoreV1().Namespaces().Get(context.TODO(), buildKitNs, metav1.GetOptions{})
+	if err != nil {
+		if !k8serr.IsNotFound(err) {
+			return err
+		}
+		var ns corev1.Namespace
+		ns.Name = buildKitNs
+		_, err = o.Kubecli.CoreV1().Namespaces().Create(context.TODO(), &ns, metav1.CreateOptions{})
+		if err != nil {
+			return err
+		}
+	}
+
 	buildKitName := "buildkitd"
 	buildKitLabels := map[string]string{"app": "buildkitd"}
-	_, err := o.Kubecli.AppsV1().Deployments(o.Namespace).Get(context.TODO(), buildKitName, metav1.GetOptions{})
+	_, err = o.Kubecli.AppsV1().Deployments(buildKitNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
 	if err == nil {
 		fmt.Println(buildKitName + " has already been installed, skip it")
 		return nil
@@ -88,7 +103,7 @@ func (o *checkOptions) Run() error {
 		SecurityContext: &corev1.SecurityContext{Privileged: &privileged},
 		Ports:           []corev1.ContainerPort{{ContainerPort: 1234}},
 	}}
-	_, err = o.Kubecli.AppsV1().Deployments(o.Namespace).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
+	_, err = o.Kubecli.AppsV1().Deployments(buildKitNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -98,7 +113,7 @@ func (o *checkOptions) Run() error {
 	watchlist := cache.NewListWatchFromClient(
 		o.Kubecli.AppsV1().RESTClient(),
 		"deployments",
-		o.Namespace,
+		buildKitNs,
 		f,
 	)
 
