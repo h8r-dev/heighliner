@@ -19,16 +19,15 @@ type Client struct {
 	genericclioptions.IOStreams
 }
 
-// GetPath returns the path to the dagger binary.
-func GetPath() string {
+// GetBin returns the path to the dagger binary.
+func GetBin() string {
 	return filepath.Join(state.GetHln(), "bin", "dagger")
 }
 
 // NewClient creates a customized dagger client and returns it
 func NewClient(logFormat, logLevel string, streams genericclioptions.IOStreams) (*Client, error) {
-	binary := GetPath()
 	return &Client{
-		Binary:    binary,
+		Binary:    GetBin(),
 		LogFormat: logFormat,
 		LogLevel:  logLevel,
 		IOStreams: streams,
@@ -37,7 +36,7 @@ func NewClient(logFormat, logLevel string, streams genericclioptions.IOStreams) 
 
 // NewDefaultClient creates a default dagger client and returns it.
 func NewDefaultClient(streams genericclioptions.IOStreams) (*Client, error) {
-	binary := GetPath()
+	binary := GetBin()
 	return &Client{
 		Binary:    binary,
 		LogFormat: "plain",

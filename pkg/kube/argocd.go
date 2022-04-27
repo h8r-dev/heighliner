@@ -13,6 +13,8 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/logger"
 )
 
+// TODO move the contents and delete this package.
+
 var argoAppResource = schema.GroupVersionResource{
 	Group:    "argoproj.io",
 	Version:  "v1alpha1",
