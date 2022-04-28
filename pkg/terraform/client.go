@@ -49,7 +49,7 @@ func (c *Client) Check() error {
 	lg := logger.New(c.IOStreams)
 	// Check if terraform binary exist.
 	if _, err := os.Stat(c.Binary); errors.Is(err, os.ErrNotExist) {
-		return errors.New("no terraform binary file found")
+		return fmt.Errorf("no terraform binary file found in %s", c.Binary)
 	}
 	// Check if the version of terraform is the available.
 	rex := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+`)
