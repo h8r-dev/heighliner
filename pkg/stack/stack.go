@@ -32,7 +32,7 @@ var (
 var Stacks = map[string]struct{}{
 	"gin-vue":  {},
 	"gin-next": {},
-	"nextjs":   {},
+	"sample":   {},
 }
 
 // New returns a Stack object.
