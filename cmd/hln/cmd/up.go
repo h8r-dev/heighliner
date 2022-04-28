@@ -137,7 +137,7 @@ func (o *upOptions) Run() error {
 	}
 	// Handle interactive
 	if o.Interactive {
-		sch := schema.New()
+		sch := schema.New(o.Dir)
 		err = sch.AutomaticEnv(o.Interactive)
 		if err != nil {
 			return err

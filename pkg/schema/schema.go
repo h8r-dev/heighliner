@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	// ErrNoSchema means no input schema for interactive prompt.
-	ErrNoSchema = errors.New("no schema found in current satck")
+	// ErrNotExist means no input schema for interactive prompt.
+	ErrNotExist = errors.New("no schema found in current satck")
 )
 
 // Schema represents a input schema of a stack.
 type Schema struct {
+	// Dir is the path to stack! Not schema directly.
+	Dir        string
 	Parameters []Parameter `yaml:"parameters"`
 }
 
@@ -32,8 +34,10 @@ type Parameter struct {
 }
 
 // New creates and returns a schema.
-func New() *Schema {
-	return &Schema{}
+func New(dir string) *Schema {
+	return &Schema{
+		Dir: dir,
+	}
 }
 
 // AutomaticEnv sets envs automatically.
@@ -74,18 +78,9 @@ func (s *Schema) AutomaticEnv(interactive bool) error {
 
 // NOTE: Make sure you are already in the project dir.
 func (s *Schema) load() error {
-	file, err := os.Open(path.Join("schemas", "schema.yaml"))
+	b, err := ioutil.ReadFile(filepath.Join(s.Dir, "schemas", "schema.yaml"))
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrNoSchema, err.Error())
-	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
-		return fmt.Errorf("failed to read schema file %w", err)
+		return fmt.Errorf("%w: %s", ErrNotExist, err.Error())
 	}
 	if err = yaml.Unmarshal(b, s); err != nil {
 		return fmt.Errorf("syntax error in schema: %w", err)
