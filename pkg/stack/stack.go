@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/hashicorp/go-getter/v2"
 
@@ -14,6 +14,9 @@ import (
 
 // Stack is a CloudNative application template.
 type Stack struct {
+	Path string
+
+	// TODO Should read from stack metadata
 	Name        string `json:"name" yaml:"name"`
 	URL         string `json:"url" yaml:"url"`
 	Version     string `json:"version" yaml:"version"`
@@ -21,14 +24,15 @@ type Stack struct {
 }
 
 var (
-	// ErrNoSuchStack means heighliner can't find the stack in localstorage.
-	ErrNoSuchStack = errors.New("target stack doesn't exist")
+	// ErrNotExist mean this stack doesn't exist.
+	ErrNotExist = errors.New("target stack doesn't exist")
 )
 
 // Stacks stores all available stacks.
 var Stacks = map[string]struct{}{
 	"gin-vue":  {},
 	"gin-next": {},
+	"nextjs":   {},
 }
 
 // New returns a Stack object.
@@ -38,15 +42,15 @@ func New(name string) (*Stack, error) {
 	// Check if specified stack exists or not
 	_, ok := Stacks[name]
 	if !ok {
-		return nil, ErrNoSuchStack
+		return nil, ErrNotExist
 	}
 
-	version := defaultVersion
-	url := fmt.Sprintf("https://stack.h8r.io/%s-%s.tar.gz", name, version)
+	url := fmt.Sprintf("https://stack.h8r.io/%s-%s.tar.gz", name, defaultVersion)
 	s := &Stack{
+		Path:    filepath.Join(state.GetCache(), name),
 		Name:    name,
 		URL:     url,
-		Version: version,
+		Version: "0.0.1",
 	}
 
 	return s, nil
@@ -73,7 +77,7 @@ func (s *Stack) check() bool {
 func (s *Stack) pull() error {
 	req := &getter.Request{
 		Src: s.URL,
-		Dst: state.GetCache(),
+		Dst: filepath.Dir(s.Path),
 	}
 	err := util.GetWithTracker(req)
 	if err != nil {
@@ -83,7 +87,7 @@ func (s *Stack) pull() error {
 }
 
 func (s *Stack) clean() {
-	if err := os.RemoveAll(path.Join(state.GetCache(), s.Name)); err != nil {
+	if err := os.RemoveAll(s.Path); err != nil {
 		panic(err)
 	}
 }
