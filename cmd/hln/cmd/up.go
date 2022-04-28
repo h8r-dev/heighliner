@@ -127,14 +127,19 @@ func (o *upOptions) Run() error {
 	//     	Set input values
 	// -----------------------------
 	// Handle --set flags
+	// TODO: handle input in a function
 	for _, val := range o.Values {
-		envvar := strings.Split(val, "=")
-		envvar[1], err = homedir.Expand(envvar[1])
+		envs := strings.Split(val, "=")
+		key, val := envs[0], envs[1]
+		val, err := homedir.Expand(val)
 		if err != nil {
 			return err
 		}
-		err := os.Setenv(envvar[0], envvar[1])
+		val, err = filepath.Abs(val)
 		if err != nil {
+			return err
+		}
+		if err := os.Setenv(key, val); err != nil {
 			return err
 		}
 	}
