@@ -89,7 +89,7 @@ func installBuildKit() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Deployment %s craeted\n", buildKitName)
+	fmt.Printf("Deployment %s created\n", buildKitName)
 
 	f, _ := fields.ParseSelector(fmt.Sprintf("metadata.name=%s", buildKitName))
 	watchlist := cache.NewListWatchFromClient(
