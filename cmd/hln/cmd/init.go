@@ -12,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/h8r-dev/heighliner/pkg/checker"
@@ -20,7 +19,6 @@ import (
 )
 
 func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
-	o := &initOptions{}
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize dependent tools and services",
@@ -30,49 +28,35 @@ func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		if o.InstallBuildKit {
-			o.Kubecli, err = k8sutil.NewFactory(k8sutil.GetKubeConfigPath()).KubernetesClientSet()
-			if err != nil {
-				return fmt.Errorf("failed to make kube client: %w", err)
-			}
-			return o.Run()
-		}
-		return nil
+		return installBuildKit()
 	}
 	// Shadow the root PersistentPreRun
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {}
 
-	o.addFlags(cmd)
 	return cmd
 }
 
-type initOptions struct {
-	InstallBuildKit bool
-
-	Kubecli *kubernetes.Clientset
-}
-
-func (o *initOptions) addFlags(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&o.InstallBuildKit, "install-buildkit", false, "Install buildkit to cluster")
-}
-
-func (o *initOptions) Run() error {
+func installBuildKit() error {
+	client, err := k8sutil.NewFactory(k8sutil.GetKubeConfigPath()).KubernetesClientSet()
+	if err != nil {
+		return fmt.Errorf("failed to make kube client: %w", err)
+	}
 	// Create namespace if not exist
-	_, err := o.Kubecli.CoreV1().Namespaces().Get(context.TODO(), heighlinerNs, metav1.GetOptions{})
+	_, err = client.CoreV1().Namespaces().Get(context.TODO(), heighlinerNs, metav1.GetOptions{})
 	if err != nil {
 		if !k8serr.IsNotFound(err) {
 			return err
 		}
 		var ns corev1.Namespace
 		ns.Name = heighlinerNs
-		_, err = o.Kubecli.CoreV1().Namespaces().Create(context.TODO(), &ns, metav1.CreateOptions{})
+		_, err = client.CoreV1().Namespaces().Create(context.TODO(), &ns, metav1.CreateOptions{})
 		if err != nil {
 			return err
 		}
 	}
 
 	buildKitLabels := map[string]string{"app": "buildkitd"}
-	_, err = o.Kubecli.AppsV1().Deployments(heighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
+	_, err = client.AppsV1().Deployments(heighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
 	if err == nil {
 		fmt.Println(buildKitName + " has already been installed, skip it")
 		return nil
@@ -101,7 +85,7 @@ func (o *initOptions) Run() error {
 		SecurityContext: &corev1.SecurityContext{Privileged: &privileged},
 		Ports:           []corev1.ContainerPort{{ContainerPort: 1234}},
 	}}
-	_, err = o.Kubecli.AppsV1().Deployments(heighlinerNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
+	_, err = client.AppsV1().Deployments(heighlinerNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -109,7 +93,7 @@ func (o *initOptions) Run() error {
 
 	f, _ := fields.ParseSelector(fmt.Sprintf("metadata.name=%s", buildKitName))
 	watchlist := cache.NewListWatchFromClient(
-		o.Kubecli.AppsV1().RESTClient(),
+		client.AppsV1().RESTClient(),
 		"deployments",
 		heighlinerNs,
 		f,
