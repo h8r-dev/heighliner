@@ -3,6 +3,8 @@ package dagger
 import (
 	"os"
 
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
@@ -53,6 +55,12 @@ func (c *Client) Do(o *ActionOptions) error {
 		if err != nil {
 			return err
 		}
+	}
+	if err := util.Exec(genericclioptions.NewTestIOStreamsDiscard(), c.Binary, "project", "init"); err != nil {
+		return err
+	}
+	if err := util.Exec(genericclioptions.NewTestIOStreamsDiscard(), c.Binary, "project", "update"); err != nil {
+		return err
 	}
 	args := []string{
 		"--log-format", c.LogFormat,

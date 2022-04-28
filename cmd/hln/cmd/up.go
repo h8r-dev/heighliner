@@ -21,10 +21,8 @@ import (
 	"k8s.io/client-go/transport/spdy"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
-	"github.com/h8r-dev/heighliner/pkg/project"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
-	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
@@ -65,7 +63,6 @@ fill your input values according to the prompts:
 type upOptions struct {
 	Stack string
 	Dir   string
-	local bool
 
 	Values []string
 
@@ -96,49 +93,37 @@ func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 }
 
 func (o *upOptions) Run() error {
+	// Save the pwd info brcause the program will chdir later.
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	// -----------------------------
+	// 		Prepare stack
+	// -----------------------------
+	// Use local dir
 	if o.Dir != "" {
 		var err error
 		o.Dir, err = homedir.Expand(o.Dir)
 		if err != nil {
 			return err
 		}
-		o.local = true
 	}
-	pwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	// Prepare the satck
-	var p *project.Project
-	switch {
-	case o.Stack != "":
-		s, err := stack.New(o.Stack)
+	// Use officaial stack
+	if o.Stack != "" {
+		stk, err := stack.New(o.Stack)
 		if err != nil {
 			return err
 		}
-		err = s.Update()
-		if err != nil {
+		if err := stk.Update(); err != nil {
 			return err
 		}
-		p = project.New(
-			filepath.Join(state.GetCache(), s.Name),
-			filepath.Join(state.GetTemp(), s.Name))
-
-	case o.Dir != "":
-		p = project.New(o.Dir, filepath.Join(state.GetTemp(), filepath.Base(o.Dir)))
-	default:
-		p = project.New(pwd, filepath.Join(state.GetTemp(), filepath.Base("hln")))
+		o.Dir = stk.Path
 	}
-
-	// Initialize the project.
-	// Enter the project dir automatically.
-	err = p.Init()
-	if err != nil {
-		return err
-	}
-
-	// Set input values.
+	// -----------------------------
+	//     	Set input values
+	// -----------------------------
+	// Handle --set flags
 	for _, val := range o.Values {
 		envvar := strings.Split(val, "=")
 		envvar[1], err = homedir.Expand(envvar[1])
@@ -150,6 +135,7 @@ func (o *upOptions) Run() error {
 			return err
 		}
 	}
+	// Handle interactive
 	if o.Interactive {
 		sch := schema.New()
 		err = sch.AutomaticEnv(o.Interactive)
@@ -157,7 +143,9 @@ func (o *upOptions) Run() error {
 			return err
 		}
 	}
-
+	// -----------------------------
+	// 	Port-forward buildkit
+	// -----------------------------
 	// Forwarding port to buildkit
 	readyCh := make(chan struct{})
 	stopCh := make(chan struct{}, 1)
@@ -179,8 +167,9 @@ func (o *upOptions) Run() error {
 		return err
 	}
 	_ = os.Setenv("BUILDKIT_HOST", fmt.Sprintf("tcp://127.0.0.1:%d", port))
-
-	// Execute the action.
+	// -----------------------------
+	// 	Execute dagger action
+	// -----------------------------
 	cli, err := dagger.NewClient(
 		viper.GetString("log-format"),
 		viper.GetString("log-level"),
@@ -198,15 +187,16 @@ func (o *upOptions) Run() error {
 	if err != nil {
 		return err
 	}
-
+	// -----------------------------
+	// 	Handle the output
+	// -----------------------------
 	// Print the output.
 	b, err := os.ReadFile(stackOutput)
 	if err != nil {
 		return err
 	}
 	fmt.Fprintf(o.IOStreams.Out, "%s\n", b)
-
-	// Keep the output info.
+	// Save the output info.
 	err = copy.Copy(stackOutput, filepath.Join(pwd, appInfo))
 	if err != nil {
 		return err
