@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
@@ -42,13 +43,16 @@ func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
 }
 
 func (o *downOptions) Run() error {
-	kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		kubeconfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
+	}
 	pat := os.Getenv("GITHUB_TOKEN")
 	output, err := app.Load(appInfo)
 	if err != nil {
 		return err
 	}
-	dClient, err := k8sutil.NewFactory("").DynamicClient()
+	dClient, err := k8sutil.NewFactory(kubeconfig).DynamicClient()
 	if err != nil {
 		return err
 	}
@@ -125,8 +129,13 @@ func deleteRepos(kubeconfig, token string, scm app.SCM, streams genericclioption
 	}
 	for _, repo := range scm.Repos {
 		lg.Info(fmt.Sprintf("delete %s...", repo.Name))
+		repoDir := filepath.Join(terraformDir, repo.Name)
+		if err := os.MkdirAll(repoDir, 0755); err != nil {
+			return err
+		}
+		copy.Copy(providerInfo, filepath.Join(repoDir, "provider.tf"))
 		if err := tfClient.Destroy(terraform.NewApplyOptions(
-			terraformDir,
+			repoDir,
 			repo.TerraformVars.Suffix,
 			repo.TerraformVars.Namespace,
 			kubeconfig,

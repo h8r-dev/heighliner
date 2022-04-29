@@ -205,6 +205,9 @@ func (o *upOptions) Run() error {
 		return err
 	}
 	fmt.Fprintf(o.IOStreams.Out, "%s\n", b)
+	if err := os.RemoveAll(filepath.Join(pwd, ".hln")); err != nil {
+		return err
+	}
 	// Save the output info.
 	if err := copy.Copy(stackOutput, filepath.Join(pwd, appInfo)); err != nil {
 		return err
