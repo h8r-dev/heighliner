@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -19,8 +19,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
+	"k8s.io/kubectl/pkg/cmd/config"
+	"k8s.io/kubectl/pkg/scheme"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/schema"
@@ -302,9 +305,30 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 
 func flattenKubeconfig() error {
 	kubeconfig := k8sutil.GetKubeConfigPath()
-	kubeCmd := exec.Command("kubectl", "config", "view", "--kubeconfig", kubeconfig, "--flatten", "--minify")
-	sp, err := kubeCmd.Output()
+
+	// kubeCmd := exec.Command("kubectl", "config", "view", "--kubeconfig", kubeconfig, "--flatten", "--minify")
+	// sp, err := kubeCmd.Output()
+	// if err != nil {
+	// 	return err
+	// }
+
+	b := make([]byte, 0)
+	buff := bytes.NewBuffer(b)
+	po := clientcmd.NewDefaultPathOptions() // po.LoadingRules.ExplicitPath = kubeconfig
+	vo := config.ViewOptions{
+		ConfigAccess: po,
+		Flatten:      true,
+		Merge:        1,
+		PrintFlags:   genericclioptions.NewPrintFlags("").WithTypeSetter(scheme.Scheme).WithDefaultOutput("yaml"),
+		Minify:       true,
+		IOStreams:    genericclioptions.IOStreams{In: os.Stdin, Out: buff, ErrOut: os.Stderr},
+	}
+	printer, err := vo.PrintFlags.ToPrinter()
 	if err != nil {
+		return err
+	}
+	vo.PrintObject = printer.PrintObj
+	if err = vo.Run(); err != nil {
 		return err
 	}
 
@@ -318,5 +342,5 @@ func flattenKubeconfig() error {
 		return err
 	}
 
-	return ioutil.WriteFile(kubeconfig, sp, 0644)
+	return ioutil.WriteFile(kubeconfig, buff.Bytes(), 0644)
 }
