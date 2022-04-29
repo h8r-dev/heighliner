@@ -170,7 +170,7 @@ func (o *upOptions) Run() error {
 	}
 	_ = os.Setenv("BUILDKIT_HOST", fmt.Sprintf("tcp://127.0.0.1:%d", port))
 
-	fmt.Fprintf(o.IOStreams.Out, "Flattening kubeconfig: %s", k8sutil.GetKubeConfigPath())
+	fmt.Fprintf(o.IOStreams.Out, "Flattening kubeconfig: %s\n", k8sutil.GetKubeConfigPath())
 	if err := flattenKubeconfig(); err != nil {
 		fmt.Println("Flatten kubeconfig failed: " + err.Error())
 	}
