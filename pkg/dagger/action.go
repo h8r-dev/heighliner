@@ -65,7 +65,7 @@ func (c *Client) Do(o *ActionOptions) error {
 	}
 	// For convenience that user might forget to set KUBECONFIG env, we will still set it which our stacks depends on.
 	if os.Getenv("KUBECONFIG") == "" {
-		os.Setenv("KUBECONFIG", k8sutil.GetKubeConfigPath())
+		_ = os.Setenv("KUBECONFIG", k8sutil.GetKubeConfigPath())
 	}
 	args := []string{
 		"--log-format", c.LogFormat,
