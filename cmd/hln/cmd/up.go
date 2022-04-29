@@ -170,10 +170,7 @@ func (o *upOptions) Run() error {
 	}
 	_ = os.Setenv("BUILDKIT_HOST", fmt.Sprintf("tcp://127.0.0.1:%d", port))
 
-	// -----------------------------
-	// 	Flatten kubeconfig
-	// ----------------------------
-	fmt.Println("Flattening kubeconfig " + k8sutil.GetKubeConfigPath())
+	fmt.Fprintf(o.IOStreams.Out, "Flattening kubeconfig: %s", k8sutil.GetKubeConfigPath())
 	if err := flattenKubeconfig(); err != nil {
 		fmt.Println("Flatten kubeconfig failed: " + err.Error())
 	}
@@ -284,13 +281,13 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 }
 
 func flattenKubeconfig() error {
-	kubeCmd := exec.Command("kubectl", "config", "view", "--flatten", "--minify")
+	kubeconfig := k8sutil.GetKubeConfigPath()
+	kubeCmd := exec.Command("kubectl", "config", "view", "--kubeconfig", kubeconfig, "--flatten", "--minify")
 	sp, err := kubeCmd.Output()
 	if err != nil {
 		return err
 	}
 
-	kubeconfig := k8sutil.GetKubeConfigPath()
 	bys, err := ioutil.ReadFile(kubeconfig)
 	if err != nil {
 		return err
