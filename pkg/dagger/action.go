@@ -6,6 +6,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 // ActionOptions controls the behavior of dagger action.
@@ -61,6 +62,10 @@ func (c *Client) Do(o *ActionOptions) error {
 	}
 	if err := util.Exec(genericclioptions.NewTestIOStreamsDiscard(), c.Binary, "project", "update"); err != nil {
 		return err
+	}
+	// For convenience that user might forget to set KUBECONFIG env, we will still set it which our stacks depends on.
+	if os.Getenv("KUBECONFIG") == "" {
+		os.Setenv("KUBECONFIG", k8sutil.GetKubeConfigPath())
 	}
 	args := []string{
 		"--log-format", c.LogFormat,
