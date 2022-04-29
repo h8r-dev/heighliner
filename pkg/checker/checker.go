@@ -15,6 +15,7 @@ import (
 
 // PreCheck just check the infras and print tips.
 func PreCheck(streams genericclioptions.IOStreams) error {
+	prompt := "please run hln init"
 	lg := logger.New(streams)
 	ioDiscard := genericclioptions.NewTestIOStreamsDiscard()
 	daggerCli, err := dagger.NewDefaultClient(ioDiscard)
@@ -22,7 +23,7 @@ func PreCheck(streams genericclioptions.IOStreams) error {
 		return err
 	}
 	if err := daggerCli.Check(); err != nil {
-		lg.Warn(color.HiYellowString("please run hln check"),
+		lg.Warn(color.HiYellowString(prompt),
 			zap.NamedError("warn", err))
 	}
 	nhctlCli, err := nhctl.NewDefaultClient(ioDiscard)
@@ -30,7 +31,7 @@ func PreCheck(streams genericclioptions.IOStreams) error {
 		return err
 	}
 	if err := nhctlCli.Check(); err != nil {
-		lg.Warn(color.HiYellowString("please run hln check"),
+		lg.Warn(color.HiYellowString(prompt),
 			zap.NamedError("warn", err))
 	}
 	tfCli, err := terraform.NewDefaultClient(ioDiscard)
@@ -38,7 +39,7 @@ func PreCheck(streams genericclioptions.IOStreams) error {
 		return err
 	}
 	if err := tfCli.Check(); err != nil {
-		lg.Warn(color.HiYellowString("please run hln check"),
+		lg.Warn(color.HiYellowString(prompt),
 			zap.NamedError("warn", err))
 	}
 	return nil
