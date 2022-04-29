@@ -18,24 +18,47 @@ type CD struct {
 	Namespace      string     `json:"namespace"`
 	Type           string     `json:"type"`
 	ApplicationRef []*ArgoApp `json:"applicationRef"`
+	DashBoardRef   DashBoard  `json:"dashboardRef"`
 }
 
 // ArgoApp is argoCD application CRD.
 type ArgoApp struct {
-	Name string `yaml:"name"`
+	Name string `json:"name"`
+}
+
+// DashBoard of some component.
+type DashBoard struct {
+	URL        string     `json:"url"`
+	Credential Credential `json:"credential"`
+}
+
+// Credential ifor login.
+type Credential struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 // SCM is source code manager like github.
 type SCM struct {
-	Repos []*Repo `json:"repos"`
+	Provider     string  `json:"provider"`
+	Manager      string  `json:"manager"`
+	TfProvider   string  `json:"tfProvider"`
+	Organization string  `json:"organization"`
+	Repos        []*Repo `json:"repos"`
 }
 
 // Repo is a source code repository.
 type Repo struct {
-	SecrectSuffix  string `json:"secretSuffix"`
-	NameSpace      string `json:"namespace"`
-	RepoName       string `json:"repoName"`
-	RepoVisibility string `json:"repoVisibility"`
+	Name          string        `json:"name"`
+	Visibility    string        `json:"visibility"`
+	URL           string        `json:"url"`
+	TerraformVars TerraformVars `json:"terraformVars"`
+}
+
+// TerraformVars for deleting repo.
+type TerraformVars struct {
+	Suffix    string `json:"suffix"`
+	Namespace string `json:"namespace"`
 }
 
 // Load read and marshal the output yaml file.

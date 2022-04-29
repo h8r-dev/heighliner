@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
@@ -13,9 +15,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
+	"github.com/h8r-dev/heighliner/pkg/terraform"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
@@ -31,10 +35,15 @@ func (o *downOptions) BindFlags(f *pflag.FlagSet) {
 }
 
 func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		return errors.New("please set GITHUB_TOKEN environment variable")
+	}
 	return nil
 }
 
 func (o *downOptions) Run() error {
+	kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+	pat := os.Getenv("GITHUB_TOKEN")
 	output, err := app.Load(appInfo)
 	if err != nil {
 		return err
@@ -46,7 +55,8 @@ func (o *downOptions) Run() error {
 	if err := deleteArgoCDApps(context.Background(), dClient, output.CD, o.IOStreams); err != nil {
 		return err
 	}
-	return nil
+
+	return deleteRepos(kubeconfig, pat, output.SCM, o.IOStreams)
 }
 
 func newDownCmd(streams genericclioptions.IOStreams) *cobra.Command {
@@ -75,7 +85,7 @@ func deleteArgoCDApps(ctx context.Context,
 	lg := logger.New(streams)
 	for _, app := range cd.ApplicationRef {
 		if err := patchFinalizerAndDelete(ctx, dClient, cd.Namespace, app.Name, streams); err != nil {
-			lg.Info(color.HiYellowString("skip %s and continue", app.Name), zap.NamedError("warn", err))
+			lg.Info(fmt.Sprintf("argo app %s already deleted", app.Name), zap.NamedError("warn", err))
 		}
 	}
 	return nil
@@ -99,4 +109,26 @@ func patchFinalizerAndDelete(ctx context.Context,
 	}
 	lg.Info(fmt.Sprintf("patch finalizer to app %s", name))
 	return argoApp.Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func deleteRepos(kubeconfig, token string, scm app.SCM, streams genericclioptions.IOStreams) error {
+	lg := logger.New(streams)
+	os.Setenv("TF_VAR_github_token", token)
+	os.Setenv("TF_VAR_organization", scm.Organization)
+	tfClient, err := terraform.NewDefaultClient(streams)
+	if err != nil {
+		return err
+	}
+	for _, repo := range scm.Repos {
+		lg.Info(fmt.Sprintf("delete %s...", repo.Name))
+		if err := tfClient.Destroy(terraform.NewApplyOptions(
+			terraformDir,
+			repo.TerraformVars.Suffix,
+			repo.TerraformVars.Namespace,
+			kubeconfig,
+		)); err != nil {
+			return err
+		}
+	}
+	return nil
 }

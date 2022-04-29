@@ -2,10 +2,8 @@ package terraform
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,7 +11,6 @@ import (
 
 	"github.com/hashicorp/go-getter/v2"
 	gover "github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-exec/tfexec"
 	"go.uber.org/zap"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
@@ -98,25 +95,6 @@ func (c *Client) install() error {
 		Dst: filepath.Dir(c.Binary),
 	}
 	err := util.GetWithTracker(req)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Destroy executes terraform destroy.
-func (c *Client) Destroy(workDir string) error {
-	tf, err := tfexec.NewTerraform(workDir, c.Binary)
-	if err != nil {
-		log.Fatalf("error running NewTerraform: %s", err)
-	}
-
-	err = tf.Init(context.Background(), tfexec.Upgrade(true))
-	if err != nil {
-		return err
-	}
-
-	err = tf.Destroy(context.Background())
 	if err != nil {
 		return err
 	}
