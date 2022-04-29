@@ -25,6 +25,7 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
+	"github.com/h8r-dev/heighliner/pkg/state/app"
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
@@ -205,8 +206,14 @@ func (o *upOptions) Run() error {
 	}
 	fmt.Fprintf(o.IOStreams.Out, "%s\n", b)
 	// Save the output info.
-	err = copy.Copy(stackOutput, filepath.Join(pwd, appInfo))
+	if err := copy.Copy(stackOutput, filepath.Join(pwd, appInfo)); err != nil {
+		return err
+	}
+	ao, err := app.Load(stackOutput)
 	if err != nil {
+		return err
+	}
+	if err := copy.Copy(ao.SCM.TfProvider, filepath.Join(pwd, providerInfo)); err != nil {
 		return err
 	}
 
