@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 )
 
+// ApplyOptions controls the behavior of terraform.
 type ApplyOptions struct {
 	Dir        string
 	Suffix     string
@@ -15,6 +16,7 @@ type ApplyOptions struct {
 	KubeConfig string
 }
 
+// NewApplyOptions returns an ApplyOption.
 func NewApplyOptions(dir, suffix, namespace, kubeconfig string) *ApplyOptions {
 	return &ApplyOptions{
 		Dir:        dir,

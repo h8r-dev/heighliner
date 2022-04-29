@@ -113,8 +113,12 @@ func patchFinalizerAndDelete(ctx context.Context,
 
 func deleteRepos(kubeconfig, token string, scm app.SCM, streams genericclioptions.IOStreams) error {
 	lg := logger.New(streams)
-	os.Setenv("TF_VAR_github_token", token)
-	os.Setenv("TF_VAR_organization", scm.Organization)
+	if err := os.Setenv("TF_VAR_github_token", token); err != nil {
+		return err
+	}
+	if err := os.Setenv("TF_VAR_organization", scm.Organization); err != nil {
+		return err
+	}
 	tfClient, err := terraform.NewDefaultClient(streams)
 	if err != nil {
 		return err
