@@ -88,7 +88,7 @@ func (c *Client) CheckAndInstall() error {
 
 func (c *Client) install() error {
 	src := fmt.Sprintf(
-		"https://releases.hashicorp.com/terraform/1.1.9/terraform_%s_%s_%s.zip",
+		"https://dl.h8r.io/terraform/terraform_%s_%s_%s.zip",
 		version.TerraformDefault, runtime.GOOS, runtime.GOARCH)
 	req := &getter.Request{
 		Src: src,

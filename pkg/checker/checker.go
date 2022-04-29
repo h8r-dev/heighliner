@@ -7,7 +7,6 @@ import (
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/logger"
-	"github.com/h8r-dev/heighliner/pkg/nhctl"
 	"github.com/h8r-dev/heighliner/pkg/terraform"
 )
 
@@ -26,14 +25,14 @@ func PreCheck(streams genericclioptions.IOStreams) error {
 		lg.Warn(color.HiYellowString(prompt),
 			zap.NamedError("warn", err))
 	}
-	nhctlCli, err := nhctl.NewDefaultClient(ioDiscard)
-	if err != nil {
-		return err
-	}
-	if err := nhctlCli.Check(); err != nil {
-		lg.Warn(color.HiYellowString(prompt),
-			zap.NamedError("warn", err))
-	}
+	// nhctlCli, err := nhctl.NewDefaultClient(ioDiscard)
+	// if err != nil {
+	// 	return err
+	// }
+	// if err := nhctlCli.Check(); err != nil {
+	// 	lg.Warn(color.HiYellowString(prompt),
+	// 		zap.NamedError("warn", err))
+	// }
 	tfCli, err := terraform.NewDefaultClient(ioDiscard)
 	if err != nil {
 		return err
@@ -61,9 +60,10 @@ func Check(streams genericclioptions.IOStreams) error {
 	if err := tfCli.CheckAndInstall(); err != nil {
 		return err
 	}
-	nhctlCli, err := nhctl.NewDefaultClient(streams)
-	if err != nil {
-		return err
-	}
-	return nhctlCli.CheckAndInstall()
+	return nil
+	// nhctlCli, err := nhctl.NewDefaultClient(streams)
+	// if err != nil {
+	// 	return err
+	// }
+	// return nhctlCli.CheckAndInstall()
 }
