@@ -127,29 +127,8 @@ func (o *upOptions) Run() error {
 	//     	Set input values
 	// -----------------------------
 	// Handle --set flags
-	// TODO: handle input in a function
-	for _, val := range o.Values {
-		envs := strings.Split(val, "=")
-		key, val := envs[0], envs[1]
-		val, err := homedir.Expand(val)
-		if err != nil {
-			return err
-		}
-		val, err = filepath.Abs(val)
-		if err != nil {
-			return err
-		}
-		if err := os.Setenv(key, val); err != nil {
-			return err
-		}
-	}
-	// Handle interactive
-	if o.Interactive {
-		sch := schema.New(o.Dir)
-		err = sch.AutomaticEnv(o.Interactive)
-		if err != nil {
-			return err
-		}
+	if err := o.setEnv(); err != nil {
+		return err
 	}
 	// -----------------------------
 	// 	Port-forward buildkit
@@ -222,6 +201,32 @@ func (o *upOptions) Run() error {
 		return err
 	}
 
+	return nil
+}
+
+func (o upOptions) setEnv() error {
+	for _, val := range o.Values {
+		envs := strings.Split(val, "=")
+		key, val := envs[0], envs[1]
+		val, err := homedir.Expand(val)
+		if err != nil {
+			return err
+		}
+		val, err = filepath.Abs(val)
+		if err != nil {
+			return err
+		}
+		if err := os.Setenv(key, val); err != nil {
+			return err
+		}
+	}
+	// Handle interactive
+	if o.Interactive {
+		sch := schema.New(o.Dir)
+		if err := sch.AutomaticEnv(o.Interactive); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
