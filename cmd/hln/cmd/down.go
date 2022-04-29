@@ -16,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/util/homedir"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
@@ -43,10 +42,7 @@ func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
 }
 
 func (o *downOptions) Run() error {
-	kubeconfig := os.Getenv("KUBECONFIG")
-	if kubeconfig == "" {
-		kubeconfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
-	}
+	kubeconfig := k8sutil.GetKubeConfigPath()
 	pat := os.Getenv("GITHUB_TOKEN")
 	output, err := app.Load(appInfo)
 	if err != nil {
