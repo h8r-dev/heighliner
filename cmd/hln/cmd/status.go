@@ -53,6 +53,12 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load app output: %w", err)
 	}
 
+	prettyPrint(ao)
+
+	return nil
+}
+
+func prettyPrint(ao *app.Output) {
 	printTarget := os.Stdout
 	appName := os.Getenv("APP_NAME")
 
@@ -76,7 +82,11 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 	fmt.Fprintf(printTarget, "ArgoApps:\n")
 	for _, app := range ao.CD.ApplicationRef {
 		fmt.Fprintf(printTarget, "  Name: %s\n", app.Name)
+		if app.Username != "" {
+			fmt.Fprintf(printTarget, "  Credential:\n")
+			fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(app.Username))
+			fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(app.Password))
+		}
 	}
 
-	return nil
 }
