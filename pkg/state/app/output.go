@@ -23,7 +23,9 @@ type CD struct {
 
 // ArgoApp is argoCD application CRD.
 type ArgoApp struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 // DashBoard of some component.
