@@ -133,7 +133,9 @@ func deleteRepos(kubeconfig, token string, scm app.SCM, streams genericclioption
 		if err := os.MkdirAll(repoDir, 0755); err != nil {
 			return err
 		}
-		copy.Copy(providerInfo, filepath.Join(repoDir, "provider.tf"))
+		if err := copy.Copy(providerInfo, filepath.Join(repoDir, "provider.tf")); err != nil {
+			return err
+		}
 		if err := tfClient.Destroy(terraform.NewApplyOptions(
 			repoDir,
 			repo.TerraformVars.Suffix,
