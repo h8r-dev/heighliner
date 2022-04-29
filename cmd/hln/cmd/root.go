@@ -88,5 +88,6 @@ func Execute(rootCmd *cobra.Command) {
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		lg.Error(err.Error())
+		os.Exit(1)
 	}
 }
