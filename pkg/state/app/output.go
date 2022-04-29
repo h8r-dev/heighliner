@@ -32,10 +32,10 @@ type SCM struct {
 
 // Repo is a source code repository.
 type Repo struct {
-	SecrectSuffix  string `json:"secretsuffix"`
+	SecrectSuffix  string `json:"secretSuffix"`
 	NameSpace      string `json:"namespace"`
-	RepoName       string `json:"repo_name"`
-	RepoVisibility string `json:"repo_visibility"`
+	RepoName       string `json:"repoName"`
+	RepoVisibility string `json:"repoVisibility"`
 }
 
 // Load read and marshal the output yaml file.
