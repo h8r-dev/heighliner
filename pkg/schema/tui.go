@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -27,10 +28,32 @@ func startUI(pm Parameter) error {
 func setVal(p Parameter, val string) error {
 	switch {
 	case val != "":
-		var err error
-		val, err = homedir.Expand(val)
-		if err != nil {
-			return err
+		if p.Type == "path" {
+			var err error
+			val, err = homedir.Expand(val)
+			if err != nil {
+				return err
+			}
+			val, err = filepath.Abs(val)
+			if err != nil {
+				return err
+			}
+		}
+		if err := os.Setenv(p.Key, val); err != nil {
+			panic(err)
+		}
+	case p.Default != "":
+		val = p.Default
+		if p.Type == "path" {
+			var err error
+			val, err = homedir.Expand(val)
+			if err != nil {
+				return err
+			}
+			val, err = filepath.Abs(val)
+			if err != nil {
+				return err
+			}
 		}
 		if err := os.Setenv(p.Key, val); err != nil {
 			panic(err)

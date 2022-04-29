@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
 )
 
@@ -61,7 +62,16 @@ func (s *Schema) AutomaticEnv(interactive bool) error {
 		} else {
 			switch {
 			case v.Default != "":
-				if err := os.Setenv(v.Key, v.Default); err != nil {
+				key, val := v.Key, v.Default
+				val, err := homedir.Expand(val)
+				if err != nil {
+					return err
+				}
+				val, err = filepath.Abs(val)
+				if err != nil {
+					return err
+				}
+				if err := os.Setenv(key, val); err != nil {
 					panic(err)
 				}
 				continue
