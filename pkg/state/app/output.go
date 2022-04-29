@@ -1,29 +1,50 @@
 package app
 
+import (
+	"os"
+
+	"sigs.k8s.io/yaml"
+)
+
 // Output defines the format of the output from `up` command.
 type Output struct {
-	Application *Application      `json:"application"`
-	Repository  *Repository       `json:"repository,omitempty"`
-	Infra       []*InfraComponent `json:"infra,omitempty"`
+	CD  CD  `json:"cd"`
+	SCM SCM `json:"scm"`
 }
 
-// Application defines the application specific information.
-type Application struct {
-	Domain  string `json:"domain,omitempty"`
-	Ingress string `json:"ingress,omitempty"`
+// CD is information about argoCD.
+type CD struct {
+	Provider       string     `json:"provider"`
+	Namespace      string     `json:"namespace"`
+	Type           string     `json:"type"`
+	ApplicationRef []*ArgoApp `json:"applicationRef"`
 }
 
-// Repository defines the repository specific information.
-type Repository struct {
-	Backend  string `json:"backend,omitempty"`
-	Frontend string `json:"frontend,omitempty"`
-	Deploy   string `json:"deploy,omitempty"`
+// ArgoApp is argoCD application CRD.
+type ArgoApp struct {
+	Name string `yaml:"name"`
 }
 
-// InfraComponent defines the information of an infra component.
-type InfraComponent struct {
-	Type     string `json:"type"`
-	URL      string `json:"url,omitempty"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
+// SCM is source code manager like github.
+type SCM struct {
+	Repos []*Repo `json:"repos"`
+}
+
+// Repo is a source code repository.
+type Repo struct {
+	SecrectSuffix  string `json:"secretSuffix"`
+	NameSpace      string `json:"namespace"`
+	RepoName       string `json:"repoName"`
+	RepoVisibility string `json:"repoVisibility"`
+}
+
+// Load read and marshal the output yaml file.
+func Load(path string) (*Output, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	output := &Output{}
+	err = yaml.Unmarshal(b, output)
+	return output, err
 }
