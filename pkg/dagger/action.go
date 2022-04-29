@@ -59,7 +59,7 @@ func (c *Client) Do(o *ActionOptions) error {
 	if err := util.Exec(genericclioptions.NewTestIOStreamsDiscard(), c.Binary, "project", "init"); err != nil {
 		return err
 	}
-	if err := util.Exec(genericclioptions.NewTestIOStreamsDiscard(), c.Binary, "project", "update"); err != nil {
+	if err := util.Exec(c.IOStreams, c.Binary, "project", "update"); err != nil {
 		return err
 	}
 	args := []string{
