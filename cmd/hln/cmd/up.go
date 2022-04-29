@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -167,6 +169,15 @@ func (o *upOptions) Run() error {
 		return err
 	}
 	_ = os.Setenv("BUILDKIT_HOST", fmt.Sprintf("tcp://127.0.0.1:%d", port))
+
+	// -----------------------------
+	// 	Flatten kubeconfig
+	// ----------------------------
+	fmt.Println("Flattening kubeconfig " + k8sutil.GetKubeConfigPath())
+	if err := flattenKubeconfig(); err != nil {
+		fmt.Println("Flatten kubeconfig failed: " + err.Error())
+	}
+
 	// -----------------------------
 	// 	Execute dagger action
 	// -----------------------------
@@ -270,4 +281,25 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 		return err
 	}
 	return fw.ForwardPorts()
+}
+
+func flattenKubeconfig() error {
+	kubeCmd := exec.Command("kubectl", "config", "view", "--flatten", "--minify")
+	sp, err := kubeCmd.Output()
+	if err != nil {
+		return err
+	}
+
+	kubeconfig := k8sutil.GetKubeConfigPath()
+	bys, err := ioutil.ReadFile(kubeconfig)
+	if err != nil {
+		return err
+	}
+
+	// Bak kubeconfig
+	if err = ioutil.WriteFile(kubeconfig+".hln.bak", bys, 0644); err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(kubeconfig, sp, 0644)
 }
