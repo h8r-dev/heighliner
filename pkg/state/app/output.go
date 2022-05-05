@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Output defines the format of the output from `up` command.
+// Output defines the output structure of `hln up` command.
 type Output struct {
 	ApplicationRef Application `json:"application"`
 	Services       []Service   `json:"services,omitempty"`
@@ -17,16 +17,18 @@ type Output struct {
 	SCM            SCM         `json:"scm,omitempty"`
 }
 
+// Application is info about the application itself.
 type Application struct {
 	Name string `json:"name"`
 }
 
+// Service of your app.
 type Service struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
-// CD is information about argoCD.
+// CD now only support argoCD.
 type CD struct {
 	Provider       string     `json:"provider"`
 	Namespace      string     `json:"namespace"`
@@ -35,20 +37,20 @@ type CD struct {
 	DashBoardRef   DashBoard  `json:"dashboardRef"`
 }
 
-// ArgoApp is argoCD application CRD.
+// ArgoApp is argoCD application.
 type ArgoApp struct {
 	Name     string `json:"name"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
-// DashBoard of some component.
+// DashBoard information of some component.
 type DashBoard struct {
 	URL        string     `json:"url"`
 	Credential Credential `json:"credential"`
 }
 
-// Credential ifor login.
+// Credential for login to dashboard.
 type Credential struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -88,6 +90,7 @@ func Load(path string) (*Output, error) {
 	return output, err
 }
 
+// PrettyPrint format and print the output.
 func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
 	printTarget := streams.Out
 

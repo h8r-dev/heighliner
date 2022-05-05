@@ -194,7 +194,10 @@ func (o *upOptions) Run() error {
 	if err := copy.Copy(stackOutput, filepath.Join(pwd, appInfo)); err != nil {
 		return err
 	}
-	ao, err := app.Load(stackOutput)
+	if err := os.Remove(stackOutput); err != nil {
+		return err
+	}
+	ao, err := app.Load(filepath.Join(pwd, appInfo))
 	if err != nil {
 		return fmt.Errorf("failed to load app output: %w", err)
 	}
