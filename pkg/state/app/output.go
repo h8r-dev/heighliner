@@ -2,11 +2,10 @@ package app
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/fatih/color"
+	"gopkg.in/yaml.v3"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/yaml"
+	"os"
 )
 
 // Output defines the output structure of `hln up` command.
@@ -60,7 +59,7 @@ type Credential struct {
 type SCM struct {
 	Provider     string  `json:"provider"`
 	Manager      string  `json:"manager"`
-	TfProvider   string  `json:"tfProvider"`
+	TfProvider   string  `json:"tfProvider" yaml:"tfProvider"`
 	Organization string  `json:"organization"`
 	Repos        []*Repo `json:"repos"`
 }
@@ -80,6 +79,7 @@ type TerraformVars struct {
 }
 
 // Load read and marshal the output yaml file.
+// Deprecated
 func Load(path string) (*Output, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -98,7 +98,7 @@ func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
 	//fmt.Fprintf(printTarget, "Application:\n")
 	//fmt.Fprintf(printTarget, "  Name: %s\n", ao.ApplicationRef.Name)
 
-	fmt.Fprintln(printTarget, fmt.Sprintf("You can access argocd on %s [Username: %s, Password: %s]", color.CyanString(ao.CD.DashBoardRef.URL),
+	fmt.Fprintln(printTarget, fmt.Sprintf("You can access Argocd on %s [Username: %s, Password: %s]", color.CyanString(ao.CD.DashBoardRef.URL),
 		color.GreenString(ao.CD.DashBoardRef.Credential.Username), color.GreenString(ao.CD.DashBoardRef.Credential.Password)))
 
 	//fmt.Fprintf(printTarget, "\nCD:\n")
@@ -113,7 +113,7 @@ func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
 		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(service.URL))
 	}
 
-	fmt.Fprintf(printTarget, "\nRepositories:\n")
+	fmt.Fprintf(printTarget, "\nYour repositories in GitHub is:\n")
 	for _, repo := range ao.SCM.Repos {
 		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(repo.Name))
 		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(repo.URL))
