@@ -187,11 +187,6 @@ func (o *upOptions) Run() error {
 	// 	Handle the output
 	// -----------------------------
 	// Print the output.
-	b, err := os.ReadFile(stackOutput)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(o.IOStreams.Out, "%s\n", b)
 	if err := os.RemoveAll(filepath.Join(pwd, ".hln")); err != nil {
 		return err
 	}
@@ -199,11 +194,17 @@ func (o *upOptions) Run() error {
 	if err := copy.Copy(stackOutput, filepath.Join(pwd, appInfo)); err != nil {
 		return err
 	}
-	ao, err := app.Load(stackOutput)
-	if err != nil {
+	if err := os.Remove(stackOutput); err != nil {
 		return err
 	}
+	ao, err := app.Load(filepath.Join(pwd, appInfo))
+	if err != nil {
+		return fmt.Errorf("failed to load app output: %w", err)
+	}
 	if err := copy.Copy(ao.SCM.TfProvider, filepath.Join(pwd, providerInfo)); err != nil {
+		return err
+	}
+	if err := ao.PrettyPrint(o.IOStreams); err != nil {
 		return err
 	}
 

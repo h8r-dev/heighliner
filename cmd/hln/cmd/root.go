@@ -56,7 +56,7 @@ func NewRootCmd() *cobra.Command {
 		newVersionCmd(),
 		newUpCmd(cfg.IOStreams),
 		newDownCmd(cfg.IOStreams),
-		newStatusCmd(),
+		newStatusCmd(cfg.IOStreams),
 		newLogsCmd(),
 		newMetricsCmd(),
 		newInitCmd(cfg.IOStreams),
