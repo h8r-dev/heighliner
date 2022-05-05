@@ -1,15 +1,29 @@
 package app
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/fatih/color"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/yaml"
 )
 
 // Output defines the format of the output from `up` command.
 type Output struct {
-	CD  CD  `json:"cd"`
-	SCM SCM `json:"scm"`
+	ApplicationRef Application `json:"application"`
+	Services       []Service   `json:"services,omitempty"`
+	CD             CD          `json:"cd,omitempty"`
+	SCM            SCM         `json:"scm,omitempty"`
+}
+
+type Application struct {
+	Name string `json:"name"`
+}
+
+type Service struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
 }
 
 // CD is information about argoCD.
@@ -72,4 +86,41 @@ func Load(path string) (*Output, error) {
 	output := &Output{}
 	err = yaml.Unmarshal(b, output)
 	return output, err
+}
+
+func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
+	printTarget := streams.Out
+
+	fmt.Fprintf(printTarget, "Application:\n")
+	fmt.Fprintf(printTarget, "  Name: %s\n", ao.ApplicationRef.Name)
+
+	fmt.Fprintf(printTarget, "\nServices:\n")
+	for _, service := range ao.Services {
+		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(service.Name))
+		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(service.URL))
+	}
+
+	fmt.Fprintf(printTarget, "\nCD:\n")
+	fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(ao.CD.DashBoardRef.URL))
+	fmt.Fprintf(printTarget, "  Credential:\n")
+	fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Username))
+	fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Password))
+
+	fmt.Fprintf(printTarget, "\nRepositories:\n")
+	for _, repo := range ao.SCM.Repos {
+		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(repo.Name))
+		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(repo.URL))
+	}
+
+	fmt.Fprintf(printTarget, "\nArgoApps:\n")
+	for _, app := range ao.CD.ApplicationRef {
+		fmt.Fprintf(printTarget, "  Name: %s\n", app.Name)
+		if app.Username != "" {
+			fmt.Fprintf(printTarget, "  Credential:\n")
+			fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(app.Username))
+			fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(app.Password))
+		}
+	}
+
+	return nil
 }

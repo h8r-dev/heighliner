@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/homedir"
 
@@ -20,10 +19,14 @@ type statusOption struct {
 	Namespace      string
 
 	Kubecli *kubernetes.Clientset
+
+	genericclioptions.IOStreams
 }
 
-func newStatusCmd() *cobra.Command {
-	o := &statusOption{}
+func newStatusCmd(streams genericclioptions.IOStreams) *cobra.Command {
+	o := &statusOption{
+		IOStreams: streams,
+	}
 	c := &cobra.Command{
 		Use:   "status",
 		Short: "Show status of your application",
@@ -53,40 +56,9 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load app output: %w", err)
 	}
 
-	prettyPrint(ao)
+	if err := ao.PrettyPrint(o.IOStreams); err != nil {
+		return err
+	}
 
 	return nil
-}
-
-func prettyPrint(ao *app.Output) {
-	printTarget := os.Stdout
-	appName := os.Getenv("APP_NAME")
-
-	// print app info
-	fmt.Fprintf(printTarget, "Application:\n")
-	fmt.Fprintf(printTarget, "  Name: %s\n", appName)
-
-	fmt.Fprintf(printTarget, "\nCD:\n")
-	fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(ao.CD.DashBoardRef.URL))
-	fmt.Fprintf(printTarget, "  Credential:\n")
-	fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Username))
-	fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Password))
-
-	// print repos
-	fmt.Fprintf(printTarget, "\nRepositories:\n")
-	for _, repo := range ao.SCM.Repos {
-		fmt.Fprintf(printTarget, "  Name: %s\n", repo.Name)
-		fmt.Fprintf(printTarget, "  URL: %s\n\n", color.CyanString(repo.URL))
-	}
-
-	fmt.Fprintf(printTarget, "ArgoApps:\n")
-	for _, app := range ao.CD.ApplicationRef {
-		fmt.Fprintf(printTarget, "  Name: %s\n", app.Name)
-		if app.Username != "" {
-			fmt.Fprintf(printTarget, "  Credential:\n")
-			fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(app.Username))
-			fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(app.Password))
-		}
-	}
-
 }
