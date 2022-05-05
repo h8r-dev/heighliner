@@ -94,20 +94,24 @@ func Load(path string) (*Output, error) {
 func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
 	printTarget := streams.Out
 
-	fmt.Fprintf(printTarget, "Application:\n")
-	fmt.Fprintf(printTarget, "  Name: %s\n", ao.ApplicationRef.Name)
+	fmt.Fprintln(printTarget, fmt.Sprintf("Heighliner application %s is Ready.", ao.ApplicationRef.Name))
+	//fmt.Fprintf(printTarget, "Application:\n")
+	//fmt.Fprintf(printTarget, "  Name: %s\n", ao.ApplicationRef.Name)
+
+	fmt.Fprintln(printTarget, fmt.Sprintf("You can access argocd on %s [Username: %s, Password: %s]", color.CyanString(ao.CD.DashBoardRef.URL),
+		color.GreenString(ao.CD.DashBoardRef.Credential.Username), color.GreenString(ao.CD.DashBoardRef.Credential.Password)))
+
+	//fmt.Fprintf(printTarget, "\nCD:\n")
+	//fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(ao.CD.DashBoardRef.URL))
+	//fmt.Fprintf(printTarget, "  Credential:\n")
+	//fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Username))
+	//fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Password))
 
 	fmt.Fprintf(printTarget, "\nServices:\n")
 	for _, service := range ao.Services {
 		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(service.Name))
 		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(service.URL))
 	}
-
-	fmt.Fprintf(printTarget, "\nCD:\n")
-	fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(ao.CD.DashBoardRef.URL))
-	fmt.Fprintf(printTarget, "  Credential:\n")
-	fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Username))
-	fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Password))
 
 	fmt.Fprintf(printTarget, "\nRepositories:\n")
 	for _, repo := range ao.SCM.Repos {
