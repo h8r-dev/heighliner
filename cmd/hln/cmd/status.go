@@ -88,14 +88,14 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 	for i, info := range status.Apps {
 		fmt.Printf("%d: %s\n", i+1, info.Name)
 		if info.Service != nil {
-			fmt.Printf("  Application %s has been deployed to k8s cluster, you can access it by k8s Service url %s in the cluster\n",
+			fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
 				info.Name, color.HiBlueString(info.Service.URL))
 		}
 		if info.Repo != nil {
-			fmt.Printf("  Application %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, color.HiBlueString(info.Repo.URL))
+			fmt.Printf("   %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, color.HiBlueString(info.Repo.URL))
 		}
 		if info.Username != "" && info.Password != "" {
-			fmt.Printf("  Your application's credential is: [Username: %s Password: %s]\n", info.Username, info.Password)
+			fmt.Printf("   Credential: [Username: %s Password: %s]\n", info.Username, info.Password)
 		}
 		fmt.Println()
 	}
