@@ -95,7 +95,7 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 			fmt.Printf("   %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, color.HiBlueString(info.Repo.URL))
 		}
 		if info.Username != "" && info.Password != "" {
-			fmt.Printf("   Credential: [Username: %s Password: %s]\n", info.Username, info.Password)
+			fmt.Printf("   credential: [Username: %s Password: %s]\n", info.Username, info.Password)
 		}
 		fmt.Println()
 	}
