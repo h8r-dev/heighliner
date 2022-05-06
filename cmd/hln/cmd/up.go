@@ -12,10 +12,11 @@ import (
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -23,12 +24,13 @@ import (
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"k8s.io/kubectl/pkg/cmd/config"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/scheme"
 
+	"github.com/h8r-dev/heighliner/internal/app"
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
-	"github.com/h8r-dev/heighliner/pkg/state/app"
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
@@ -144,9 +146,10 @@ func (o *upOptions) Run() error {
 	if err != nil {
 		return err
 	}
+	fact := k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
 
 	go func() {
-		errChan <- forwardPortToBuildKit(fmt.Sprintf("%d:%d", port, 1234), readyCh, stopCh)
+		errChan <- forwardPortToBuildKit(fact, fmt.Sprintf("%d:%d", port, 1234), readyCh, stopCh)
 	}()
 
 	select {
@@ -190,21 +193,56 @@ func (o *upOptions) Run() error {
 	if err := os.RemoveAll(filepath.Join(pwd, ".hln")); err != nil {
 		return err
 	}
-	// Save the output info.
-	if err := copy.Copy(stackOutput, filepath.Join(pwd, appInfo)); err != nil {
-		return err
+	// TODO: by hxx, Save the output info to k8s config map
+	appName := os.Getenv("APP_NAME")
+	if appName == "" {
+		return errors.New("APP_NAME not set? ")
 	}
-	if err := os.Remove(stackOutput); err != nil {
-		return err
-	}
-	ao, err := app.Load(filepath.Join(pwd, appInfo))
+
+	outputBys, err := ioutil.ReadFile(stackOutput)
 	if err != nil {
-		return fmt.Errorf("failed to load app output: %w", err)
-	}
-	if err := copy.Copy(ao.SCM.TfProvider, filepath.Join(pwd, providerInfo)); err != nil {
 		return err
 	}
-	if err := ao.PrettyPrint(o.IOStreams); err != nil {
+
+	k8sCli, err := fact.KubernetesClientSet()
+	if err != nil {
+		return err
+	}
+
+	tfConfigName := "tf-" + appName
+	configMap := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Name: appName, Labels: map[string]string{configTypeKey: "heighliner",
+			"heighliner.dev/app-name": appName}},
+		Data: map[string]string{"output.yaml": string(outputBys), "tf-provider": tfConfigName},
+	}
+
+	_, err = k8sCli.CoreV1().ConfigMaps(heighlinerNs).Create(context.TODO(), &configMap, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	// TODO: by hxx, load the output info to k8s config map
+	ao := app.Output{}
+	if err = yaml.Unmarshal(outputBys, &ao); err != nil {
+		return err
+	}
+
+	tfBys, err := ioutil.ReadFile(ao.SCM.TfProvider)
+	if err != nil {
+		return fmt.Errorf("fail to read file from %s, err: %w", ao.SCM.TfProvider, err)
+	}
+
+	tfConfigMap := v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Name: tfConfigName, Labels: map[string]string{configTypeKey: "tf-provider",
+			"heighliner.dev/app-name": appName}},
+		Data: map[string]string{tfProviderConfigMapKey: string(tfBys)},
+	}
+	_, err = k8sCli.CoreV1().ConfigMaps(heighlinerNs).Create(context.TODO(), &tfConfigMap, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	if err := os.Remove(stackOutput); err != nil {
 		return err
 	}
 
@@ -261,8 +299,7 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error {
-	fact := k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
+func forwardPortToBuildKit(fact cmdutil.Factory, portStr string, readyCh, stopCh chan struct{}) error {
 	client, err := fact.KubernetesClientSet()
 	if err != nil {
 		return err
