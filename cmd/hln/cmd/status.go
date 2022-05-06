@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/h8r-dev/heighliner/internal/app"
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,7 +71,7 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 	}
 
 	appName := cms.Items[0].Name
-	fmt.Printf("output.yaml:\n%s\n", cms.Items[0].Data["output.yaml"])
+	//fmt.Printf("output.yaml:\n%s\n", cms.Items[0].Data["output.yaml"])
 
 	ao := app.Output{}
 	err = yaml.Unmarshal([]byte(cms.Items[0].Data["output.yaml"]), &ao)
@@ -80,18 +81,18 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 
 	status := ao.ConvertOutputToStatus()
 
-	fmt.Printf("Heighliner application %s is ready!\n\n", appName)
-	fmt.Printf("You can access %s on %s (username: %s, password: %s)\n\n", status.Cd.Provider, status.Cd.URL,
+	fmt.Printf("Heighliner application %s is ready!\n", appName)
+	fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.Cd.Provider, color.HiBlueString(status.Cd.URL),
 		status.Cd.Username, status.Cd.Password)
 	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.Cd.Provider)
-	for _, info := range status.Apps {
-		fmt.Printf("Applicaton Name: %s\n", info.Name)
+	for i, info := range status.Apps {
+		fmt.Printf("%d: %s\n", i+1, info.Name)
 		if info.Service != nil {
-			fmt.Printf("  Application %s has been deployed to k8s cluster, you can access it by k8s service url %s in the cluster\n",
-				info.Name, info.Service.URL)
+			fmt.Printf("  Application %s has been deployed to k8s cluster, you can access it by k8s Service url %s in the cluster\n",
+				info.Name, color.HiBlueString(info.Service.URL))
 		}
 		if info.Repo != nil {
-			fmt.Printf("  Application %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, info.Repo.URL)
+			fmt.Printf("  Application %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, color.HiBlueString(info.Repo.URL))
 		}
 		if info.Username != "" && info.Password != "" {
 			fmt.Printf("  Your application's credential is: [Username: %s Password: %s]\n", info.Username, info.Password)
@@ -102,6 +103,5 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 	//if err := ao.PrettyPrint(o.IOStreams); err != nil {
 	//	return err
 	//}
-
 	return nil
 }

@@ -148,8 +148,10 @@ func (ao *Output) ConvertOutputToStatus() Status {
 
 	for _, app := range ao.CD.ApplicationRef {
 		a := ApplicationInfo{
-			Name: app.Name,
-			Type: app.Type,
+			Name:     app.Name,
+			Type:     app.Type,
+			Username: app.Username,
+			Password: app.Password,
 		}
 
 		var repo *Repo
