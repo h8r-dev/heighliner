@@ -268,6 +268,9 @@ func (o *upOptions) Run() error {
 func (o upOptions) setEnv() error {
 	for _, val := range o.Values {
 		envs := strings.Split(val, "=")
+		if len(envs) != 2 {
+			return errors.New("value format should be '--set key=value'")
+		}
 		key, val := envs[0], envs[1]
 		val, err := homedir.Expand(val)
 		if err != nil {
