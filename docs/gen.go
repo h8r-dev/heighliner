@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra/doc"
 
@@ -22,13 +22,39 @@ func main() {
 		}
 		docPath = filepath.Join(pwd, "docs", "commands")
 	}
-	if err := os.RemoveAll(docPath); err != nil {
+	if err := gennerateDocs(docPath); err != nil {
 		panic(err)
 	}
-	if err := os.MkdirAll(docPath, 0755); err != nil {
+	if err := quoteFiglet(docPath); err != nil {
 		panic(err)
 	}
-	if err := doc.GenMarkdownTree(cmd.NewRootCmd(), docPath); err != nil {
-		log.Fatal(err)
+}
+
+func gennerateDocs(path string) error {
+	if err := os.RemoveAll(path); err != nil {
+		return err
 	}
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return err
+	}
+	return doc.GenMarkdownTree(cmd.NewRootCmd(), path)
+}
+
+func quoteFiglet(path string) error {
+	src := filepath.Join(path, "hln.md")
+	b, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(b), "\n")
+	for i, line := range lines {
+		if line == "### Synopsis" {
+			lines[i+2] = "```"
+		}
+		if line == "### Options" {
+			lines[i-2] = "```"
+		}
+	}
+	output := strings.Join(lines, "\n")
+	return os.WriteFile(src, []byte(output), 0644)
 }
