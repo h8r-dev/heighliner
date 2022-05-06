@@ -1,10 +1,7 @@
 package app
 
 import (
-	"fmt"
-	"github.com/fatih/color"
 	"gopkg.in/yaml.v3"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"os"
 )
 
@@ -92,46 +89,46 @@ func Load(path string) (*Output, error) {
 }
 
 // PrettyPrint format and print the output.
-func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
-	printTarget := streams.Out
-
-	fmt.Fprintln(printTarget, fmt.Sprintf("Heighliner application %s is Ready.", ao.ApplicationRef.Name))
-	//fmt.Fprintf(printTarget, "Application:\n")
-	//fmt.Fprintf(printTarget, "  Name: %s\n", ao.ApplicationRef.Name)
-
-	fmt.Fprintln(printTarget, fmt.Sprintf("You can access Argocd on %s [Username: %s, Password: %s]", color.CyanString(ao.CD.DashBoardRef.URL),
-		color.GreenString(ao.CD.DashBoardRef.Credential.Username), color.GreenString(ao.CD.DashBoardRef.Credential.Password)))
-
-	//fmt.Fprintf(printTarget, "\nCD:\n")
-	//fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(ao.CD.DashBoardRef.URL))
-	//fmt.Fprintf(printTarget, "  Credential:\n")
-	//fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Username))
-	//fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Password))
-
-	fmt.Fprintf(printTarget, "\nServices:\n")
-	for _, service := range ao.Services {
-		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(service.Name))
-		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(service.URL))
-	}
-
-	fmt.Fprintf(printTarget, "\nYour repositories in GitHub is:\n")
-	for _, repo := range ao.SCM.Repos {
-		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(repo.Name))
-		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(repo.URL))
-	}
-
-	fmt.Fprintf(printTarget, "\nArgoApps:\n")
-	for _, app := range ao.CD.ApplicationRef {
-		fmt.Fprintf(printTarget, "  Name: %s\n", app.Name)
-		if app.Username != "" {
-			fmt.Fprintf(printTarget, "  Credential:\n")
-			fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(app.Username))
-			fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(app.Password))
-		}
-	}
-
-	return nil
-}
+//func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
+//	printTarget := streams.Out
+//
+//	fmt.Fprintln(printTarget, fmt.Sprintf("Heighliner application %s is Ready.", ao.ApplicationRef.Name))
+//	//fmt.Fprintf(printTarget, "Application:\n")
+//	//fmt.Fprintf(printTarget, "  Name: %s\n", ao.ApplicationRef.Name)
+//
+//	fmt.Fprintln(printTarget, fmt.Sprintf("You can access Argocd on %s [Username: %s, Password: %s]", color.CyanString(ao.CD.DashBoardRef.URL),
+//		color.GreenString(ao.CD.DashBoardRef.Credential.Username), color.GreenString(ao.CD.DashBoardRef.Credential.Password)))
+//
+//	//fmt.Fprintf(printTarget, "\nCD:\n")
+//	//fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(ao.CD.DashBoardRef.URL))
+//	//fmt.Fprintf(printTarget, "  Credential:\n")
+//	//fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Username))
+//	//fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Password))
+//
+//	fmt.Fprintf(printTarget, "\nServices:\n")
+//	for _, service := range ao.Services {
+//		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(service.Name))
+//		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(service.URL))
+//	}
+//
+//	fmt.Fprintf(printTarget, "\nYour repositories in GitHub is:\n")
+//	for _, repo := range ao.SCM.Repos {
+//		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(repo.Name))
+//		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(repo.URL))
+//	}
+//
+//	fmt.Fprintf(printTarget, "\nArgoApps:\n")
+//	for _, app := range ao.CD.ApplicationRef {
+//		fmt.Fprintf(printTarget, "  Name: %s\n", app.Name)
+//		if app.Username != "" {
+//			fmt.Fprintf(printTarget, "  Credential:\n")
+//			fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(app.Username))
+//			fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(app.Password))
+//		}
+//	}
+//
+//	return nil
+//}
 
 func (ao *Output) ConvertOutputToStatus() Status {
 	s := Status{}

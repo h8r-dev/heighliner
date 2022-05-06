@@ -1,9 +1,11 @@
 package app
 
 type Status struct {
-	Cd   CdInfo
-	Apps []ApplicationInfo
-	SCM  SCM
+	AppName         string // Heighliner app name
+	Cd              CdInfo
+	Apps            []ApplicationInfo
+	SCM             SCM
+	TfConfigMapName string
 }
 
 type CdInfo struct {

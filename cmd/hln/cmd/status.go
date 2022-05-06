@@ -5,83 +5,99 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/h8r-dev/heighliner/internal/app"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"path/filepath"
-
-	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/util/homedir"
-
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
-// statusOption controls the behavior of status command.
-type statusOption struct {
-	KubeconfigPath string
-	Namespace      string
-
-	//Kubecli *kubernetes.Clientset
-
-	genericclioptions.IOStreams
-}
-
 func newStatusCmd(streams genericclioptions.IOStreams) *cobra.Command {
-	o := &statusOption{
-		IOStreams: streams,
-	}
 	c := &cobra.Command{
 		Use:   "status",
 		Short: "Show status of your application",
 		Args:  cobra.NoArgs,
-		RunE:  o.getStatus,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return getStatus()
+		},
 	}
-
-	if home := homedir.HomeDir(); home != "" {
-		c.Flags().StringVar(&o.KubeconfigPath, "", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		c.Flags().StringVar(&o.KubeconfigPath, "", "", "(optional) absolute path to the kubeconfig file")
-	}
-	c.Flags().StringVar(&o.Namespace, "namespace", "default", "Specify the namespace")
 
 	return c
 }
 
-func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
-	kubecli, err := k8sutil.NewFactory(o.KubeconfigPath).KubernetesClientSet()
+// For hln down
+func getTfProvider() (string, error) {
+	s, err := getAppStatus()
 	if err != nil {
-		return fmt.Errorf("failed to make kube client: %w", err)
+		return "", err
 	}
 
-	// todo: by hxx load from configmap
+	if s.TfConfigMapName == "" {
+		return "", fmt.Errorf("No tf provider config map? ")
+	}
+
+	cli, err := getDefaultClientSet()
+	if err != nil {
+		return "", err
+	}
+
+	cm, err := cli.CoreV1().ConfigMaps(heighlinerNs).Get(context.TODO(), s.TfConfigMapName, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	if len(cm.Data) == 0 || cm.Data[tfProviderConfigMapKey] == "" {
+		return "", fmt.Errorf("No data found in tf provider configmap ")
+	}
+	return cm.Data[tfProviderConfigMapKey], nil
+}
+
+// Get Heighliner application status from k8s configmap
+func getAppStatus() (*app.Status, error) {
+	kubecli, err := getDefaultClientSet()
+	if err != nil {
+		return nil, fmt.Errorf("failed to make kube client: %w", err)
+	}
+
 	// todo: by hxx specify a appName here
 	cms, err := kubecli.CoreV1().ConfigMaps(heighlinerNs).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.Set(map[string]string{"type": "app"}).AsSelector().String(),
+		LabelSelector: labels.Set(map[string]string{configTypeKey: "output"}).AsSelector().String(),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(cms.Items) == 0 {
-		return fmt.Errorf("config map len is 0")
+		return nil, fmt.Errorf("config map len is 0")
 	}
 
 	if len(cms.Items[0].Data) == 0 || cms.Items[0].Data["output.yaml"] == "" {
-		return fmt.Errorf("no data in configmap")
+		return nil, fmt.Errorf("no data in configmap")
 	}
 
 	appName := cms.Items[0].Name
-	//fmt.Printf("output.yaml:\n%s\n", cms.Items[0].Data["output.yaml"])
 
 	ao := app.Output{}
 	err = yaml.Unmarshal([]byte(cms.Items[0].Data["output.yaml"]), &ao)
 	if err != nil {
+		return nil, err
+	}
+
+	s := ao.ConvertOutputToStatus()
+	if cms.Items[0].Data[tfProviderConfigMapKey] != "" {
+		s.TfConfigMapName = cms.Items[0].Data[tfProviderConfigMapKey]
+	}
+	s.AppName = appName
+	return &s, nil
+}
+
+func getStatus() error {
+
+	status, err := getAppStatus()
+	if err != nil {
 		return err
 	}
 
-	status := ao.ConvertOutputToStatus()
-
-	fmt.Printf("Heighliner application %s is ready!\n", appName)
+	fmt.Printf("Heighliner application %s is ready!\n", status.AppName)
 	fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.Cd.Provider, color.HiBlueString(status.Cd.URL),
 		status.Cd.Username, status.Cd.Password)
 	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.Cd.Provider)
@@ -99,9 +115,5 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 		}
 		fmt.Println()
 	}
-
-	//if err := ao.PrettyPrint(o.IOStreams); err != nil {
-	//	return err
-	//}
 	return nil
 }

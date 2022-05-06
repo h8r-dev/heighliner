@@ -211,8 +211,9 @@ func (o *upOptions) Run() error {
 
 	tfConfigName := "tf-" + appName
 	configMap := v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{Name: appName, Labels: map[string]string{"type": "app"}},
-		Data:       map[string]string{"output.yaml": string(outputBys), "tf-provider": tfConfigName},
+		ObjectMeta: metav1.ObjectMeta{Name: appName, Labels: map[string]string{configTypeKey: "heighliner",
+			"heighliner.dev/app-name": appName}},
+		Data: map[string]string{"output.yaml": string(outputBys), "tf-provider": tfConfigName},
 	}
 
 	_, err = k8sCli.CoreV1().ConfigMaps(heighlinerNs).Create(context.TODO(), &configMap, metav1.CreateOptions{})
@@ -244,17 +245,18 @@ func (o *upOptions) Run() error {
 	}
 
 	tfConfigMap := v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{Name: tfConfigName, Labels: map[string]string{"type": "tf-provider"}},
-		Data:       map[string]string{"tf-provider": string(tfBys)},
+		ObjectMeta: metav1.ObjectMeta{Name: tfConfigName, Labels: map[string]string{configTypeKey: "tf-provider",
+			"heighliner.dev/app-name": appName}},
+		Data: map[string]string{tfProviderConfigMapKey: string(tfBys)},
 	}
 	_, err = k8sCli.CoreV1().ConfigMaps(heighlinerNs).Create(context.TODO(), &tfConfigMap, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
 
-	if err := ao.PrettyPrint(o.IOStreams); err != nil {
-		return err
-	}
+	//if err := ao.PrettyPrint(o.IOStreams); err != nil {
+	//	return err
+	//}
 
 	if err := os.Remove(stackOutput); err != nil {
 		return err
