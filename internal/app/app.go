@@ -1,5 +1,6 @@
 package app
 
+// Status app status
 type Status struct {
 	AppName         string // Heighliner app name
 	Cd              CdInfo
@@ -8,6 +9,7 @@ type Status struct {
 	TfConfigMapName string
 }
 
+// CdInfo Cd info
 type CdInfo struct {
 	Provider string `json:"provider" yaml:"provider"`
 	URL      string `json:"url" yaml:"url"`
@@ -15,6 +17,7 @@ type CdInfo struct {
 	Password string `json:"password" yaml:"password"`
 }
 
+// ApplicationInfo app info
 type ApplicationInfo struct {
 	Name     string
 	Type     string

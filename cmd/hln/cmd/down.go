@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/h8r-dev/heighliner/internal/app"
 	"os"
 	"path/filepath"
 
@@ -18,6 +17,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/dynamic"
 
+	"github.com/h8r-dev/heighliner/internal/app"
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/terraform"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"

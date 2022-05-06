@@ -3,16 +3,17 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"github.com/fatih/color"
-	"github.com/h8r-dev/heighliner/internal/app"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/h8r-dev/heighliner/internal/app"
 )
 
-func newStatusCmd(streams genericclioptions.IOStreams) *cobra.Command {
+func newStatusCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "status",
 		Short: "Show status of your application",
@@ -25,15 +26,15 @@ func newStatusCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	return c
 }
 
-// For hln down
-func getTfProvider() (string, error) {
+// GetTfProvider For hln down
+func GetTfProvider() (string, error) {
 	s, err := getAppStatus()
 	if err != nil {
 		return "", err
 	}
 
 	if s.TfConfigMapName == "" {
-		return "", fmt.Errorf("No tf provider config map? ")
+		return "", fmt.Errorf("no tf provider config map? ")
 	}
 
 	cli, err := getDefaultClientSet()
@@ -47,7 +48,7 @@ func getTfProvider() (string, error) {
 	}
 
 	if len(cm.Data) == 0 || cm.Data[tfProviderConfigMapKey] == "" {
-		return "", fmt.Errorf("No data found in tf provider configmap ")
+		return "", fmt.Errorf("no data found in tf provider configmap ")
 	}
 	return cm.Data[tfProviderConfigMapKey], nil
 }
