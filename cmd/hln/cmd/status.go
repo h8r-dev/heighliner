@@ -61,7 +61,7 @@ func getAppStatus() (*app.Status, error) {
 
 	// todo: by hxx specify a appName here
 	cms, err := kubecli.CoreV1().ConfigMaps(heighlinerNs).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.Set(map[string]string{configTypeKey: "output"}).AsSelector().String(),
+		LabelSelector: labels.Set(map[string]string{configTypeKey: "heighliner"}).AsSelector().String(),
 	})
 	if err != nil {
 		return nil, err
