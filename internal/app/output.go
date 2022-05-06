@@ -12,8 +12,8 @@ import (
 type Output struct {
 	ApplicationRef Application `json:"application"`
 	Services       []Service   `json:"services,omitempty"`
-	CD             CD          `json:"cd,omitempty"`
-	SCM            SCM         `json:"scm,omitempty"`
+	CD             CD          `json:"cd,omitempty" yaml:"cd"`
+	SCM            SCM         `json:"scm,omitempty" yaml:"scm"`
 }
 
 // Application is info about the application itself.
@@ -24,7 +24,7 @@ type Application struct {
 // Service of your app.
 type Service struct {
 	Name string `json:"name"`
-	URL  string `json:"url"`
+	URL  string `json:"url" yaml:"url"`
 }
 
 // CD now only support argoCD.
@@ -32,8 +32,8 @@ type CD struct {
 	Provider       string     `json:"provider"`
 	Namespace      string     `json:"namespace"`
 	Type           string     `json:"type"`
-	ApplicationRef []*ArgoApp `json:"applicationRef"`
-	DashBoardRef   DashBoard  `json:"dashboardRef"`
+	ApplicationRef []*ArgoApp `json:"applicationRef" yaml:"applicationRef"`
+	DashBoardRef   DashBoard  `json:"dashboardRef" yaml:"dashboardRef"`
 }
 
 // ArgoApp is argoCD application.

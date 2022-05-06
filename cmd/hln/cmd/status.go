@@ -52,8 +52,6 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to make kube client: %w", err)
 	}
-	//o.Kubecli = kubecli
-	fmt.Println(kubecli)
 
 	// todo: by hxx load from configmap
 	// todo: by hxx specify a appName here
@@ -72,6 +70,7 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 	}
 
 	appName := cms.Items[0].Name
+	fmt.Printf("output.yaml:\n%s\n", cms.Items[0].Data["output.yaml"])
 
 	ao := app.Output{}
 	err = yaml.Unmarshal([]byte(cms.Items[0].Data["output.yaml"]), &ao)
