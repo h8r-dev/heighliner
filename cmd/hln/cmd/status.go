@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/h8r-dev/heighliner/internal/app"
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -12,7 +13,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/h8r-dev/heighliner/pkg/state/app"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
@@ -71,20 +71,38 @@ func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
 		return fmt.Errorf("no data in configmap")
 	}
 
+	appName := cms.Items[0].Name
+
 	ao := app.Output{}
 	err = yaml.Unmarshal([]byte(cms.Items[0].Data["output.yaml"]), &ao)
 	if err != nil {
 		return err
 	}
 
-	//ao, err := app.Load(appInfo)
-	//if err != nil {
-	//	return fmt.Errorf("failed to load app output: %w", err)
-	//}
+	status := ao.ConvertOutputToStatus()
 
-	if err := ao.PrettyPrint(o.IOStreams); err != nil {
-		return err
+	fmt.Printf("Heighliner application %s is ready!\n\n", appName)
+	fmt.Printf("You can access %s on %s (username: %s, password: %s)\n\n", status.Cd.Provider, status.Cd.URL,
+		status.Cd.Username, status.Cd.Password)
+	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.Cd.Provider)
+	for _, info := range status.Apps {
+		fmt.Printf("Applicaton Name: %s\n", info.Name)
+		if info.Service != nil {
+			fmt.Printf("  Application %s has been deployed to k8s cluster, you can access it by k8s service url %s in the cluster\n",
+				info.Name, info.Service.URL)
+		}
+		if info.Repo != nil {
+			fmt.Printf("  Application %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, info.Repo.URL)
+		}
+		if info.Username != "" && info.Password != "" {
+			fmt.Printf("  Your application's credential is: [Username: %s Password: %s]\n", info.Username, info.Password)
+		}
+		fmt.Println()
 	}
+
+	//if err := ao.PrettyPrint(o.IOStreams); err != nil {
+	//	return err
+	//}
 
 	return nil
 }

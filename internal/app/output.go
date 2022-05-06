@@ -41,6 +41,7 @@ type ArgoApp struct {
 	Name     string `json:"name"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
+	Type     string
 }
 
 // DashBoard information of some component.
@@ -130,4 +131,50 @@ func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
 	}
 
 	return nil
+}
+
+func (ao *Output) ConvertOutputToStatus() Status {
+	s := Status{}
+	s.Cd.Provider = ao.CD.Provider
+	s.Cd.URL = ao.CD.DashBoardRef.URL
+	s.Cd.Username = ao.CD.DashBoardRef.Credential.Username
+	s.Cd.Password = ao.CD.DashBoardRef.Credential.Password
+
+	s.SCM = ao.SCM
+
+	if len(ao.CD.ApplicationRef) > 0 {
+		s.Apps = make([]ApplicationInfo, 0)
+	}
+
+	for _, app := range ao.CD.ApplicationRef {
+		a := ApplicationInfo{
+			Name: app.Name,
+			Type: app.Type,
+		}
+
+		var repo *Repo
+		for _, r := range ao.SCM.Repos {
+			if r.Name == app.Name {
+				repo = r
+				break
+			}
+		}
+		if repo != nil {
+			a.Repo = repo
+		}
+
+		var svc *Service
+		for _, service := range ao.Services {
+			if service.Name == app.Name {
+				svc = &service
+				break
+			}
+		}
+		if svc != nil {
+			a.Service = svc
+		}
+		s.Apps = append(s.Apps, a)
+	}
+
+	return s
 }

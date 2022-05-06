@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/h8r-dev/heighliner/internal/app"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
@@ -30,7 +31,6 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
-	"github.com/h8r-dev/heighliner/pkg/state/app"
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
