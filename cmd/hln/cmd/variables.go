@@ -5,12 +5,10 @@ import (
 )
 
 const (
-	stackOutput            = "output.yaml"
-	heighlinerNs           = "heighliner"
-	buildKitName           = "buildkitd"
-	terraformDir           = ".hln"
-	tfProviderConfigMapKey = "tf-provider"
-	configTypeKey          = "heighliner.dev/config-type"
+	stackOutput  = "output.yaml"
+	heighlinerNs = "heighliner"
+	buildKitName = "buildkitd"
+	terraformDir = ".hln"
 )
 
 var (
