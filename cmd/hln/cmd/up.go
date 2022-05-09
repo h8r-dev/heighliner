@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/h8r-dev/heighliner/pkg/state"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -28,7 +28,6 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
-	"github.com/h8r-dev/heighliner/pkg/state/app"
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
@@ -190,25 +189,16 @@ func (o *upOptions) Run() error {
 	if err := os.RemoveAll(filepath.Join(pwd, ".hln")); err != nil {
 		return err
 	}
-	// Save the output info.
-	if err := copy.Copy(stackOutput, filepath.Join(pwd, appInfo)); err != nil {
-		return err
+	appName := os.Getenv("APP_NAME")
+	if appName == "" {
+		return errors.New("APP_NAME not set? ")
 	}
-	if err := os.Remove(stackOutput); err != nil {
-		return err
-	}
-	ao, err := app.Load(filepath.Join(pwd, appInfo))
+	cm, err := getConfigMapState()
 	if err != nil {
-		return fmt.Errorf("failed to load app output: %w", err)
-	}
-	if err := copy.Copy(ao.SCM.TfProvider, filepath.Join(pwd, providerInfo)); err != nil {
-		return err
-	}
-	if err := ao.PrettyPrint(o.IOStreams); err != nil {
 		return err
 	}
 
-	return nil
+	return cm.SaveOutputAndTfProvider(appName)
 }
 
 func (o upOptions) setEnv() error {
@@ -269,11 +259,11 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 	}
 
 	// Find pod name of buildkit
-	deploy, err := client.AppsV1().Deployments(heighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
+	deploy, err := client.AppsV1().Deployments(state.HeighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	podList, err := client.CoreV1().Pods(heighlinerNs).List(context.TODO(), metav1.ListOptions{
+	podList, err := client.CoreV1().Pods(state.HeighlinerNs).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labels.Set(deploy.Spec.Selector.MatchLabels).AsSelector().String()})
 	if err != nil {
 		return err
@@ -290,7 +280,7 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 
 	req := client.CoreV1().RESTClient().Post().
 		Resource("pods").
-		Namespace(heighlinerNs).
+		Namespace(state.HeighlinerNs).
 		Name(podName).
 		SubResource("portforward")
 

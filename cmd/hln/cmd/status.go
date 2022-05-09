@@ -1,25 +1,27 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
+	"github.com/h8r-dev/heighliner/pkg/state"
+	"github.com/pkg/errors"
 
 	"github.com/fatih/color"
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-
 	"github.com/h8r-dev/heighliner/pkg/state/app"
+	"github.com/spf13/cobra"
 )
 
 func newStatusCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "status",
+		Use:   "status [appName]",
 		Short: "Show status of your application",
-		Args:  cobra.NoArgs,
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return errors.Errorf("%q requires at least 1 argument\n", cmd.CommandPath())
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return getStatus()
+			return getStatus(args[0])
 		},
 	}
 
@@ -27,73 +29,46 @@ func newStatusCmd() *cobra.Command {
 }
 
 // GetTfProvider For hln down
-func GetTfProvider() (string, error) {
-	s, err := getAppStatus()
+func GetTfProvider(appName string) (string, error) {
+	cs, err := getConfigMapState()
 	if err != nil {
 		return "", err
 	}
 
-	if s.TfConfigMapName == "" {
-		return "", fmt.Errorf("no tf provider config map? ")
-	}
-
-	cli, err := getDefaultClientSet()
-	if err != nil {
-		return "", err
-	}
-
-	cm, err := cli.CoreV1().ConfigMaps(heighlinerNs).Get(context.TODO(), s.TfConfigMapName, metav1.GetOptions{})
-	if err != nil {
-		return "", err
-	}
-
-	if len(cm.Data) == 0 || cm.Data[tfProviderConfigMapKey] == "" {
-		return "", fmt.Errorf("no data found in tf provider configmap ")
-	}
-	return cm.Data[tfProviderConfigMapKey], nil
+	return cs.LoadTfProvider(appName)
 }
 
-// Get Heighliner application status from k8s configmap
-func getAppStatus() (*app.Status, error) {
+func getConfigMapState() (state.State, error) {
 	kubecli, err := getDefaultClientSet()
 	if err != nil {
 		return nil, fmt.Errorf("failed to make kube client: %w", err)
 	}
 
-	// todo: by hxx specify a appName here1
-	cms, err := kubecli.CoreV1().ConfigMaps(heighlinerNs).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.Set(map[string]string{configTypeKey: "heighliner"}).AsSelector().String(),
-	})
+	cs := state.ConfigMapState{ClientSet: kubecli}
+	return &cs, nil
+}
+
+// Get Heighliner application status from k8s configmap
+func getAppStatus(appName string) (*app.Status, error) {
+
+	cs, err := getConfigMapState()
 	if err != nil {
 		return nil, err
 	}
-	if len(cms.Items) == 0 {
-		return nil, fmt.Errorf("config map len is 0")
-	}
 
-	if len(cms.Items[0].Data) == 0 || cms.Items[0].Data["output.yaml"] == "" {
-		return nil, fmt.Errorf("no data in configmap")
-	}
-
-	appName := cms.Items[0].Name
-
-	ao := app.Output{}
-	err = yaml.Unmarshal([]byte(cms.Items[0].Data["output.yaml"]), &ao)
+	ao, err := cs.LoadOutput(appName)
 	if err != nil {
 		return nil, err
 	}
 
 	s := ao.ConvertOutputToStatus()
-	if cms.Items[0].Data[tfProviderConfigMapKey] != "" {
-		s.TfConfigMapName = cms.Items[0].Data[tfProviderConfigMapKey]
-	}
 	s.AppName = appName
 	return &s, nil
 }
 
-func getStatus() error {
+func getStatus(appName string) error {
 
-	status, err := getAppStatus()
+	status, err := getAppStatus(appName)
 	if err != nil {
 		return err
 	}
