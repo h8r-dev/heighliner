@@ -146,6 +146,7 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// nolint
 	switch msg := msg.(type) {
 
 	// Is it a key press?
