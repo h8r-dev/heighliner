@@ -60,7 +60,7 @@ func getAppStatus() (*app.Status, error) {
 		return nil, fmt.Errorf("failed to make kube client: %w", err)
 	}
 
-	// todo: by hxx specify a appName here
+	// todo: by hxx specify a appName here1
 	cms, err := kubecli.CoreV1().ConfigMaps(heighlinerNs).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labels.Set(map[string]string{configTypeKey: "heighliner"}).AsSelector().String(),
 	})
