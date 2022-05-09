@@ -11,6 +11,7 @@ func newListCmd() *cobra.Command {
 	}
 
 	listCmd.AddCommand(newListStacksCmd())
+	listCmd.AddCommand(newListAppsCmd())
 
 	return listCmd
 }

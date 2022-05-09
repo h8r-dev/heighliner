@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"os"
 )
@@ -16,16 +17,28 @@ type ConfigMapState struct {
 	ClientSet *kubernetes.Clientset
 }
 
+func (c *ConfigMapState) ListApps() ([]string, error) {
+
+	cms, err := c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.Set(map[string]string{configTypeKey: "heighliner"}).AsSelector().String(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	apps := make([]string, 0)
+	for _, item := range cms.Items {
+		apps = append(apps, item.Name)
+	}
+	return apps, nil
+}
+
 func (c *ConfigMapState) LoadOutput(appName string) (*app.Output, error) {
 
 	cm, err := c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Get(context.TODO(), appName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
-
-	//	Get(context.TODO(), metav1.ListOptions{
-	//	LabelSelector: labels.Set(map[string]string{ConfigTypeKey: "heighliner"}).AsSelector().String(),
-	//})
 
 	if cm.Data["output.yaml"] == "" {
 		return nil, fmt.Errorf("no data in configmap %s", appName)

@@ -22,8 +22,18 @@ func (l *LocalFileState) LoadOutput(appName string) (*app.Output, error) {
 	return output, err
 }
 
+// LoadTFProvider No need in Local File State
 func (l *LocalFileState) LoadTFProvider(appName string) (string, error) {
 	return "", nil
+}
+
+// ListApps only list app in current dir
+func (l *LocalFileState) ListApps() ([]string, error) {
+	op, err := l.LoadOutput("")
+	if err != nil {
+		return nil, err
+	}
+	return []string{op.ApplicationRef.Name}, nil
 }
 
 func (l *LocalFileState) SaveOutputAndTFProvider(appName string) error {

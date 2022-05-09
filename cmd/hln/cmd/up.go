@@ -238,8 +238,9 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		Use:   "up",
 		Short: "Spin up your application",
 		Long:  upDesc,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			_ = os.Setenv("APP_NAME", args[0]) // used by stack
 			if err := o.Validate(cmd, args); err != nil {
 				return err
 			}
