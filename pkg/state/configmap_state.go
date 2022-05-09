@@ -45,12 +45,12 @@ func (c *ConfigMapState) LoadOutput(appName string) (*app.Output, error) {
 		return nil, err
 	}
 
-	if cm.Data["output.yaml"] == "" {
+	if cm.Data[stackOutput] == "" {
 		return nil, fmt.Errorf("no data in configmap %s", appName)
 	}
 
 	ao := app.Output{}
-	err = yaml.Unmarshal([]byte(cm.Data["output.yaml"]), &ao)
+	err = yaml.Unmarshal([]byte(cm.Data[stackOutput]), &ao)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 	configMap := v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{Name: appName, Labels: map[string]string{configTypeKey: "heighliner",
 			"heighliner.dev/app-name": appName}},
-		Data: map[string]string{"output.yaml": string(outputBys), "tf-provider": tfConfigName},
+		Data: map[string]string{stackOutput: string(outputBys), "tf-provider": tfConfigName},
 	}
 
 	_, err = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Create(context.TODO(), &configMap, metav1.CreateOptions{})
