@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
+	"k8s.io/client-go/kubernetes"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"os"
 	"strings"
 
@@ -56,7 +59,7 @@ func NewRootCmd() *cobra.Command {
 		newVersionCmd(),
 		newUpCmd(cfg.IOStreams),
 		newDownCmd(cfg.IOStreams),
-		newStatusCmd(cfg.IOStreams),
+		newStatusCmd(),
 		newLogsCmd(),
 		newMetricsCmd(),
 		newInitCmd(cfg.IOStreams),
@@ -90,4 +93,19 @@ func Execute(rootCmd *cobra.Command) {
 		lg.Error(err.Error())
 		os.Exit(1)
 	}
+}
+
+var (
+	fact cmdutil.Factory
+)
+
+func getDefaultFactory() cmdutil.Factory {
+	if fact == nil {
+		return k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
+	}
+	return fact
+}
+
+func getDefaultClientSet() (*kubernetes.Clientset, error) {
+	return getDefaultFactory().KubernetesClientSet()
 }

@@ -1,20 +1,17 @@
 package app
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/fatih/color"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 // Output defines the output structure of `hln up` command.
 type Output struct {
 	ApplicationRef Application `json:"application"`
 	Services       []Service   `json:"services,omitempty"`
-	CD             CD          `json:"cd,omitempty"`
-	SCM            SCM         `json:"scm,omitempty"`
+	CD             CD          `json:"cd,omitempty" yaml:"cd"`
+	SCM            SCM         `json:"scm,omitempty" yaml:"scm"`
 }
 
 // Application is info about the application itself.
@@ -25,7 +22,7 @@ type Application struct {
 // Service of your app.
 type Service struct {
 	Name string `json:"name"`
-	URL  string `json:"url"`
+	URL  string `json:"url" yaml:"url"`
 }
 
 // CD now only support argoCD.
@@ -33,8 +30,8 @@ type CD struct {
 	Provider       string     `json:"provider"`
 	Namespace      string     `json:"namespace"`
 	Type           string     `json:"type"`
-	ApplicationRef []*ArgoApp `json:"applicationRef"`
-	DashBoardRef   DashBoard  `json:"dashboardRef"`
+	ApplicationRef []*ArgoApp `json:"applicationRef" yaml:"applicationRef"`
+	DashBoardRef   DashBoard  `json:"dashboardRef" yaml:"dashboardRef"`
 }
 
 // ArgoApp is argoCD application.
@@ -42,6 +39,7 @@ type ArgoApp struct {
 	Name     string `json:"name"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
+	Type     string
 }
 
 // DashBoard information of some component.
@@ -60,7 +58,7 @@ type Credential struct {
 type SCM struct {
 	Provider     string  `json:"provider"`
 	Manager      string  `json:"manager"`
-	TfProvider   string  `json:"tfProvider"`
+	TfProvider   string  `json:"tfProvider" yaml:"tfProvider"`
 	Organization string  `json:"organization"`
 	Repos        []*Repo `json:"repos"`
 }
@@ -80,6 +78,7 @@ type TerraformVars struct {
 }
 
 // Load read and marshal the output yaml file.
+// Deprecated
 func Load(path string) (*Output, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -90,40 +89,52 @@ func Load(path string) (*Output, error) {
 	return output, err
 }
 
-// PrettyPrint format and print the output.
-func (ao *Output) PrettyPrint(streams genericclioptions.IOStreams) error {
-	printTarget := streams.Out
+// ConvertOutputToStatus Convert Output To Status
+func (ao *Output) ConvertOutputToStatus() Status {
+	s := Status{}
+	s.Cd.Provider = ao.CD.Provider
+	s.Cd.URL = ao.CD.DashBoardRef.URL
+	s.Cd.Username = ao.CD.DashBoardRef.Credential.Username
+	s.Cd.Password = ao.CD.DashBoardRef.Credential.Password
 
-	fmt.Fprintf(printTarget, "Application:\n")
-	fmt.Fprintf(printTarget, "  Name: %s\n", ao.ApplicationRef.Name)
+	s.SCM = ao.SCM
 
-	fmt.Fprintf(printTarget, "\nServices:\n")
-	for _, service := range ao.Services {
-		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(service.Name))
-		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(service.URL))
+	if len(ao.CD.ApplicationRef) > 0 {
+		s.Apps = make([]ApplicationInfo, 0)
 	}
 
-	fmt.Fprintf(printTarget, "\nCD:\n")
-	fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(ao.CD.DashBoardRef.URL))
-	fmt.Fprintf(printTarget, "  Credential:\n")
-	fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Username))
-	fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(ao.CD.DashBoardRef.Credential.Password))
-
-	fmt.Fprintf(printTarget, "\nRepositories:\n")
-	for _, repo := range ao.SCM.Repos {
-		fmt.Fprintf(printTarget, "  %s:\n", color.HiBlueString(repo.Name))
-		fmt.Fprintf(printTarget, "  URL: %s\n", color.CyanString(repo.URL))
-	}
-
-	fmt.Fprintf(printTarget, "\nArgoApps:\n")
 	for _, app := range ao.CD.ApplicationRef {
-		fmt.Fprintf(printTarget, "  Name: %s\n", app.Name)
-		if app.Username != "" {
-			fmt.Fprintf(printTarget, "  Credential:\n")
-			fmt.Fprintf(printTarget, "    Username: %s\n", color.GreenString(app.Username))
-			fmt.Fprintf(printTarget, "    Password: %s\n", color.GreenString(app.Password))
+		a := ApplicationInfo{
+			Name:     app.Name,
+			Type:     app.Type,
+			Username: app.Username,
+			Password: app.Password,
 		}
+
+		var repo *Repo
+		for _, r := range ao.SCM.Repos {
+			if r.Name == app.Name {
+				repo = r
+				break
+			}
+		}
+		if repo != nil {
+			a.Repo = repo
+		}
+
+		var svc *Service
+		for _, service := range ao.Services {
+			if service.Name == app.Name {
+				sv := service
+				svc = &sv
+				break
+			}
+		}
+		if svc != nil {
+			a.Service = svc
+		}
+		s.Apps = append(s.Apps, a)
 	}
 
-	return nil
+	return s
 }
