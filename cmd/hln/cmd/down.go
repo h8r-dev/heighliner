@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
@@ -41,14 +41,20 @@ func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *downOptions) Run() error {
+func (o *downOptions) Run(appName string) error {
 	kubeconfig := k8sutil.GetKubeConfigPath()
 	pat := os.Getenv("GITHUB_TOKEN")
-	output, err := app.Load(appInfo)
+
+	state, err := getStateInSpecificBackend()
 	if err != nil {
 		return err
 	}
-	dClient, err := k8sutil.NewFactory(kubeconfig).DynamicClient()
+	output, err := state.LoadOutput(appName)
+	if err != nil {
+		return err
+	}
+
+	dClient, err := getDefaultFactory().DynamicClient()
 	if err != nil {
 		return err
 	}
@@ -56,7 +62,7 @@ func (o *downOptions) Run() error {
 		return err
 	}
 
-	return deleteRepos(kubeconfig, pat, output.SCM, o.IOStreams)
+	return deleteRepos(appName, kubeconfig, pat, output.SCM, o.IOStreams)
 }
 
 func newDownCmd(streams genericclioptions.IOStreams) *cobra.Command {
@@ -64,14 +70,14 @@ func newDownCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		IOStreams: streams,
 	}
 	cmd := &cobra.Command{
-		Use:   "down",
+		Use:   "down [appName]",
 		Short: "Take down your application",
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := o.Validate(cmd, args); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.Run(args[0])
 		},
 	}
 	o.BindFlags(cmd.Flags())
@@ -111,7 +117,7 @@ func patchFinalizerAndDelete(ctx context.Context,
 	return argoApp.Delete(ctx, name, metav1.DeleteOptions{})
 }
 
-func deleteRepos(kubeconfig, token string, scm app.SCM, streams genericclioptions.IOStreams) error {
+func deleteRepos(appName, kubeconfig, token string, scm app.SCM, streams genericclioptions.IOStreams) error {
 	lg := logger.New(streams)
 	if err := os.Setenv("TF_VAR_github_token", token); err != nil {
 		return err
@@ -129,7 +135,12 @@ func deleteRepos(kubeconfig, token string, scm app.SCM, streams genericclioption
 		if err := os.MkdirAll(repoDir, 0755); err != nil {
 			return err
 		}
-		if err := copy.Copy(providerInfo, filepath.Join(repoDir, "provider.tf")); err != nil {
+		tfContent, err := GetTFProvider(appName)
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(filepath.Join(repoDir, "provider.tf"), []byte(tfContent), 0644)
+		if err != nil {
 			return err
 		}
 		if err := tfClient.Destroy(terraform.NewApplyOptions(

@@ -9,9 +9,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 
 	"github.com/h8r-dev/heighliner/pkg/checker"
 	"github.com/h8r-dev/heighliner/pkg/logger"
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 const greetBanner = `
@@ -56,7 +59,7 @@ func NewRootCmd() *cobra.Command {
 		newVersionCmd(),
 		newUpCmd(cfg.IOStreams),
 		newDownCmd(cfg.IOStreams),
-		newStatusCmd(cfg.IOStreams),
+		newStatusCmd(),
 		newLogsCmd(),
 		newMetricsCmd(),
 		newInitCmd(cfg.IOStreams),
@@ -90,4 +93,19 @@ func Execute(rootCmd *cobra.Command) {
 		lg.Error(err.Error())
 		os.Exit(1)
 	}
+}
+
+var (
+	defaultFactory cmdutil.Factory
+)
+
+func getDefaultFactory() cmdutil.Factory {
+	if defaultFactory == nil {
+		return k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
+	}
+	return defaultFactory
+}
+
+func getDefaultClientSet() (*kubernetes.Clientset, error) {
+	return getDefaultFactory().KubernetesClientSet()
 }

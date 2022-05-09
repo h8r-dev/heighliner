@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -28,7 +27,7 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
-	"github.com/h8r-dev/heighliner/pkg/state/app"
+	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
@@ -98,7 +97,7 @@ func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *upOptions) Run() error {
+func (o *upOptions) Run(appName string) error {
 	// Save the pwd info brcause the program will chdir later.
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -190,25 +189,18 @@ func (o *upOptions) Run() error {
 	if err := os.RemoveAll(filepath.Join(pwd, ".hln")); err != nil {
 		return err
 	}
-	// Save the output info.
-	if err := copy.Copy(stackOutput, filepath.Join(pwd, appInfo)); err != nil {
-		return err
-	}
-	if err := os.Remove(stackOutput); err != nil {
-		return err
-	}
-	ao, err := app.Load(filepath.Join(pwd, appInfo))
+
+	cm, err := getConfigMapState()
 	if err != nil {
-		return fmt.Errorf("failed to load app output: %w", err)
-	}
-	if err := copy.Copy(ao.SCM.TfProvider, filepath.Join(pwd, providerInfo)); err != nil {
-		return err
-	}
-	if err := ao.PrettyPrint(o.IOStreams); err != nil {
 		return err
 	}
 
-	return nil
+	err = cm.SaveOutputAndTFProvider(appName)
+	if err != nil {
+		return err
+	}
+
+	return showStatus(appName)
 }
 
 func (o upOptions) setEnv() error {
@@ -248,12 +240,13 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		Use:   "up",
 		Short: "Spin up your application",
 		Long:  upDesc,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			_ = os.Setenv("APP_NAME", args[0]) // used by stack
 			if err := o.Validate(cmd, args); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.Run(args[0])
 		},
 	}
 	o.BindFlags(cmd.Flags())
@@ -269,11 +262,11 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 	}
 
 	// Find pod name of buildkit
-	deploy, err := client.AppsV1().Deployments(heighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
+	deploy, err := client.AppsV1().Deployments(state.HeighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	podList, err := client.CoreV1().Pods(heighlinerNs).List(context.TODO(), metav1.ListOptions{
+	podList, err := client.CoreV1().Pods(state.HeighlinerNs).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labels.Set(deploy.Spec.Selector.MatchLabels).AsSelector().String()})
 	if err != nil {
 		return err
@@ -290,7 +283,7 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 
 	req := client.CoreV1().RESTClient().Post().
 		Resource("pods").
-		Namespace(heighlinerNs).
+		Namespace(state.HeighlinerNs).
 		Name(podName).
 		SubResource("portforward")
 

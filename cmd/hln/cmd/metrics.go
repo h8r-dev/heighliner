@@ -31,7 +31,7 @@ func newMetricsCmd() *cobra.Command {
 
 	cmd.RunE = func(c *cobra.Command, args []string) error {
 		printTarget := os.Stdout
-		b, err := os.ReadFile(appInfo)
+		b, err := os.ReadFile("")
 		if err != nil {
 			return err
 		}

@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/h8r-dev/heighliner/pkg/checker"
+	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
@@ -42,13 +43,13 @@ func installBuildKit() error {
 		return fmt.Errorf("failed to make kube client: %w", err)
 	}
 	// Create namespace if not exist
-	_, err = client.CoreV1().Namespaces().Get(context.TODO(), heighlinerNs, metav1.GetOptions{})
+	_, err = client.CoreV1().Namespaces().Get(context.TODO(), state.HeighlinerNs, metav1.GetOptions{})
 	if err != nil {
 		if !k8serr.IsNotFound(err) {
 			return err
 		}
 		var ns corev1.Namespace
-		ns.Name = heighlinerNs
+		ns.Name = state.HeighlinerNs
 		_, err = client.CoreV1().Namespaces().Create(context.TODO(), &ns, metav1.CreateOptions{})
 		if err != nil {
 			return err
@@ -56,7 +57,7 @@ func installBuildKit() error {
 	}
 
 	buildKitLabels := map[string]string{"app": "buildkitd"}
-	_, err = client.AppsV1().Deployments(heighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
+	_, err = client.AppsV1().Deployments(state.HeighlinerNs).Get(context.TODO(), buildKitName, metav1.GetOptions{})
 	if err == nil {
 		fmt.Println(buildKitName + " has already been installed, skip it")
 		return nil
@@ -85,7 +86,7 @@ func installBuildKit() error {
 		SecurityContext: &corev1.SecurityContext{Privileged: &privileged},
 		Ports:           []corev1.ContainerPort{{ContainerPort: 1234}},
 	}}
-	_, err = client.AppsV1().Deployments(heighlinerNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
+	_, err = client.AppsV1().Deployments(state.HeighlinerNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -95,7 +96,7 @@ func installBuildKit() error {
 	watchlist := cache.NewListWatchFromClient(
 		client.AppsV1().RESTClient(),
 		"deployments",
-		heighlinerNs,
+		state.HeighlinerNs,
 		f,
 	)
 

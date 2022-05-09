@@ -2,63 +2,98 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
+	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/homedir"
 
+	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
-// statusOption controls the behavior of status command.
-type statusOption struct {
-	KubeconfigPath string
-	Namespace      string
-
-	Kubecli *kubernetes.Clientset
-
-	genericclioptions.IOStreams
-}
-
-func newStatusCmd(streams genericclioptions.IOStreams) *cobra.Command {
-	o := &statusOption{
-		IOStreams: streams,
-	}
+func newStatusCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "status",
+		Use:   "status [appName]",
 		Short: "Show status of your application",
-		Args:  cobra.NoArgs,
-		RunE:  o.getStatus,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return showStatus(args[0])
+		},
 	}
-
-	if home := homedir.HomeDir(); home != "" {
-		c.Flags().StringVar(&o.KubeconfigPath, "", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		c.Flags().StringVar(&o.KubeconfigPath, "", "", "(optional) absolute path to the kubeconfig file")
-	}
-	c.Flags().StringVar(&o.Namespace, "namespace", "default", "Specify the namespace")
 
 	return c
 }
 
-func (o *statusOption) getStatus(c *cobra.Command, args []string) error {
-	kubecli, err := k8sutil.NewFactory(o.KubeconfigPath).KubernetesClientSet()
+// GetTFProvider For hln down
+func GetTFProvider(appName string) (string, error) {
+	cs, err := getStateInSpecificBackend()
 	if err != nil {
-		return fmt.Errorf("failed to make kube client: %w", err)
-	}
-	o.Kubecli = kubecli
-
-	ao, err := app.Load(appInfo)
-	if err != nil {
-		return fmt.Errorf("failed to load app output: %w", err)
+		return "", err
 	}
 
-	if err := ao.PrettyPrint(o.IOStreams); err != nil {
+	return cs.LoadTFProvider(appName)
+}
+
+// Get state in specific backend by env, such as: CONFIG_MAP, S3, LOCAL_FILE
+func getStateInSpecificBackend() (state.State, error) {
+	if l, ok := os.LookupEnv("STATE_BACKEND"); ok && l == "LOCAL_FILE" {
+		return &state.LocalFileState{}, nil
+	}
+	return getConfigMapState()
+}
+
+func getConfigMapState() (state.State, error) {
+	kubecli, err := getDefaultClientSet()
+	if err != nil {
+		return nil, fmt.Errorf("failed to make kube client: %w", err)
+	}
+
+	cs := state.ConfigMapState{ClientSet: kubecli}
+	return &cs, nil
+}
+
+// Get Heighliner application status from k8s configmap
+func getAppStatus(appName string) (*app.Status, error) {
+
+	cs, err := getStateInSpecificBackend()
+	if err != nil {
+		return nil, err
+	}
+
+	ao, err := cs.LoadOutput(appName)
+	if err != nil {
+		return nil, err
+	}
+
+	s := ao.ConvertOutputToStatus()
+	s.AppName = appName
+	return &s, nil
+}
+
+func showStatus(appName string) error {
+
+	status, err := getAppStatus(appName)
+	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Heighliner application %s is ready!\n", status.AppName)
+	fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.CD.Provider, color.HiBlueString(status.CD.URL),
+		status.CD.Username, status.CD.Password)
+	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.CD.Provider)
+	for i, info := range status.Apps {
+		fmt.Printf("%d: %s\n", i+1, info.Name)
+		if info.Service != nil {
+			fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
+				info.Name, color.HiBlueString(info.Service.URL))
+		}
+		if info.Repo != nil {
+			fmt.Printf("   %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, color.HiBlueString(info.Repo.URL))
+		}
+		if info.Username != "" && info.Password != "" {
+			fmt.Printf("   credential: [Username: %s Password: %s]\n", info.Username, info.Password)
+		}
+		fmt.Println()
+	}
 	return nil
 }
