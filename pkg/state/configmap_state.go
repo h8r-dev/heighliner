@@ -40,7 +40,7 @@ func (c *ConfigMapState) LoadOutput(appName string) (*app.Output, error) {
 	return &ao, nil
 }
 
-func (c *ConfigMapState) LoadTfProvider(appName string) (string, error) {
+func (c *ConfigMapState) LoadTFProvider(appName string) (string, error) {
 
 	cm, err := c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Get(context.TODO(), appName, metav1.GetOptions{})
 	if err != nil {
@@ -63,7 +63,7 @@ func (c *ConfigMapState) LoadTfProvider(appName string) (string, error) {
 	return cm.Data[tfProviderConfigMapKey], nil
 }
 
-func (c *ConfigMapState) SaveOutputAndTfProvider(appName string) error {
+func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 	outputBys, err := ioutil.ReadFile(stackOutput)
 	if err != nil {
 		return err

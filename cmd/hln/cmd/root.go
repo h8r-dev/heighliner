@@ -96,14 +96,14 @@ func Execute(rootCmd *cobra.Command) {
 }
 
 var (
-	fact cmdutil.Factory
+	defaultFactory cmdutil.Factory
 )
 
 func getDefaultFactory() cmdutil.Factory {
-	if fact == nil {
+	if defaultFactory == nil {
 		return k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
 	}
-	return fact
+	return defaultFactory
 }
 
 func getDefaultClientSet() (*kubernetes.Clientset, error) {

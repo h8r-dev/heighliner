@@ -92,10 +92,10 @@ func Load(path string) (*Output, error) {
 // ConvertOutputToStatus Convert Output To Status
 func (ao *Output) ConvertOutputToStatus() Status {
 	s := Status{}
-	s.Cd.Provider = ao.CD.Provider
-	s.Cd.URL = ao.CD.DashBoardRef.URL
-	s.Cd.Username = ao.CD.DashBoardRef.Credential.Username
-	s.Cd.Password = ao.CD.DashBoardRef.Credential.Password
+	s.CD.Provider = ao.CD.Provider
+	s.CD.URL = ao.CD.DashBoardRef.URL
+	s.CD.Username = ao.CD.DashBoardRef.Credential.Username
+	s.CD.Password = ao.CD.DashBoardRef.Credential.Password
 
 	s.SCM = ao.SCM
 

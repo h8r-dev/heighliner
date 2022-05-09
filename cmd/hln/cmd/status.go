@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/h8r-dev/heighliner/pkg/state"
-	"github.com/pkg/errors"
+	"os"
 
 	"github.com/fatih/color"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
@@ -14,28 +14,31 @@ func newStatusCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "status [appName]",
 		Short: "Show status of your application",
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				return errors.Errorf("%q requires at least 1 argument\n", cmd.CommandPath())
-			}
-			return nil
-		},
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return getStatus(args[0])
+			return showStatus(args[0])
 		},
 	}
 
 	return c
 }
 
-// GetTfProvider For hln down
-func GetTfProvider(appName string) (string, error) {
-	cs, err := getConfigMapState()
+// GetTFProvider For hln down
+func GetTFProvider(appName string) (string, error) {
+	cs, err := getStateInSpecificBackend()
 	if err != nil {
 		return "", err
 	}
 
-	return cs.LoadTfProvider(appName)
+	return cs.LoadTFProvider(appName)
+}
+
+// Get state in specific backend by env, such as: CONFIG_MAP, S3, LOCAL_FILE
+func getStateInSpecificBackend() (state.State, error) {
+	if l, ok := os.LookupEnv("STATE_BACKEND"); ok == true && l == "LOCAL_FILE" {
+		return &state.LocalFileState{}, nil
+	}
+	return getConfigMapState()
 }
 
 func getConfigMapState() (state.State, error) {
@@ -51,7 +54,7 @@ func getConfigMapState() (state.State, error) {
 // Get Heighliner application status from k8s configmap
 func getAppStatus(appName string) (*app.Status, error) {
 
-	cs, err := getConfigMapState()
+	cs, err := getStateInSpecificBackend()
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +69,7 @@ func getAppStatus(appName string) (*app.Status, error) {
 	return &s, nil
 }
 
-func getStatus(appName string) error {
+func showStatus(appName string) error {
 
 	status, err := getAppStatus(appName)
 	if err != nil {
@@ -74,9 +77,9 @@ func getStatus(appName string) error {
 	}
 
 	fmt.Printf("Heighliner application %s is ready!\n", status.AppName)
-	fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.Cd.Provider, color.HiBlueString(status.Cd.URL),
-		status.Cd.Username, status.Cd.Password)
-	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.Cd.Provider)
+	fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.CD.Provider, color.HiBlueString(status.CD.URL),
+		status.CD.Username, status.CD.Password)
+	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.CD.Provider)
 	for i, info := range status.Apps {
 		fmt.Printf("%d: %s\n", i+1, info.Name)
 		if info.Service != nil {

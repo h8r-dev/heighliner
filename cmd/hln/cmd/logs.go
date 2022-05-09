@@ -32,7 +32,8 @@ func newLogsCmd() *cobra.Command {
 	o := &LogsOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "logs",
+		Use:   "logs [appName]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Print the logs for an app",
 		RunE:  o.getPodLogs,
 	}
@@ -53,6 +54,7 @@ func getServiceNames(services []app.Service) []string {
 }
 
 func (o *LogsOptions) getPodLogs(cmd *cobra.Command, args []string) error {
+
 	fact := k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
 	k8sClient, err := fact.KubernetesClientSet()
 	if err != nil {
@@ -61,10 +63,19 @@ func (o *LogsOptions) getPodLogs(cmd *cobra.Command, args []string) error {
 	}
 	o.Kubecli = k8sClient
 
-	appInfo, err := app.Load(appInfo)
+	//appInfo, err := app.Load(appInfo)
+	//if err != nil {
+	//	return err
+	//}
+	st, err := getStateInSpecificBackend()
 	if err != nil {
 		return err
 	}
+	appInfo, err := st.LoadOutput(args[0])
+	if err != nil {
+		return err
+	}
+
 	names := getServiceNames(appInfo.Services)
 
 	// ask user to select one of the services to get logs from

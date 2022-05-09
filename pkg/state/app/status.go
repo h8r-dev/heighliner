@@ -3,14 +3,14 @@ package app
 // Status app status
 type Status struct {
 	AppName         string // Heighliner app name
-	Cd              CdInfo
+	CD              CDInfo
 	Apps            []ApplicationInfo
 	SCM             SCM
-	TfConfigMapName string
+	TFConfigMapName string
 }
 
-// CdInfo Cd info
-type CdInfo struct {
+// CDInfo CD info
+type CDInfo struct {
 	Provider string `json:"provider" yaml:"provider"`
 	URL      string `json:"url" yaml:"url"`
 	Username string `json:"username" yaml:"username"`
@@ -19,8 +19,8 @@ type CdInfo struct {
 
 // ApplicationInfo app info
 type ApplicationInfo struct {
-	Name     string
-	Type     string
+	Name     string `json:"name,omitempty"`
+	Type     string `json:"type,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 	*Repo

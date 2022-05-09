@@ -198,7 +198,7 @@ func (o *upOptions) Run() error {
 		return err
 	}
 
-	return cm.SaveOutputAndTfProvider(appName)
+	return cm.SaveOutputAndTFProvider(appName)
 }
 
 func (o upOptions) setEnv() error {
