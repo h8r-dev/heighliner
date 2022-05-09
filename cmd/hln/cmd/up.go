@@ -97,7 +97,7 @@ func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *upOptions) Run() error {
+func (o *upOptions) Run(appName string) error {
 	// Save the pwd info brcause the program will chdir later.
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -189,16 +189,18 @@ func (o *upOptions) Run() error {
 	if err := os.RemoveAll(filepath.Join(pwd, ".hln")); err != nil {
 		return err
 	}
-	appName := os.Getenv("APP_NAME")
-	if appName == "" {
-		return errors.New("APP_NAME not set? ")
-	}
+
 	cm, err := getConfigMapState()
 	if err != nil {
 		return err
 	}
 
-	return cm.SaveOutputAndTFProvider(appName)
+	err = cm.SaveOutputAndTFProvider(appName)
+	if err != nil {
+		return err
+	}
+
+	return showStatus(appName)
 }
 
 func (o upOptions) setEnv() error {
@@ -244,7 +246,7 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.Validate(cmd, args); err != nil {
 				return err
 			}
-			return o.Run()
+			return o.Run(args[0])
 		},
 	}
 	o.BindFlags(cmd.Flags())
