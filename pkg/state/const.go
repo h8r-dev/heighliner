@@ -3,8 +3,10 @@ package state
 import "path/filepath"
 
 const (
+	// HeighlinerNs Heighliner namespace
+	HeighlinerNs = "heighliner"
+
 	tfProviderConfigMapKey = "tf-provider"
-	HeighlinerNs           = "heighliner"
 	stackOutput            = "output.yaml"
 	configTypeKey          = "heighliner.dev/config-type"
 )

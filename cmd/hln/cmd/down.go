@@ -44,10 +44,7 @@ func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
 func (o *downOptions) Run(appName string) error {
 	kubeconfig := k8sutil.GetKubeConfigPath()
 	pat := os.Getenv("GITHUB_TOKEN")
-	//output, err := app.Load(appInfo)
-	//if err != nil {
-	//	return err
-	//}
+
 	state, err := getStateInSpecificBackend()
 	if err != nil {
 		return err
@@ -142,9 +139,6 @@ func deleteRepos(appName, kubeconfig, token string, scm app.SCM, streams generic
 		if err != nil {
 			return err
 		}
-		//if err := copy.Copy(providerInfo, filepath.Join(repoDir, "provider.tf")); err != nil {
-		//	return err
-		//}
 		err = ioutil.WriteFile(filepath.Join(repoDir, "provider.tf"), []byte(tfContent), 0644)
 		if err != nil {
 			return err

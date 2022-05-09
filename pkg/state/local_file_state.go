@@ -2,16 +2,20 @@ package state
 
 import (
 	"fmt"
-	"github.com/h8r-dev/heighliner/pkg/state/app"
-	"github.com/otiai10/copy"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+
+	"github.com/otiai10/copy"
+	"gopkg.in/yaml.v3"
+
+	"github.com/h8r-dev/heighliner/pkg/state/app"
 )
 
+// LocalFileState State using local file as backend
 type LocalFileState struct {
 }
 
+// LoadOutput load output
 func (l *LocalFileState) LoadOutput(appName string) (*app.Output, error) {
 	b, err := os.ReadFile(filepath.Join(".hln", "output.yaml"))
 	if err != nil {
@@ -36,6 +40,7 @@ func (l *LocalFileState) ListApps() ([]string, error) {
 	return []string{op.ApplicationRef.Name}, nil
 }
 
+// SaveOutputAndTFProvider save output and tf provider
 func (l *LocalFileState) SaveOutputAndTFProvider(appName string) error {
 	pwd, err := os.Getwd()
 	if err != nil {

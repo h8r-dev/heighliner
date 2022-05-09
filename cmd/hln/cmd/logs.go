@@ -61,10 +61,6 @@ func (o *LogsOptions) getPodLogs(cmd *cobra.Command, args []string) error {
 	}
 	o.Kubecli = k8sClient
 
-	//appInfo, err := app.Load(appInfo)
-	//if err != nil {
-	//	return err
-	//}
 	st, err := getStateInSpecificBackend()
 	if err != nil {
 		return err

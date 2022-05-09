@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
-	"k8s.io/client-go/kubernetes"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"os"
 	"strings"
 
@@ -12,9 +9,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 
 	"github.com/h8r-dev/heighliner/pkg/checker"
 	"github.com/h8r-dev/heighliner/pkg/logger"
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 const greetBanner = `

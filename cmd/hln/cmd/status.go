@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/h8r-dev/heighliner/pkg/state"
 	"os"
 
 	"github.com/fatih/color"
-	"github.com/h8r-dev/heighliner/pkg/state/app"
 	"github.com/spf13/cobra"
+
+	"github.com/h8r-dev/heighliner/pkg/state"
+	"github.com/h8r-dev/heighliner/pkg/state/app"
 )
 
 func newStatusCmd() *cobra.Command {
@@ -35,7 +36,7 @@ func GetTFProvider(appName string) (string, error) {
 
 // Get state in specific backend by env, such as: CONFIG_MAP, S3, LOCAL_FILE
 func getStateInSpecificBackend() (state.State, error) {
-	if l, ok := os.LookupEnv("STATE_BACKEND"); ok == true && l == "LOCAL_FILE" {
+	if l, ok := os.LookupEnv("STATE_BACKEND"); ok && l == "LOCAL_FILE" {
 		return &state.LocalFileState{}, nil
 	}
 	return getConfigMapState()

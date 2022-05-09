@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/h8r-dev/heighliner/pkg/state"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -16,6 +15,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/h8r-dev/heighliner/pkg/checker"
+	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 

@@ -3,20 +3,24 @@ package state
 import (
 	"context"
 	"fmt"
-	"github.com/h8r-dev/heighliner/pkg/state/app"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"os"
+
+	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
-	"os"
+
+	"github.com/h8r-dev/heighliner/pkg/state/app"
 )
 
+// ConfigMapState state using k8s configmap as backend
 type ConfigMapState struct {
 	ClientSet *kubernetes.Clientset
 }
 
+// ListApps list all heighliner applications
 func (c *ConfigMapState) ListApps() ([]string, error) {
 
 	cms, err := c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).List(context.TODO(), metav1.ListOptions{
@@ -33,6 +37,7 @@ func (c *ConfigMapState) ListApps() ([]string, error) {
 	return apps, nil
 }
 
+// LoadOutput load output from configmap
 func (c *ConfigMapState) LoadOutput(appName string) (*app.Output, error) {
 
 	cm, err := c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Get(context.TODO(), appName, metav1.GetOptions{})
@@ -53,6 +58,7 @@ func (c *ConfigMapState) LoadOutput(appName string) (*app.Output, error) {
 	return &ao, nil
 }
 
+// LoadTFProvider Load tf provider from configmap
 func (c *ConfigMapState) LoadTFProvider(appName string) (string, error) {
 
 	cm, err := c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Get(context.TODO(), appName, metav1.GetOptions{})
@@ -76,6 +82,7 @@ func (c *ConfigMapState) LoadTFProvider(appName string) (string, error) {
 	return cm.Data[tfProviderConfigMapKey], nil
 }
 
+// SaveOutputAndTFProvider Save output and tf provider to configmap
 func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 	outputBys, err := ioutil.ReadFile(stackOutput)
 	if err != nil {
