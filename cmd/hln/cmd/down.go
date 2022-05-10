@@ -7,10 +7,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/google/go-github/v44/github"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,13 +28,15 @@ import (
 
 // upOptions controls the behavior of up command.
 type downOptions struct {
-	Dir string
+	Dir              string
+	IsDeletePackages bool
 
 	genericclioptions.IOStreams
 }
 
 func (o *downOptions) BindFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.Dir, "dir", "", "Path to your local stack")
+	f.BoolVar(&o.IsDeletePackages, "delete-packages", false, "Delete packages")
 }
 
 func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
@@ -60,6 +65,12 @@ func (o *downOptions) Run(appName string) error {
 	}
 	if err := deleteArgoCDApps(context.Background(), dClient, output.CD, o.IOStreams); err != nil {
 		return err
+	}
+
+	if o.IsDeletePackages {
+		if err := deletePackages(pat, output.SCM, o.IOStreams); err != nil {
+			return err
+		}
 	}
 
 	return deleteRepos(appName, kubeconfig, pat, output.SCM, o.IOStreams)
@@ -130,7 +141,7 @@ func deleteRepos(appName, kubeconfig, token string, scm app.SCM, streams generic
 		return err
 	}
 	for _, repo := range scm.Repos {
-		lg.Info(fmt.Sprintf("delete %s...", repo.Name))
+		lg.Info(fmt.Sprintf("delete repo %s...", repo.Name))
 		repoDir := filepath.Join(terraformDir, repo.Name)
 		if err := os.MkdirAll(repoDir, 0755); err != nil {
 			return err
@@ -149,6 +160,35 @@ func deleteRepos(appName, kubeconfig, token string, scm app.SCM, streams generic
 			repo.TerraformVars.Namespace,
 			kubeconfig,
 		)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deletePackages(token string, scm app.SCM, streams genericclioptions.IOStreams) error {
+	lg := logger.New(streams)
+
+	// set GitHub client
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	gClient := github.NewClient(tc)
+
+	pkgType := "container"
+	for _, repo := range scm.Repos {
+
+		if _, _, err := gClient.Users.GetPackage(ctx, scm.Organization, pkgType, repo.Name); err != nil {
+			if strings.Contains(err.Error(), "404 Package not found.") {
+				continue
+			}
+			return err
+		}
+
+		lg.Info(fmt.Sprintf("delete package %s...", repo.Name))
+		if _, err := gClient.Users.DeletePackage(ctx, scm.Organization, pkgType, repo.Name); err != nil {
 			return err
 		}
 	}
