@@ -180,7 +180,7 @@ func deletePackages(token string, scm app.SCM, streams genericclioptions.IOStrea
 	pkgType := "container"
 	for _, repo := range scm.Repos {
 
-		if _, _, err := gClient.Users.GetPackage(ctx, "", pkgType, repo.Name); err != nil {
+		if _, _, err := gClient.Users.GetPackage(ctx, scm.Organization, pkgType, repo.Name); err != nil {
 			if strings.Contains(err.Error(), "404 Package not found.") {
 				continue
 			}
@@ -188,7 +188,7 @@ func deletePackages(token string, scm app.SCM, streams genericclioptions.IOStrea
 		}
 
 		lg.Info(fmt.Sprintf("delete package %s...", repo.Name))
-		if _, err := gClient.Users.DeletePackage(ctx, "", pkgType, repo.Name); err != nil {
+		if _, err := gClient.Users.DeletePackage(ctx, scm.Organization, pkgType, repo.Name); err != nil {
 			return err
 		}
 	}
