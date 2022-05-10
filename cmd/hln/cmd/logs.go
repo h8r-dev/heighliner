@@ -96,9 +96,22 @@ func (o *LogsOptions) getPodLogs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no pods found for service %s", names[o.Choice])
 	}
 
-	request := o.Kubecli.CoreV1().Pods(namespace).GetLogs(names[o.Choice], &corev1.PodLogOptions{
+	podNames := []string{}
+	for _, po := range podlist.Items {
+		podNames = append(podNames, po.Name)
+	}
+
+	var podChoice int
+	// ask user to select one of the services to get logs from
+	program := tea.NewProgram(initialModel(podNames, &podChoice))
+	if err := program.Start(); err != nil {
+		return err
+	}
+
+	request := o.Kubecli.CoreV1().Pods(namespace).GetLogs(podNames[podChoice], &corev1.PodLogOptions{
 		Follow: o.Follow,
 	})
+
 	return DefaultConsumeRequest(request, os.Stdout)
 }
 

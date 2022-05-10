@@ -55,6 +55,8 @@ func (c *ConfigMapState) LoadOutput(appName string) (*app.Output, error) {
 		return nil, err
 	}
 
+	ao.ApplicationRef.Name = appName
+
 	return &ao, nil
 }
 
@@ -84,7 +86,13 @@ func (c *ConfigMapState) LoadTFProvider(appName string) (string, error) {
 
 // SaveOutputAndTFProvider Save output and tf provider to configmap
 func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
-	outputBys, err := ioutil.ReadFile(stackOutput)
+	ao, err := app.Load(stackOutput)
+	if err != nil {
+		return err
+	}
+	// fill in ApplicationRef.Name
+	ao.ApplicationRef.Name = appName
+	outputBys, err := yaml.Marshal(ao)
 	if err != nil {
 		return err
 	}
@@ -98,11 +106,6 @@ func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 
 	_, err = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Create(context.TODO(), &configMap, metav1.CreateOptions{})
 	if err != nil {
-		return err
-	}
-
-	ao := app.Output{}
-	if err = yaml.Unmarshal(outputBys, &ao); err != nil {
 		return err
 	}
 

@@ -68,7 +68,7 @@ type Repo struct {
 	Name          string        `json:"name"`
 	Visibility    string        `json:"visibility"`
 	URL           string        `json:"url"`
-	TerraformVars TerraformVars `json:"terraformVars"`
+	TerraformVars TerraformVars `json:"terraformVars" yaml:"terraformVars"`
 }
 
 // TerraformVars for deleting repo.
