@@ -30,9 +30,10 @@ var (
 
 // Stacks stores all available stacks.
 var Stacks = map[string]struct{}{
-	"gin-vue":  {},
-	"gin-next": {},
-	"sample":   {},
+	"sample":     {},
+	"gin-next":   {},
+	"spring-vue": {},
+	"gin-vue":    {},
 }
 
 // New returns a Stack object.
