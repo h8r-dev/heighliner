@@ -40,27 +40,27 @@ to check all available stacks. Alternatively, you can use '--dir' flag
 to specify a local directory as your stack source. If you don't specify both '-s' 
 and '--dir' flag, it will use current working directory by default:
 
-    $ hln up -s gin-next
+    $ hln up [appName] -s gin-next
 
 or
 
-    $ hln up --dir /path/to/your/stack
+    $ hln up [appName] --dir /path/to/your/stack
 
 To set values in a stack, use '-s' or '--stack' flag to specify a stack, use 
 the '--set' flag and pass configuration from the command line:
 
-    $ hln up -s gin-next --set foo=bar
+    $ hln up [appName] -s gin-next --set foo=bar
 
 You can specify the '--set' flag multiple times. The priority will be given to the
 last (right-most) set specified. For example, if both 'bar' and 'newbar' values are
 set for a key called 'foo', the 'newbar' value would take precedence:
 
-    $ hln up -s gin-next --set foo=bar --set foo=newbar
+    $ hln up [appName] -s gin-next --set foo=bar --set foo=newbar
 
 Simply set '-i' or '--interactive' flag and it will run the stack interactively. You can 
 fill your input values according to the prompts:
 
-    $ hln up -s gin-next -i
+    $ hln up [appName] -s gin-next -i
 
 `
 
@@ -87,11 +87,11 @@ func (o *upOptions) BindFlags(f *pflag.FlagSet) {
 
 func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 	if o.Stack != "" && o.Dir != "" {
-		return errors.New("please do not specify both stack and dir")
+		return errors.New("can't use both stack and dir")
 	}
 	for _, v := range o.Values {
 		if !strings.Contains(v, "=") {
-			return errors.New("value format should be '--set key=value'")
+			return errors.New("format of values should be '--set key=value'")
 		}
 	}
 	return nil
@@ -237,7 +237,7 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		IOStreams: streams,
 	}
 	cmd := &cobra.Command{
-		Use:   "up",
+		Use:   "up [appName]",
 		Short: "Spin up your application",
 		Long:  upDesc,
 		Args:  cobra.ExactArgs(1),
@@ -302,12 +302,6 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 
 func flattenKubeconfig() error {
 	kubeconfig := k8sutil.GetKubeConfigPath()
-
-	// kubeCmd := exec.Command("kubectl", "config", "view", "--kubeconfig", kubeconfig, "--flatten", "--minify")
-	// sp, err := kubeCmd.Output()
-	// if err != nil {
-	// 	return err
-	// }
 
 	b := make([]byte, 0)
 	buff := bytes.NewBuffer(b)
