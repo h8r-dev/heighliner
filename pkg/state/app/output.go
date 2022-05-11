@@ -39,7 +39,8 @@ type ArgoApp struct {
 	Name     string `json:"name"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
-	Type     string
+	Url      string `json:"url"`
+	Type     string `json:"type"`
 }
 
 // DashBoard information of some component.
@@ -109,6 +110,7 @@ func (ao *Output) ConvertOutputToStatus() Status {
 			Type:     app.Type,
 			Username: app.Username,
 			Password: app.Password,
+			Url:      app.Url,
 		}
 
 		var repo *Repo
