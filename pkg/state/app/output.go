@@ -36,11 +36,12 @@ type CD struct {
 
 // ArgoApp is argoCD application.
 type ArgoApp struct {
-	Name     string `json:"name" yaml:"name"`
-	Username string `json:"username,omitempty" yaml:"username"`
-	Password string `json:"password,omitempty" yaml:"password"`
-	URL      string `json:"url" yaml:"url"`
-	Type     string `json:"type" yaml:"type"`
+	Name        string `json:"name" yaml:"name"`
+	Username    string `json:"username,omitempty" yaml:"username"`
+	Password    string `json:"password,omitempty" yaml:"password"`
+	URL         string `json:"url" yaml:"url"`
+	Type        string `json:"type" yaml:"type"`
+	Annotations string `json:"annotations" yaml:"annotations"`
 }
 
 // DashBoard information of some component.

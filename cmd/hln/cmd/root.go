@@ -61,7 +61,7 @@ func NewRootCmd() *cobra.Command {
 		newDownCmd(cfg.IOStreams),
 		newStatusCmd(),
 		newLogsCmd(),
-		newMetricsCmd(),
+		newMetricsCmd(cfg.IOStreams),
 		newInitCmd(cfg.IOStreams),
 	)
 

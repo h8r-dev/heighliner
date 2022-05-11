@@ -90,9 +90,7 @@ func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 	if err != nil {
 		return err
 	}
-	// fill in ApplicationRef.Name
-	ao.ApplicationRef.Name = appName
-	outputBys, err := yaml.Marshal(ao)
+	outputBys, err := os.ReadFile(stackOutput)
 	if err != nil {
 		return err
 	}
