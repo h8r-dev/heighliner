@@ -83,9 +83,9 @@ func showStatus(appName string) error {
 	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.CD.Provider)
 	for i, info := range status.Apps {
 		fmt.Printf("%d: %s\n", i+1, info.Name)
-		if info.Url != "" {
+		if info.URL != "" {
 			fmt.Printf("   You can access %s from broswer by url: %s\n",
-				info.Name, color.HiBlueString(info.Service.URL))
+				info.Name, color.HiBlueString(info.URL))
 		}
 		if info.Service != nil {
 			fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
