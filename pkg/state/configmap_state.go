@@ -104,6 +104,12 @@ func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 		Data: map[string]string{stackOutput: string(outputBys), "tf-provider": tfConfigName},
 	}
 
+	// delete it if already exist
+	_, err = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Get(context.TODO(), appName, metav1.GetOptions{})
+	if err == nil {
+		_ = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Delete(context.TODO(), appName, metav1.DeleteOptions{})
+	}
+
 	_, err = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Create(context.TODO(), &configMap, metav1.CreateOptions{})
 	if err != nil {
 		return err
@@ -119,6 +125,13 @@ func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 			"heighliner.dev/app-name": appName}},
 		Data: map[string]string{tfProviderConfigMapKey: string(tfBys)},
 	}
+
+	// delete it if already exist
+	_, err = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Get(context.TODO(), tfConfigName, metav1.GetOptions{})
+	if err == nil {
+		_ = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Delete(context.TODO(), tfConfigName, metav1.DeleteOptions{})
+	}
+
 	_, err = c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Create(context.TODO(), &tfConfigMap, metav1.CreateOptions{})
 	if err != nil {
 		return err
