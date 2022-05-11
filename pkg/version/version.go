@@ -16,9 +16,9 @@ var (
 
 const (
 	// DaggerConstraint defines all acceptable versions of dagger.
-	DaggerConstraint = "=0.2.9"
+	DaggerConstraint = "=0.2.10"
 	// DaggerDefault is the default version of dagger to download.
-	DaggerDefault = "0.2.9"
+	DaggerDefault = "0.2.10"
 )
 
 const (
