@@ -19,17 +19,20 @@ type metricsOptions struct {
 	genericclioptions.IOStreams
 }
 
+// Metrics to print
 type Metrics struct {
 	AppName       string
 	CridentialRef Cridential
 	DashboardRefs []MonitorDashboard
 }
 
+// Cridential for login
 type Cridential struct {
 	Username string
 	Password string
 }
 
+// MonitorDashboard of apps
 type MonitorDashboard struct {
 	Title string
 	URL   url.URL
