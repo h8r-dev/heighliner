@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/url"
+	"text/tabwriter"
 
 	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
@@ -79,19 +82,26 @@ func getMetrics(appName string) (*Metrics, error) {
 			metrics.CridentialRef.Username = argoApp.Username
 			metrics.CridentialRef.Password = argoApp.Password
 			if argoApp.Annotations != "" {
+				str := argoApp.Annotations
+				raw := make([]byte, base64.StdEncoding.DecodedLen(len(str)))
+				_, err := base64.StdEncoding.Decode(raw, []byte(str))
+				if err != nil {
+					return nil, fmt.Errorf("failed to decode annotations :%w", err)
+				}
 				type MDashboard struct {
-					Title string
-					Path  string
+					Title string `json:"title"`
+					Path  string `json:"path"`
 				}
 				mdb := MDashboard{}
-				if err := json.Unmarshal([]byte(argoApp.Annotations), &mdb); err != nil {
-					return nil, err
+				if err := json.Unmarshal(raw, &mdb); err != nil {
+					return nil, fmt.Errorf("bad annotations format: %w", err)
 				}
 				metrics.DashboardRefs = append(metrics.DashboardRefs, MonitorDashboard{
 					Title: mdb.Title,
 					URL: url.URL{
-						Host: argoApp.URL,
-						Path: mdb.Path,
+						Scheme: "http",
+						Host:   argoApp.URL,
+						Path:   mdb.Path,
 					},
 				})
 			}
@@ -104,12 +114,19 @@ func getMetrics(appName string) (*Metrics, error) {
 }
 
 func showMetrics(w io.Writer, m *Metrics) {
-	fmt.Fprintf(w, "The metrics of %s:\n", m.AppName)
-	fmt.Fprintf(w, "Cridentials for login:\n")
+	fmt.Fprintf(w, "Use this cridential to login the monitoring dashboards of %s:\n", m.AppName)
 	fmt.Fprintf(w, "  Username: %s\n", color.HiBlueString(m.CridentialRef.Username))
 	fmt.Fprintf(w, "  Password: %s\n", color.HiBlueString(m.CridentialRef.Password))
+	fmt.Fprintf(w, "\nApplication %s has %d available dashboard(s):\n", m.AppName, len(m.DashboardRefs))
+	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
+	defer func() {
+		err := tw.Flush()
+		if err != nil {
+			log.Fatal().Msg(err.Error())
+		}
+	}()
+	fmt.Fprintf(tw, "NAME\tURL\n")
 	for _, db := range m.DashboardRefs {
-		fmt.Fprintf(w, "Dashboard %s:\n", db.Title)
-		fmt.Fprintf(w, "  URL: %s\n", color.CyanString(db.URL.String()))
+		fmt.Fprintf(tw, "%s\t%s\n", db.Title, color.CyanString(db.URL.String()))
 	}
 }
