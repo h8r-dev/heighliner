@@ -14,8 +14,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 // LogsOptions controls the behavior of logs command.
@@ -55,7 +55,7 @@ func getServiceNames(services []app.Service) []string {
 
 func (o *LogsOptions) getPodLogs(cmd *cobra.Command, args []string) error {
 
-	k8sClient, err := k8sutil.GetDefaultClientSet()
+	k8sClient, err := k8sfactory.GetDefaultClientSet()
 	if err != nil {
 		return err
 

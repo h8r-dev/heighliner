@@ -7,9 +7,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
+	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 func newStatusCmd() *cobra.Command {
@@ -44,7 +44,7 @@ func getStateInSpecificBackend() (state.State, error) {
 }
 
 func getConfigMapState() (state.State, error) {
-	kubecli, err := k8sutil.GetDefaultClientSet()
+	kubecli, err := k8sfactory.GetDefaultClientSet()
 	if err != nil {
 		return nil, fmt.Errorf("failed to make kube client: %w", err)
 	}

@@ -20,6 +20,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/dynamic"
 
+	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
 	"github.com/h8r-dev/heighliner/pkg/terraform"
@@ -59,7 +60,7 @@ func (o *downOptions) Run(appName string) error {
 		return err
 	}
 
-	dClient, err := k8sutil.GetDefaultFactory().DynamicClient()
+	dClient, err := k8sfactory.GetDefaultFactory().DynamicClient()
 	if err != nil {
 		return err
 	}
