@@ -1,9 +1,10 @@
 package k8sfactory
 
 import (
-	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 	"k8s.io/client-go/kubernetes"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+
+	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
 var (
