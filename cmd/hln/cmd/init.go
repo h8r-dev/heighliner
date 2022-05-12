@@ -14,8 +14,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/h8r-dev/heighliner/pkg/checker"
+	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/state"
+	"github.com/h8r-dev/heighliner/pkg/terraform"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
@@ -25,7 +26,7 @@ func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		Short: "Initialize dependent tools and services",
 	}
 	cmd.RunE = func(c *cobra.Command, args []string) error {
-		err := checker.Check(streams)
+		err := checkAndInstall(streams)
 		if err != nil {
 			return err
 		}
@@ -35,6 +36,29 @@ func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {}
 
 	return cmd
+}
+
+func checkAndInstall(streams genericclioptions.IOStreams) error {
+	daggerCli, err := dagger.NewDefaultClient(streams)
+	if err != nil {
+		return err
+	}
+	if err := daggerCli.CheckAndInstall(); err != nil {
+		return err
+	}
+	tfCli, err := terraform.NewDefaultClient(streams)
+	if err != nil {
+		return err
+	}
+	if err := tfCli.CheckAndInstall(); err != nil {
+		return err
+	}
+	return nil
+	// nhctlCli, err := nhctl.NewDefaultClient(streams)
+	// if err != nil {
+	// 	return err
+	// }
+	// return nhctlCli.CheckAndInstall()
 }
 
 func installBuildKit() error {
