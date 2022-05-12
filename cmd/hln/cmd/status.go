@@ -97,6 +97,9 @@ func showStatus(appName string) error {
 		if info.Username != "" && info.Password != "" {
 			fmt.Printf("   credential: [Username: %s Password: %s]\n", info.Username, info.Password)
 		}
+		if info.Prompt != "" {
+			fmt.Printf("   %s\n", info.Prompt)
+		}
 		fmt.Println()
 	}
 	return nil
