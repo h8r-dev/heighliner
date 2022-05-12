@@ -5,8 +5,13 @@ import (
 	"path/filepath"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/homedir"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+)
+
+var (
+	defaultFactory cmdutil.Factory
 )
 
 // NewFactory can generate many kinds of k8s client.
@@ -24,4 +29,17 @@ func GetKubeConfigPath() string {
 		return path
 	}
 	return filepath.Join(homedir.HomeDir(), ".kube", "config")
+}
+
+// GetDefaultFactory for cluster operations.
+func GetDefaultFactory() cmdutil.Factory {
+	if defaultFactory == nil {
+		return NewFactory(GetKubeConfigPath())
+	}
+	return defaultFactory
+}
+
+// GetDefaultClientSet for cluster operations.
+func GetDefaultClientSet() (*kubernetes.Clientset, error) {
+	return GetDefaultFactory().KubernetesClientSet()
 }

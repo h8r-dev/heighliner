@@ -59,7 +59,7 @@ func (o *downOptions) Run(appName string) error {
 		return err
 	}
 
-	dClient, err := getDefaultFactory().DynamicClient()
+	dClient, err := k8sutil.GetDefaultFactory().DynamicClient()
 	if err != nil {
 		return err
 	}
