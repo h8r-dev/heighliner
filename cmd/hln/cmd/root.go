@@ -4,16 +4,19 @@ import (
 	"os"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/moby/buildkit/util/appcontext"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 
-	"github.com/h8r-dev/heighliner/pkg/checker"
+	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/logger"
+	"github.com/h8r-dev/heighliner/pkg/terraform"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
@@ -51,7 +54,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	cmd.PersistentPreRunE = func(c *cobra.Command, args []string) error {
-		return checker.PreCheck(cfg.IOStreams)
+		return preCheck(cfg.IOStreams)
 	}
 
 	cmd.AddCommand(
@@ -80,6 +83,37 @@ func NewRootCmd() *cobra.Command {
 	viper.AutomaticEnv()
 
 	return cmd
+}
+
+func preCheck(streams genericclioptions.IOStreams) error {
+	prompt := "please run hln init"
+	lg := logger.New(streams)
+	ioDiscard := genericclioptions.NewTestIOStreamsDiscard()
+	daggerCli, err := dagger.NewDefaultClient(ioDiscard)
+	if err != nil {
+		return err
+	}
+	if err := daggerCli.Check(); err != nil {
+		lg.Warn(color.HiYellowString(prompt),
+			zap.NamedError("warn", err))
+	}
+	// nhctlCli, err := nhctl.NewDefaultClient(ioDiscard)
+	// if err != nil {
+	// 	return err
+	// }
+	// if err := nhctlCli.Check(); err != nil {
+	// 	lg.Warn(color.HiYellowString(prompt),
+	// 		zap.NamedError("warn", err))
+	// }
+	tfCli, err := terraform.NewDefaultClient(ioDiscard)
+	if err != nil {
+		return err
+	}
+	if err := tfCli.Check(); err != nil {
+		lg.Warn(color.HiYellowString(prompt),
+			zap.NamedError("warn", err))
+	}
+	return nil
 }
 
 // Execute executes the root command with context
