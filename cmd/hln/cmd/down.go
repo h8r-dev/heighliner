@@ -124,7 +124,7 @@ func patchFinalizerAndDelete(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	lg.Info(fmt.Sprintf("patch finalizer to app %s", name))
+	lg.Info(fmt.Sprintf("delete app %s...", name))
 	return argoApp.Delete(ctx, name, metav1.DeleteOptions{})
 }
 
