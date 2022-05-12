@@ -102,11 +102,11 @@ func (ao *Output) ConvertOutputToStatus() Status {
 	s.SCM = ao.SCM
 
 	if len(ao.CD.ApplicationRef) > 0 {
-		s.Apps = make([]ApplicationInfo, 0)
+		s.Services = make([]ServiceInfo, 0)
 	}
 
 	for _, app := range ao.CD.ApplicationRef {
-		a := ApplicationInfo{
+		a := ServiceInfo{
 			Name:     app.Name,
 			Type:     app.Type,
 			Username: app.Username,
@@ -136,7 +136,7 @@ func (ao *Output) ConvertOutputToStatus() Status {
 		if svc != nil {
 			a.Service = svc
 		}
-		s.Apps = append(s.Apps, a)
+		s.Services = append(s.Services, a)
 	}
 
 	return s

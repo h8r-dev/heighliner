@@ -80,8 +80,8 @@ func showStatus(appName string) error {
 	fmt.Printf("Heighliner application %s is ready!\n", status.AppName)
 	fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.CD.Provider, color.HiBlueString(status.CD.URL),
 		status.CD.Username, status.CD.Password)
-	fmt.Printf("There are %d applications deployed by %s:\n", len(status.Apps), status.CD.Provider)
-	for i, info := range status.Apps {
+	fmt.Printf("There are %d services deployed by %s:\n", len(status.Services), status.CD.Provider)
+	for i, info := range status.Services {
 		fmt.Printf("%d: %s\n", i+1, info.Name)
 		if info.URL != "" {
 			fmt.Printf("   You can access %s from broswer by url: %s\n",

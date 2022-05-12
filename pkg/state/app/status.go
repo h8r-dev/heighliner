@@ -4,7 +4,7 @@ package app
 type Status struct {
 	AppName         string // Heighliner app name
 	CD              CDInfo
-	Apps            []ApplicationInfo
+	Services        []ServiceInfo
 	SCM             SCM
 	TFConfigMapName string
 }
@@ -17,8 +17,8 @@ type CDInfo struct {
 	Password string `json:"password" yaml:"password"`
 }
 
-// ApplicationInfo app info
-type ApplicationInfo struct {
+// ServiceInfo service info
+type ServiceInfo struct {
 	Name     string `json:"name,omitempty"`
 	Type     string `json:"type,omitempty"`
 	Username string `json:"username,omitempty"`
