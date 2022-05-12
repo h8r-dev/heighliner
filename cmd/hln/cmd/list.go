@@ -10,7 +10,7 @@ func newListCmd() *cobra.Command {
 		Short: "List apps or stacks",
 	}
 
-	listCmd.AddCommand(newListStacksCmd())
+	// listCmd.AddCommand(newListStacksCmd())
 	listCmd.AddCommand(newListAppsCmd())
 
 	return listCmd
