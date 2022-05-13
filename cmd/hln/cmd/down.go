@@ -142,7 +142,15 @@ func deleteRepos(appName, kubeconfig, token string, scm app.SCM, streams generic
 	}
 	for _, repo := range scm.Repos {
 		lg.Info(fmt.Sprintf("delete repo %s...", repo.Name))
-		repoDir := filepath.Join(terraformDir, repo.Name)
+		repoDir, err := os.MkdirTemp("", "hlnExecTF")
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := os.RemoveAll(repoDir); err != nil {
+				panic(err)
+			}
+		}()
 		if err := os.MkdirAll(repoDir, 0755); err != nil {
 			return err
 		}
