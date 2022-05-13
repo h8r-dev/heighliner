@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
 )
 
@@ -54,7 +55,7 @@ func getServiceNames(services []app.Service) []string {
 
 func (o *LogsOptions) getPodLogs(cmd *cobra.Command, args []string) error {
 
-	k8sClient, err := getDefaultClientSet()
+	k8sClient, err := k8sfactory.GetDefaultClientSet()
 	if err != nil {
 		return err
 
