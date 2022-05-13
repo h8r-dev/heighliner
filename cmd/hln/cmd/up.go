@@ -98,11 +98,6 @@ func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 }
 
 func (o *upOptions) Run(appName string) error {
-	// Save the pwd info brcause the program will chdir later.
-	pwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
 	// -----------------------------
 	// 		Prepare stack
 	// -----------------------------
@@ -182,14 +177,10 @@ func (o *upOptions) Run(appName string) error {
 	if err != nil {
 		return err
 	}
+
 	// -----------------------------
 	// 	Handle the output
 	// -----------------------------
-	// Print the output.
-	if err := os.RemoveAll(filepath.Join(pwd, ".hln")); err != nil {
-		return err
-	}
-
 	cm, err := getConfigMapState()
 	if err != nil {
 		return err
