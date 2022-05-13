@@ -86,8 +86,7 @@ func getMetrics(appName string) (*Metrics, error) {
 			metrics.CridentialRef.Password = argoApp.Password
 			if argoApp.Annotations != "" {
 				str := argoApp.Annotations
-				raw := make([]byte, base64.StdEncoding.DecodedLen(len(str)))
-				_, err := base64.StdEncoding.Decode(raw, []byte(str))
+				data, err := base64.StdEncoding.DecodeString(str)
 				if err != nil {
 					return nil, fmt.Errorf("failed to decode annotations :%w", err)
 				}
@@ -96,7 +95,7 @@ func getMetrics(appName string) (*Metrics, error) {
 					Path  string `json:"path"`
 				}
 				mdb := MDashboard{}
-				if err := json.Unmarshal(raw, &mdb); err != nil {
+				if err := json.Unmarshal(data, &mdb); err != nil {
 					return nil, fmt.Errorf("bad annotations format: %w", err)
 				}
 				metrics.DashboardRefs = append(metrics.DashboardRefs, MonitorDashboard{
