@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,6 +13,8 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	watchtools "k8s.io/client-go/tools/watch"
+
+	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 )
 
 const (
@@ -74,9 +75,9 @@ func waitForIGController(namespace, label string, timeout time.Duration) error {
 		switch {
 		case err == nil:
 			return nil
-		case err == watchtools.ErrWatchClosed:
+		case errors.Is(err, watchtools.ErrWatchClosed):
 			continue
-		case err == wait.ErrWaitTimeout:
+		case errors.Is(err, wait.ErrWaitTimeout):
 			return errors.New("watch time out")
 		default:
 			return err
