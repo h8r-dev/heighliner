@@ -18,10 +18,10 @@ import (
 )
 
 const (
-	defaultNS  = "ingress-nginx"
-	defaultSVC = "ingress-nginx-controller"
-	igLabel    = "app.kubernetes.io/component=controller"
-	defaultIP  = "127.0.0.1" // This IP is for local kind and minikube
+	defaultIngressNS    = "ingress-nginx"
+	defaultIngressSVC   = "ingress-nginx-controller"
+	defaultIngressLabel = "app.kubernetes.io/component=controller"
+	defaultIngressIP    = "127.0.0.1" // This IP is for local kind and minikube
 )
 
 type getIngressOptions struct {
@@ -45,10 +45,10 @@ func newGetIngressCmd(streams genericclioptions.IOStreams) *cobra.Command {
 func (o *getIngressOptions) runGetIngress(cmd *cobra.Command, args []string) error {
 	defaultTimeout := 90 * time.Second
 	fmt.Fprintf(o.Out, "waiting for ingress pod to be ready...\n")
-	if err := waitForIGController(defaultNS, igLabel, defaultTimeout); err != nil {
+	if err := waitForIGController(defaultIngressNS, defaultIngressLabel, defaultTimeout); err != nil {
 		return err
 	}
-	ip, err := getIngressIP(defaultNS, defaultSVC)
+	ip, err := getIngressIP(defaultIngressNS, defaultIngressSVC)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func getIngressIP(namespace, svcName string) (string, error) {
 	if len(igs) > 0 {
 		igip = igs[0].IP
 	} else {
-		igip = defaultIP
+		igip = defaultIngressIP
 	}
 	return igip, err
 }
