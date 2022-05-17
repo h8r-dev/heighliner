@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/viper"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/portforward"
@@ -87,6 +88,11 @@ func (o *upOptions) BindFlags(f *pflag.FlagSet) {
 }
 
 func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
+	errs := validation.IsDNS1123Subdomain(args[0])
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ";"))
+	}
+
 	if o.Stack != "" && o.Dir != "" {
 		return errors.New("can't use both stack and dir")
 	}
