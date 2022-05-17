@@ -44,6 +44,7 @@ func newGetIngressCmd(streams genericclioptions.IOStreams) *cobra.Command {
 
 func (o *getIngressOptions) runGetIngress(cmd *cobra.Command, args []string) error {
 	defaultTimeout := 90 * time.Second
+	fmt.Fprintf(o.Out, "waiting for ingress pod to be ready...\n")
 	if err := waitForIGController(defaultNS, igLabel, defaultTimeout); err != nil {
 		return err
 	}
@@ -85,7 +86,7 @@ func waitForIGController(namespace, label string, timeout time.Duration) error {
 	}
 }
 
-// IsDeleted returns true if the object is deleted. It prints any errors it encounters.
+// podIsReady returns true if the pod is ready. It prints any errors it encounters.
 func podIsReady(event watch.Event) (bool, error) {
 	pod, ok := event.Object.(*v1.Pod)
 	if !ok {
