@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -185,13 +186,14 @@ func (o *upOptions) Run(appName string) error {
 	if err != nil {
 		return err
 	}
-
-	err = cm.SaveOutputAndTFProvider(appName)
-	if err != nil {
+	if err := cm.SaveOutputAndTFProvider(appName); err != nil {
 		return err
 	}
-
-	return showStatus(appName)
+	if err := showStatus(appName); err != nil {
+		return err
+	}
+	fmt.Fprintf(o.Out, "\n%s\n", color.GreenString("Congrats! Application is ready!"))
+	return nil
 }
 
 func (o upOptions) setEnv() error {
