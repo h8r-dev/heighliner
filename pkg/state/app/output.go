@@ -23,6 +23,7 @@ type Application struct {
 type Service struct {
 	Name string `json:"name"`
 	URL  string `json:"url" yaml:"url"`
+	Type string `json:"type" yaml:"type"`
 }
 
 // CD now only support argoCD.
@@ -118,30 +119,27 @@ func (ao *Output) ConvertOutputToStatus() Status {
 			Infra:    app.Infra,
 		}
 
+		s.Services = append(s.Services, a)
+	}
+
+	if len(ao.Services) > 0 {
+		s.UserServices = make([]UserService, 0)
+	}
+
+	for _, service := range ao.Services {
+		var u UserService
+		u.Service = service
+
 		var repo *Repo
 		for _, r := range ao.SCM.Repos {
-			if r.Name == app.Name {
+			if r.Name == service.Name {
 				repo = r
 				break
 			}
 		}
 		if repo != nil {
-			a.Repo = repo
+			u.Repo = repo
 		}
-
-		var svc *Service
-		for _, service := range ao.Services {
-			if service.Name == app.Name {
-				sv := service
-				svc = &sv
-				break
-			}
-		}
-		if svc != nil {
-			a.Service = svc
-		}
-		s.Services = append(s.Services, a)
 	}
-
 	return s
 }

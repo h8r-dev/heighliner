@@ -80,27 +80,30 @@ func showStatus(appName string) error {
 
 	fmt.Printf("Heighliner application %s is ready!", status.AppName)
 
-	var frontendService *app.ServiceInfo
+	var frontendService *app.UserService
 	var addonServices []app.ServiceInfo
-	var userServices []app.ServiceInfo
 	var emptyAddonServices []app.ServiceInfo
 	for _, info := range status.Services {
-		if info.Type == "frontend" && info.Service != nil && info.Service.URL != "" {
-			frontendService = &info
-			userServices = append(userServices, info)
-			continue
-		}
+		//if info.Type == "frontend" && info.Service != nil && info.Service.URL != "" {
+		//	frontendService = &info
+		//	userServices = append(userServices, info)
+		//	continue
+		//}
 
 		if info.Infra == "true" {
-			if info.URL == "" && info.Service == nil && info.Repo == nil {
+			if info.URL == "" {
 				emptyAddonServices = append(emptyAddonServices, info)
 			} else {
 				addonServices = append(addonServices, info)
 			}
 			continue
 		}
+	}
 
-		userServices = append(userServices, info)
+	for _, service := range status.UserServices {
+		if service.Type == "frontend" {
+			frontendService = &service
+		}
 	}
 
 	if frontendService != nil {
@@ -111,26 +114,17 @@ func showStatus(appName string) error {
 	//fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.CD.Provider, color.HiBlueString(status.CD.URL),
 	//	status.CD.Username, status.CD.Password)
 	fmt.Printf("There are %d services have been deployed:\n", len(status.Services))
-	for _, info := range userServices {
-		fmt.Printf("● %s\n", info.Name)
-		if info.URL != "" {
-			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
-		} else if info.Service != nil {
+	for _, info := range status.UserServices {
+		fmt.Printf("● %s\n", info.Service.Name)
+
+		if info.Service.URL != "" {
 			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.Service.URL))
 		}
-		//if info.Service != nil {
-		//	fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
-		//		info.Name, color.HiBlueString(info.Service.URL))
-		//}
+
 		if info.Repo != nil {
 			fmt.Printf("  ● resource code: %s\n", color.HiBlueString(info.Repo.URL))
 		}
-		if info.Username != "" && info.Password != "" {
-			fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
-		}
-		//if info.Prompt != "" {
-		//	fmt.Printf("   %s\n", info.Prompt)
-		//}
+
 		fmt.Println()
 	}
 
@@ -139,21 +133,15 @@ func showStatus(appName string) error {
 		fmt.Printf("There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices))
 		for _, info := range addonServices {
 			fmt.Printf("● %s\n", info.Name)
+
 			if info.URL != "" {
 				fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
-			} else if info.Service != nil {
-				fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.Service.URL))
 			}
-			//if info.Service != nil {
-			//	fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
-			//		info.Name, color.HiBlueString(info.Service.URL))
-			//}
-			if info.Repo != nil {
-				fmt.Printf("  ● resource code: %s\n", color.HiBlueString(info.Repo.URL))
-			}
+
 			if info.Username != "" && info.Password != "" {
 				fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
 			}
+
 			if info.Prompt != "" {
 				fmt.Printf("  ● %s\n", info.Prompt)
 			}
