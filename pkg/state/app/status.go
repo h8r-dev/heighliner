@@ -1,10 +1,17 @@
 package app
 
+// UserService user service
+type UserService struct {
+	Service
+	*Repo
+}
+
 // Status app status
 type Status struct {
 	AppName         string // Heighliner app name
 	CD              CDInfo
-	Services        []ServiceInfo
+	Services        []ServiceInfo // addon service
+	UserServices    []UserService
 	SCM             SCM
 	TFConfigMapName string
 }
@@ -24,7 +31,6 @@ type ServiceInfo struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 	URL      string `json:"url"`
+	Infra    string `json:"infra"`
 	Prompt   string `json:"prompt"`
-	*Repo
-	*Service
 }

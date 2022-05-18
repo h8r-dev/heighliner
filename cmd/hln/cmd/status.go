@@ -78,30 +78,81 @@ func showStatus(appName string) error {
 		return err
 	}
 
-	fmt.Printf("Heighliner application %s is ready!\n", status.AppName)
-	fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.CD.Provider, color.HiBlueString(status.CD.URL),
-		status.CD.Username, status.CD.Password)
-	fmt.Printf("There are %d services deployed by %s:\n", len(status.Services), status.CD.Provider)
-	for i, info := range status.Services {
-		fmt.Printf("%d: %s\n", i+1, info.Name)
-		if info.URL != "" {
-			fmt.Printf("   You can access %s from broswer by url: %s\n",
-				info.Name, color.HiBlueString(info.URL))
+	fmt.Printf("Heighliner application %s is ready! ", status.AppName)
+
+	var frontendService app.UserService
+	var addonServices []app.ServiceInfo
+	var emptyAddonServices []app.ServiceInfo
+	for _, info := range status.Services {
+
+		if info.Infra == "true" {
+			if info.URL == "" {
+				emptyAddonServices = append(emptyAddonServices, info)
+			} else {
+				addonServices = append(addonServices, info)
+			}
+			continue
 		}
-		if info.Service != nil {
-			fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
-				info.Name, color.HiBlueString(info.Service.URL))
+	}
+
+	var found bool
+	for _, service := range status.UserServices {
+		if service.Type == "frontend" {
+			frontendService = service
+			found = true
+			break
 		}
+	}
+
+	if found {
+		fmt.Printf("access URL: %s", color.HiBlueString(frontendService.Service.URL))
+	}
+	fmt.Printf("\n\n")
+
+	fmt.Printf("There are %d services have been deployed:\n", len(status.UserServices))
+	for _, info := range status.UserServices {
+		fmt.Printf("● %s\n", info.Service.Name)
+
+		if info.Service.URL != "" {
+			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.Service.URL))
+		}
+
 		if info.Repo != nil {
-			fmt.Printf("   %s's source code resides on %s repository: %s\n", info.Name, status.SCM.Provider, color.HiBlueString(info.Repo.URL))
+			fmt.Printf("  ● resource code: %s\n", color.HiBlueString(info.Repo.URL))
 		}
+
+		fmt.Println()
+	}
+
+	fmt.Printf("There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices)+1)
+	fmt.Printf("● %s\n", status.CD.Provider)
+	if status.CD.URL != "" {
+		fmt.Printf("  ● access URL: %s\n", color.HiBlueString(status.CD.URL))
+	}
+	if status.CD.Username != "" && status.CD.Password != "" {
+		fmt.Printf("  ● credential: [Username: %s Password: %s]\n", status.CD.Username, status.CD.Password)
+	}
+	fmt.Println()
+
+	for _, info := range addonServices {
+		fmt.Printf("● %s\n", info.Name)
+
+		if info.URL != "" {
+			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
+		}
+
 		if info.Username != "" && info.Password != "" {
-			fmt.Printf("   credential: [Username: %s Password: %s]\n", info.Username, info.Password)
+			fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
 		}
+
 		if info.Prompt != "" {
-			fmt.Printf("   %s\n", info.Prompt)
+			fmt.Printf("  ● %s\n", info.Prompt)
 		}
 		fmt.Println()
 	}
+	for _, info := range emptyAddonServices {
+		fmt.Printf("● %s\n", info.Name)
+	}
+
 	return nil
 }
