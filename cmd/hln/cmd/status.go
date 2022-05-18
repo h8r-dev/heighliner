@@ -131,10 +131,10 @@ func showStatus(appName string) error {
 	if status.CD.URL != "" {
 		fmt.Printf("  ● access URL: %s\n", color.HiBlueString(status.CD.URL))
 	}
-
 	if status.CD.Username != "" && status.CD.Password != "" {
 		fmt.Printf("  ● credential: [Username: %s Password: %s]\n", status.CD.Username, status.CD.Password)
 	}
+	fmt.Println()
 
 	for _, info := range addonServices {
 		fmt.Printf("● %s\n", info.Name)
