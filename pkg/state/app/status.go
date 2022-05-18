@@ -33,6 +33,4 @@ type ServiceInfo struct {
 	URL      string `json:"url"`
 	Infra    string `json:"infra"`
 	Prompt   string `json:"prompt"`
-	//*Repo
-	//*Service
 }

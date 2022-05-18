@@ -84,11 +84,6 @@ func showStatus(appName string) error {
 	var addonServices []app.ServiceInfo
 	var emptyAddonServices []app.ServiceInfo
 	for _, info := range status.Services {
-		//if info.Type == "frontend" && info.Service != nil && info.Service.URL != "" {
-		//	frontendService = &info
-		//	userServices = append(userServices, info)
-		//	continue
-		//}
 
 		if info.Infra == "true" {
 			if info.URL == "" {
