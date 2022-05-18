@@ -109,7 +109,7 @@ func showStatus(appName string) error {
 	if frontendService != nil {
 		fmt.Printf("access URL: %s", frontendService.Service.URL)
 	}
-	fmt.Println()
+	fmt.Printf("\n\n")
 
 	fmt.Printf("There are %d services have been deployed:\n", len(status.UserServices))
 	for _, info := range status.UserServices {
