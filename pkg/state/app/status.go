@@ -24,7 +24,7 @@ type ServiceInfo struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 	URL      string `json:"url"`
-	Infra    bool   `json:"infra"`
+	Infra    string `json:"infra"`
 	Prompt   string `json:"prompt"`
 	*Repo
 	*Service

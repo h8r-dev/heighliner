@@ -91,7 +91,7 @@ func showStatus(appName string) error {
 			continue
 		}
 
-		if info.Infra {
+		if info.Infra == "true" {
 			if info.URL == "" && info.Service == nil && info.Repo == nil {
 				emptyAddonServices = append(emptyAddonServices, info)
 			} else {
