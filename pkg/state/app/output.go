@@ -40,6 +40,7 @@ type ArgoApp struct {
 	Username    string `json:"username,omitempty" yaml:"username"`
 	Password    string `json:"password,omitempty" yaml:"password"`
 	URL         string `json:"url,omitempty" yaml:"url,omitempty"`
+	Infra       string `json:"infra,omitempty" yaml:"infra,omitempty"`
 	Prompt      string `json:"prompt,omitempty" yaml:"prompt,omitempty"`
 	Type        string `json:"type" yaml:"type"`
 	Annotations string `json:"annotations" yaml:"annotations"`
@@ -114,6 +115,7 @@ func (ao *Output) ConvertOutputToStatus() Status {
 			Password: app.Password,
 			URL:      app.URL,
 			Prompt:   app.Prompt,
+			Infra:    app.Infra,
 		}
 
 		var repo *Repo
