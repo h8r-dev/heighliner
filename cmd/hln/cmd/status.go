@@ -134,32 +134,34 @@ func showStatus(appName string) error {
 		fmt.Println()
 	}
 
-	fmt.Printf("There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices))
-	for _, info := range addonServices {
-		fmt.Printf("● %s\n", info.Name)
-		if info.URL != "" {
-			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
-		} else if info.Service != nil {
-			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.Service.URL))
-		}
-		//if info.Service != nil {
-		//	fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
-		//		info.Name, color.HiBlueString(info.Service.URL))
-		//}
-		if info.Repo != nil {
-			fmt.Printf("  ● resource code: %s\n", color.HiBlueString(info.Repo.URL))
-		}
-		if info.Username != "" && info.Password != "" {
-			fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
-		}
-		//if info.Prompt != "" {
-		//	fmt.Printf("   %s\n", info.Prompt)
-		//}
-		fmt.Println()
-	}
+	if len(addonServices)+len(emptyAddonServices) > 0 {
 
-	for _, info := range addonServices {
-		fmt.Printf("● %s\n", info.Name)
+		fmt.Printf("There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices))
+		for _, info := range addonServices {
+			fmt.Printf("● %s\n", info.Name)
+			if info.URL != "" {
+				fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
+			} else if info.Service != nil {
+				fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.Service.URL))
+			}
+			//if info.Service != nil {
+			//	fmt.Printf("   %s has been deployed to k8s cluster, you can access it by k8s Service url: %s\n",
+			//		info.Name, color.HiBlueString(info.Service.URL))
+			//}
+			if info.Repo != nil {
+				fmt.Printf("  ● resource code: %s\n", color.HiBlueString(info.Repo.URL))
+			}
+			if info.Username != "" && info.Password != "" {
+				fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
+			}
+			if info.Prompt != "" {
+				fmt.Printf("  ● %s\n", info.Prompt)
+			}
+			fmt.Println()
+		}
+		for _, info := range emptyAddonServices {
+			fmt.Printf("● %s\n", info.Name)
+		}
 	}
 
 	return nil
