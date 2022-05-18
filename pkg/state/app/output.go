@@ -140,6 +140,7 @@ func (ao *Output) ConvertOutputToStatus() Status {
 		if repo != nil {
 			u.Repo = repo
 		}
+		s.UserServices = append(s.UserServices, u)
 	}
 	return s
 }

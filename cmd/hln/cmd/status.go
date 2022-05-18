@@ -113,7 +113,7 @@ func showStatus(appName string) error {
 
 	//fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.CD.Provider, color.HiBlueString(status.CD.URL),
 	//	status.CD.Username, status.CD.Password)
-	fmt.Printf("There are %d services have been deployed:\n", len(status.Services))
+	fmt.Printf("There are %d services have been deployed:\n", len(status.UserServices))
 	for _, info := range status.UserServices {
 		fmt.Printf("● %s\n", info.Service.Name)
 
