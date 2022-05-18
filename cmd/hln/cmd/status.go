@@ -78,7 +78,7 @@ func showStatus(appName string) error {
 		return err
 	}
 
-	fmt.Printf("🎉 Heighliner application %s is ready! ", status.AppName)
+	fmt.Printf("🎉🎉 Heighliner application %s is ready! ", status.AppName)
 
 	var frontendService app.UserService
 	var addonServices []app.ServiceInfo
