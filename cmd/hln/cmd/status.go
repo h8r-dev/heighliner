@@ -111,8 +111,6 @@ func showStatus(appName string) error {
 	}
 	fmt.Println()
 
-	//fmt.Printf("You can access %s on %s [Username: %s Password: %s]\n\n", status.CD.Provider, color.HiBlueString(status.CD.URL),
-	//	status.CD.Username, status.CD.Password)
 	fmt.Printf("There are %d services have been deployed:\n", len(status.UserServices))
 	for _, info := range status.UserServices {
 		fmt.Printf("● %s\n", info.Service.Name)
@@ -128,28 +126,34 @@ func showStatus(appName string) error {
 		fmt.Println()
 	}
 
-	if len(addonServices)+len(emptyAddonServices) > 0 {
+	fmt.Printf("There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices)+1)
+	fmt.Printf("● %s\n", status.CD.Provider)
+	if status.CD.URL != "" {
+		fmt.Printf("  ● access URL: %s\n", color.HiBlueString(status.CD.URL))
+	}
 
-		fmt.Printf("There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices))
-		for _, info := range addonServices {
-			fmt.Printf("● %s\n", info.Name)
+	if status.CD.Username != "" && status.CD.Password != "" {
+		fmt.Printf("  ● credential: [Username: %s Password: %s]\n", status.CD.Username, status.CD.Password)
+	}
 
-			if info.URL != "" {
-				fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
-			}
+	for _, info := range addonServices {
+		fmt.Printf("● %s\n", info.Name)
 
-			if info.Username != "" && info.Password != "" {
-				fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
-			}
-
-			if info.Prompt != "" {
-				fmt.Printf("  ● %s\n", info.Prompt)
-			}
-			fmt.Println()
+		if info.URL != "" {
+			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
 		}
-		for _, info := range emptyAddonServices {
-			fmt.Printf("● %s\n", info.Name)
+
+		if info.Username != "" && info.Password != "" {
+			fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
 		}
+
+		if info.Prompt != "" {
+			fmt.Printf("  ● %s\n", info.Prompt)
+		}
+		fmt.Println()
+	}
+	for _, info := range emptyAddonServices {
+		fmt.Printf("● %s\n", info.Name)
 	}
 
 	return nil
