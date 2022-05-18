@@ -80,7 +80,7 @@ func showStatus(appName string) error {
 
 	fmt.Printf("Heighliner application %s is ready! ", status.AppName)
 
-	var frontendService *app.UserService
+	var frontendService app.UserService
 	var addonServices []app.ServiceInfo
 	var emptyAddonServices []app.ServiceInfo
 	for _, info := range status.Services {
@@ -100,13 +100,16 @@ func showStatus(appName string) error {
 		}
 	}
 
+	var found bool
 	for _, service := range status.UserServices {
 		if service.Type == "frontend" {
-			frontendService = &service
+			frontendService = service
+			found = true
+			break
 		}
 	}
 
-	if frontendService != nil {
+	if found {
 		fmt.Printf("access URL: %s", color.HiBlueString(frontendService.Service.URL))
 	}
 	fmt.Printf("\n\n")
