@@ -1,20 +1,27 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 )
 
 const (
-	hlnSectionStart = "# Added by hln"
-	hlnSectionEnd   = "# End of section"
+	hlnSectionStart   = "# Added by hln"
+	hlnSectionEnd     = "# End of section"
+	defaultIngressNS  = "ingress-nginx"
+	defaultIngressSVC = "ingress-nginx-controller"
+	defaultIngressIP  = "127.0.0.1" // This IP is for local kind and minikube
 )
 
 var hlnHostsSection = []string{
@@ -25,48 +32,63 @@ var hlnHostsSection = []string{
 	"loki",
 }
 
-type hostsOptions struct {
+type domainMappingOptions struct {
+	IP     string
+	Domain string
+
 	genericclioptions.IOStreams
 }
 
-func newHostsCmd(streams genericclioptions.IOStreams) *cobra.Command {
-	o := &hostsOptions{
+func (o *domainMappingOptions) BindFlags(f *pflag.FlagSet) {
+	f.StringVar(&o.IP, "ip", "", "IP address")
+	f.StringVar(&o.Domain, "domain", "", "Your domain name")
+}
+
+func newDomainMappingCmd(streams genericclioptions.IOStreams) *cobra.Command {
+	o := &domainMappingOptions{
 		IOStreams: streams,
 	}
 	cmd := &cobra.Command{
-		Use:   "hosts [appName]",
-		Short: "Update hosts file",
+		Use:   "domain-mapping [appName]",
+		Short: "Set domain mapping",
 		Args:  cobra.ExactArgs(1),
 		RunE:  o.Run,
 	}
+	o.BindFlags(cmd.Flags())
 	return cmd
 }
 
-func (o *hostsOptions) Run(cmd *cobra.Command, args []string) error {
+func (o *domainMappingOptions) Run(cmd *cobra.Command, args []string) error {
 	defaultHosts := filepath.Join("/etc", "hosts")
 	appName := args[0]
-	if _, err := getAppStatus(appName); err != nil {
-		return fmt.Errorf("target app not found: %w", err)
-	}
+	// This section will test if the app exists.
+	// if _, err := getAppStatus(appName); err != nil {
+	// 	return fmt.Errorf("target app not found: %w", err)
+	// }
 	hlnHostsSection = append(hlnHostsSection, appName)
-	defaultTimeout := 90 * time.Second
 	b, err := os.ReadFile(defaultHosts)
 	if err != nil {
 		return err
 	}
 	// Get ingress ip
-	fmt.Fprintf(o.Out, "waiting for ingress pod to be ready...\n")
-	if err := waitForIGController(defaultIngressNS, defaultIngressLabel, defaultTimeout); err != nil {
-		return err
+	ip := ""
+	if o.IP != "" {
+		ip = o.IP
+	} else {
+		igip, err := getIngressIP(defaultIngressNS, defaultIngressSVC)
+		if err != nil {
+			return err
+		}
+		ip = igip
 	}
-	igip, err := getIngressIP(defaultIngressNS, defaultIngressSVC)
-	if err != nil {
-		return err
+	domain := "h8r.site"
+	if o.Domain != "" {
+		domain = o.Domain
 	}
 	// Modify hosts
 	lines := strings.Split(string(b), "\n")
 	start, end, ok := findHlnSection(lines)
-	newLines := getAppendHlnSection(igip)
+	newLines := getAppendHlnSection(ip, domain)
 	if !ok {
 		if err := copy.Copy(defaultHosts, defaultHosts+".bak"); err != nil {
 			return fmt.Errorf("failed to backup hosts file: %w", err)
@@ -117,11 +139,10 @@ func findHlnSection(lines []string) (start, end int, ok bool) {
 	return
 }
 
-func getAppendHlnSection(ingressIP string) []string {
-	defaultSuffix := "h8r.site"
+func getAppendHlnSection(ip, domain string) []string {
 	lines := []string{}
 	for _, prefix := range hlnHostsSection {
-		line := ingressIP + " " + prefix + "." + defaultSuffix
+		line := ip + " " + prefix + "." + domain
 		lines = append(lines, line)
 	}
 	return lines
@@ -135,3 +156,23 @@ func getAppendHlnSection(ingressIP string) []string {
 // func updateHosts(ingressIP string, lines []string) bool {
 
 // }
+
+func getIngressIP(namespace, svcName string) (string, error) {
+	cs, err := k8sfactory.GetDefaultClientSet()
+	if err != nil {
+		return "", err
+	}
+	ctx := context.TODO()
+	igsvc, err := cs.CoreV1().Services(namespace).Get(ctx, svcName, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	igs := igsvc.Status.LoadBalancer.Ingress
+	var igip string
+	if len(igs) > 0 {
+		igip = igs[0].IP
+	} else {
+		igip = defaultIngressIP
+	}
+	return igip, err
+}
