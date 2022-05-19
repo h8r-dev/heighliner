@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"text/tabwriter"
 
 	"github.com/fatih/color"
@@ -35,7 +34,7 @@ type Cridential struct {
 // MonitorDashboard of apps
 type MonitorDashboard struct {
 	Title string
-	URL   url.URL
+	URL   string
 }
 
 func (o *metricsOptions) Run(args []string) error {
@@ -100,11 +99,7 @@ func getMetrics(appName string) (*Metrics, error) {
 				}
 				metrics.DashboardRefs = append(metrics.DashboardRefs, MonitorDashboard{
 					Title: mdb.Title,
-					URL: url.URL{
-						Scheme: "http",
-						Host:   argoApp.URL,
-						Path:   mdb.Path,
-					},
+					URL:   argoApp.URL + mdb.Path,
 				})
 			}
 		}
@@ -129,6 +124,6 @@ func showMetrics(w io.Writer, m *Metrics) {
 	}()
 	fmt.Fprintf(tw, "NAME\tURL\n")
 	for _, db := range m.DashboardRefs {
-		fmt.Fprintf(tw, "%s\t%s\n", db.Title, color.CyanString(db.URL.String()))
+		fmt.Fprintf(tw, "%s\t%s\n", db.Title, color.CyanString(db.URL))
 	}
 }
