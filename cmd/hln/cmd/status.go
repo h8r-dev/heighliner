@@ -18,6 +18,25 @@ func newStatusCmd() *cobra.Command {
 		Short: "Show status of your application",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			st, err := getStateInSpecificBackend()
+			if err != nil {
+				return err
+			}
+
+			apps, err := st.ListApps()
+			if err != nil {
+				return err
+			}
+			var found bool
+			for _, s := range apps {
+				if s == args[0] {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("application \"%s\" not found ", args[0])
+			}
 			return showStatus(args[0])
 		},
 	}
