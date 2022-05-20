@@ -98,7 +98,7 @@ func installBuildKit() error {
 	buildKitDeploy.Spec.Template.Spec.Containers = []corev1.Container{{
 		Name:  buildKitName,
 		Image: "moby/buildkit:master-rootless",
-		Args:  []string{"--addr", "unix:///run/buildkit/buildkitd.sock", "--addr", "tcp://0.0.0.0:1234", "--oci-worker-no-process-sandbox"},
+		Args:  []string{"--addr", "unix:///run/user/1000/buildkit/buildkitd.sock", "--addr", "tcp://0.0.0.0:1234", "--oci-worker-no-process-sandbox"},
 		ReadinessProbe: &corev1.Probe{
 			ProbeHandler:        corev1.ProbeHandler{Exec: &corev1.ExecAction{Command: []string{"buildctl", "debug", "workers"}}},
 			InitialDelaySeconds: 5,
