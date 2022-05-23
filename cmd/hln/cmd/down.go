@@ -265,6 +265,7 @@ func (m downModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
+		default:
 		}
 
 	case errMsg:
