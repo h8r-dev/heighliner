@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/go-github/v44/github"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -31,6 +33,7 @@ import (
 type downOptions struct {
 	Dir              string
 	IsDeletePackages bool
+	IsAutoYes        bool
 
 	genericclioptions.IOStreams
 }
@@ -38,6 +41,7 @@ type downOptions struct {
 func (o *downOptions) BindFlags(f *pflag.FlagSet) {
 	f.StringVar(&o.Dir, "dir", "", "Path to your local stack")
 	f.BoolVar(&o.IsDeletePackages, "delete-packages", false, "Delete packages")
+	f.BoolVarP(&o.IsAutoYes, "yes", "y", false, "Automatic yes to prompts")
 }
 
 func (o *downOptions) Validate(cmd *cobra.Command, args []string) error {
@@ -57,7 +61,7 @@ func (o *downOptions) Run(appName string) error {
 	}
 	output, err := state.LoadOutput(appName)
 	if err != nil {
-		return err
+		return fmt.Errorf("application %s not found: %w", appName, err)
 	}
 
 	dClient, err := k8sfactory.GetDefaultFactory().DynamicClient()
@@ -89,12 +93,36 @@ func newDownCmd(streams genericclioptions.IOStreams) *cobra.Command {
 			if err := o.Validate(cmd, args); err != nil {
 				return err
 			}
+			if err := o.Confirm(args[0]); err != nil {
+				return err
+			}
 			return o.Run(args[0])
 		},
 	}
 	o.BindFlags(cmd.Flags())
 
 	return cmd
+}
+
+func (o *downOptions) Confirm(appName string) error {
+	if o.IsAutoYes {
+		return nil
+	}
+	program := tea.NewProgram(initialDownConfirmModel(appName))
+	m, err := program.StartReturningModel()
+	if err != nil {
+		return err
+	}
+	if m, ok := m.(downModel); ok {
+		if m.err != nil {
+			return m.err
+		}
+		if m.textInput.Value() == m.appName {
+			return nil
+		}
+		return errors.New("wrong app name, please check")
+	}
+	return errors.New("internal err: failed to assert downModel")
 }
 
 func deleteArgoCDApps(ctx context.Context,
@@ -203,3 +231,58 @@ func deletePackages(token string, scm app.SCM, streams genericclioptions.IOStrea
 	}
 	return nil
 }
+
+// -------------------------------------
+// This section is for down cmd confirmation prompt
+type errMsg error
+
+type downModel struct {
+	appName   string
+	textInput textinput.Model
+	err       error
+}
+
+func initialDownConfirmModel(app string) downModel {
+	ti := textinput.New()
+	ti.Focus()
+
+	return downModel{
+		appName:   app,
+		textInput: ti,
+		err:       nil,
+	}
+}
+
+func (m downModel) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+func (m downModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
+			return m, tea.Quit
+		}
+
+	case errMsg:
+		m.err = msg
+		return m, nil
+	}
+
+	m.textInput, cmd = m.textInput.Update(msg)
+	return m, cmd
+}
+
+func (m downModel) View() string {
+	return fmt.Sprintf(
+		"Do you really want to take down %s?\n\n%s\n\n%s",
+		m.appName,
+		m.textInput.View(),
+		"Enter the application name to confirm",
+	) + "\n"
+}
+
+// -----------------------------------
