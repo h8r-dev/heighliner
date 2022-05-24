@@ -10,13 +10,13 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-getter/v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
-	"sigs.k8s.io/yaml"
 )
 
-// StacksIndexURL to get index
+// HlnRepoURL is official repo
 const HlnRepoURL = "https://stack.h8r.io"
 
 // Stack is a CloudNative application template.
