@@ -28,7 +28,7 @@ type Stack struct {
 }
 
 // StacksIndexURL to get index
-const StacksIndexURL = "https://stack.h8r.io/index"
+const StacksIndexURL = "https://stack.h8r.io/index.yaml"
 
 var (
 	// ErrNotExist mean this stack doesn't exist.
@@ -37,14 +37,13 @@ var (
 
 // List all stacks
 func List() ([]Stack, error) {
-	type Index struct {
-		Stacks []Stack `yaml:"stacks"`
-	}
 	b, err := getIndexYaml()
 	if err != nil {
 		return nil, err
 	}
-	idx := &Index{}
+	idx := &struct {
+		Stacks []Stack `yaml:"stacks"`
+	}{}
 	if err := yaml.Unmarshal(b, idx); err != nil {
 		return nil, err
 	}
