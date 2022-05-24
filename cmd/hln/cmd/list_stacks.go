@@ -19,6 +19,10 @@ func newListStacksCmd() *cobra.Command {
 	}
 
 	listStacksCmd.RunE = func(c *cobra.Command, args []string) error {
+		ss, err := stack.List()
+		if err != nil {
+			return err
+		}
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.TabIndent)
 		defer func() {
 			err := w.Flush()
@@ -26,13 +30,9 @@ func newListStacksCmd() *cobra.Command {
 				log.Fatal().Msg(err.Error())
 			}
 		}()
-		fmt.Fprintln(w, "NAME\tVERSION")
-		for name := range stack.Stacks {
-			s, err := stack.New(name)
-			if err != nil {
-				return fmt.Errorf("failed to list stack %s: %w", name, err)
-			}
-			line := fmt.Sprintf("%s\t%s\t", s.Name, s.Version)
+		fmt.Fprintln(w, "NAME\tVERSION\tDESCRIPTION")
+		for _, s := range ss {
+			line := fmt.Sprintf("%s\t%s\t%s", s.Name, s.Version, s.Description)
 			fmt.Fprintln(w, line)
 		}
 		return nil
