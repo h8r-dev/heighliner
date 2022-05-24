@@ -103,11 +103,13 @@ func installBuildKit() error {
 			ProbeHandler:        corev1.ProbeHandler{Exec: &corev1.ExecAction{Command: []string{"buildctl", "debug", "workers"}}},
 			InitialDelaySeconds: 5,
 			PeriodSeconds:       30,
+			FailureThreshold:    10,
 		},
 		LivenessProbe: &corev1.Probe{
 			ProbeHandler:        corev1.ProbeHandler{Exec: &corev1.ExecAction{Command: []string{"buildctl", "debug", "workers"}}},
 			InitialDelaySeconds: 5,
 			PeriodSeconds:       30,
+			FailureThreshold:    10,
 		},
 		SecurityContext: &corev1.SecurityContext{SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined}, RunAsUser: pointer.Int64Ptr(1000), RunAsGroup: pointer.Int64Ptr(1000)},
 		Ports:           []corev1.ContainerPort{{ContainerPort: 1234}},
