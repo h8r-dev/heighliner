@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	// HlnRepoURL is official repo
-	HlnRepoURL   = "https://stack.h8r.io"
+	// HlnRepoURL is official repo.
+	HlnRepoURL = "https://stack.h8r.io"
+	// MetaFileName is the name of metadata file.
 	MetaFileName = "metadata.yaml"
 )
 
@@ -32,6 +33,7 @@ type Stack struct {
 	Description string `json:"description" yaml:"description"`
 }
 
+// Metadata of the schema.
 type Metadata struct {
 	Name        string `json:"name"`
 	Version     string `json:"version"`
@@ -42,13 +44,16 @@ type Metadata struct {
 	Tags        []*Tag `json:"tags"`
 }
 
+// Owner info.
 type Owner struct {
 	Name    string `json:"name"`
 	Contact string `json:"contact"`
 }
 
+// Tag is a key word.
 type Tag string
 
+// LoadMeta loads metadata file.
 func LoadMeta(path string) (*Metadata, error) {
 	metafile := filepath.Join(path, MetaFileName)
 	b, err := os.ReadFile(metafile)
@@ -62,6 +67,7 @@ func LoadMeta(path string) (*Metadata, error) {
 	return stackMeta, nil
 }
 
+// Show displays the info of metadata.
 func (m Metadata) Show(w io.Writer) {
 	fmt.Fprintf(w, "\nNAME: %s\n", m.Name)
 	fmt.Fprintf(w, "VERSION: %s\n", m.Version)

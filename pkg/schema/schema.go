@@ -44,6 +44,7 @@ func New(dir string) *Schema {
 	}
 }
 
+// Show displays the info of input shcema.
 func (s Schema) Show(o io.Writer) {
 
 	w := tabwriter.NewWriter(o, 0, 4, 2, ' ', tabwriter.TabIndent)

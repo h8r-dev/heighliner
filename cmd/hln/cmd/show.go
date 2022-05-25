@@ -4,11 +4,12 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/h8r-dev/heighliner/pkg/schema"
-	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/h8r-dev/heighliner/pkg/schema"
+	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
 type showOptions struct {
