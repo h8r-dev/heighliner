@@ -2,6 +2,7 @@ package dagger
 
 import (
 	"path/filepath"
+	"runtime"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
@@ -21,7 +22,11 @@ type Client struct {
 
 // GetBin returns the path to the dagger binary.
 func GetBin() string {
-	return filepath.Join(state.GetHln(), "bin", "dagger")
+	bin := filepath.Join(state.GetHln(), "bin", "dagger")
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+	return bin
 }
 
 // NewClient creates a customized dagger client and returns it

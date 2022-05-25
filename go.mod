@@ -3,6 +3,7 @@ module github.com/h8r-dev/heighliner
 go 1.17
 
 require (
+	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.20.0
 	github.com/cheggaaa/pb v1.0.29
@@ -25,7 +26,6 @@ require (
 	k8s.io/apimachinery v0.23.6
 	k8s.io/cli-runtime v0.23.6
 	k8s.io/kubectl v0.23.6
-	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -124,6 +124,7 @@ require (
 	k8s.io/component-base v0.23.6 // indirect
 	k8s.io/klog/v2 v2.30.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
+	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
 	sigs.k8s.io/kustomize/api v0.10.1 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.13.0 // indirect

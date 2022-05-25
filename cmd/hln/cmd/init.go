@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/utils/pointer"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
 	"github.com/h8r-dev/heighliner/pkg/state"
@@ -89,16 +88,16 @@ func installBuildKit() error {
 
 	buildKitLabels := map[string]string{"app": "buildkitd"}
 	var buildKitDeploy v1.Deployment
+	privileged := true
 
 	buildKitDeploy.Name = buildKitName
 	buildKitDeploy.Labels = buildKitLabels
-	buildKitDeploy.Annotations = map[string]string{"container.apparmor.security.beta.kubernetes.io/buildkitd": "unconfined"}
 	buildKitDeploy.Spec.Selector = &metav1.LabelSelector{MatchLabels: buildKitLabels}
 	buildKitDeploy.Spec.Template.Labels = buildKitLabels
 	buildKitDeploy.Spec.Template.Spec.Containers = []corev1.Container{{
 		Name:  buildKitName,
-		Image: "moby/buildkit:master-rootless",
-		Args:  []string{"--addr", "unix:///run/user/1000/buildkit/buildkitd.sock", "--addr", "tcp://0.0.0.0:1234", "--oci-worker-no-process-sandbox"},
+		Image: "moby/buildkit:master",
+		Args:  []string{"--addr", "unix:///run/buildkit/buildkitd.sock", "--addr", "tcp://0.0.0.0:1234"},
 		ReadinessProbe: &corev1.Probe{
 			ProbeHandler:        corev1.ProbeHandler{Exec: &corev1.ExecAction{Command: []string{"buildctl", "debug", "workers"}}},
 			InitialDelaySeconds: 5,
@@ -111,7 +110,7 @@ func installBuildKit() error {
 			PeriodSeconds:       30,
 			FailureThreshold:    10,
 		},
-		SecurityContext: &corev1.SecurityContext{SeccompProfile: &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeUnconfined}, RunAsUser: pointer.Int64Ptr(1000), RunAsGroup: pointer.Int64Ptr(1000)},
+		SecurityContext: &corev1.SecurityContext{Privileged: &privileged},
 		Ports:           []corev1.ContainerPort{{ContainerPort: 1234}},
 	}}
 	_, err = client.AppsV1().Deployments(state.HeighlinerNs).Create(context.TODO(), &buildKitDeploy, metav1.CreateOptions{})

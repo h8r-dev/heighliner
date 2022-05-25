@@ -7,7 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 
+	"github.com/cavaliergopher/grab/v3"
 	"github.com/hashicorp/go-getter/v2"
 	gover "github.com/hashicorp/go-version"
 	"go.uber.org/zap"
@@ -15,10 +17,14 @@ import (
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/ziputil"
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
-const installScriptURL = "https://dl.dagger.io/dagger/install.sh"
+const (
+	installScriptURL = "https://dl.dagger.io/dagger/install.sh"
+	windowsBase      = "https://dagger-io.s3.amazonaws.com"
+)
 
 // Check checks if the version of dagger binary is available.
 func (c *Client) Check() error {
@@ -67,6 +73,9 @@ func (c *Client) CheckAndInstall() error {
 
 // install runs the dagger install.sh script.
 func (c *Client) install() error {
+	if runtime.GOOS == "windows" {
+		return c.installForWindows()
+	}
 	err := os.Setenv("DAGGER_VERSION", version.DaggerDefault)
 	if err != nil {
 		return err
@@ -101,4 +110,18 @@ func (c *Client) install() error {
 		return err
 	}
 	return nil
+}
+
+func (c Client) installForWindows() error {
+	fileName := "dagger_v" + version.DaggerDefault + "_windows_amd64"
+	url := fmt.Sprintf("%s/dagger/releases/%s/%s.zip", windowsBase, version.DaggerDefault, fileName)
+	hlnbin := filepath.Dir(filepath.Dir(c.Binary))
+	zipFile := filepath.Join(hlnbin, "dagger.zip")
+	if _, err := grab.Get(zipFile, url); err != nil {
+		return err
+	}
+	if err := ziputil.Extract(filepath.Join(hlnbin, "bin"), zipFile); err != nil {
+		return err
+	}
+	return os.Remove(zipFile)
 }
