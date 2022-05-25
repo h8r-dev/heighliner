@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -97,6 +98,7 @@ func showStatus(appName string) error {
 		return err
 	}
 
+	fmt.Println()
 	fmt.Printf("🎉 Heighliner application %s is ready! ", status.AppName)
 
 	var frontendService app.UserService
@@ -165,13 +167,18 @@ func showStatus(appName string) error {
 		}
 
 		if info.Prompt != "" {
-			fmt.Printf("  ● %s\n", info.Prompt)
+			for _, prompt := range strings.Split(info.Prompt, ", ") {
+				fmt.Printf("  ● %s\n", prompt)
+			}
 		}
+
 		fmt.Println()
 	}
+
 	for _, info := range emptyAddonServices {
 		fmt.Printf("● %s\n", info.Name)
 	}
 
+	fmt.Println()
 	return nil
 }
