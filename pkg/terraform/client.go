@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"runtime"
 
+	"github.com/cavaliergopher/grab/v3"
 	"github.com/hashicorp/go-getter/v2"
 	gover "github.com/hashicorp/go-version"
 	"go.uber.org/zap"
@@ -17,6 +18,7 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/ziputil"
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
@@ -30,7 +32,11 @@ type Client struct {
 
 // GetBin returns the path to the terraform binary.
 func GetBin() string {
-	return filepath.Join(state.GetHln(), "bin", "terraform")
+	bin := filepath.Join(state.GetHln(), "bin", "terraform")
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+	return bin
 }
 
 // NewDefaultClient creates a default terraform client.
@@ -90,6 +96,9 @@ func (c *Client) install() error {
 	src := fmt.Sprintf(
 		"https://dl.h8r.io/terraform/terraform_%s_%s_%s.zip",
 		version.TerraformDefault, runtime.GOOS, runtime.GOARCH)
+	if runtime.GOOS == "windows" {
+		return c.installForWindows(src)
+	}
 	req := &getter.Request{
 		Src: src,
 		Dst: filepath.Dir(c.Binary),
@@ -99,4 +108,16 @@ func (c *Client) install() error {
 		return err
 	}
 	return nil
+}
+
+func (c Client) installForWindows(src string) error {
+	hlnbin := filepath.Dir(filepath.Dir(c.Binary))
+	zipFile := filepath.Join(hlnbin, "terraform.zip")
+	if _, err := grab.Get(zipFile, src); err != nil {
+		return err
+	}
+	if err := ziputil.Extract(filepath.Join(hlnbin, "bin"), zipFile); err != nil {
+		return err
+	}
+	return os.Remove(zipFile)
 }
