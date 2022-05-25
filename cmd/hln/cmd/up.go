@@ -68,8 +68,9 @@ fill your input values according to the prompts:
 
 // upOptions controls the behavior of up command.
 type upOptions struct {
-	Stack string
-	Dir   string
+	Stack   string
+	Version string
+	Dir     string
 
 	Values []string
 
@@ -104,7 +105,22 @@ func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func (o *upOptions) Complete() error {
+	if strings.Contains(o.Stack, "@") {
+		args := strings.Split(o.Stack, "@")
+		if len(args) < 2 {
+			return errors.New("invalid stack fromat, should be name@version")
+		}
+		o.Stack = args[0]
+		o.Version = args[1]
+	}
+	return nil
+}
+
 func (o *upOptions) Run(appName string) error {
+	if err := os.Setenv("APP_NAME", appName); err != nil {
+		return err
+	}
 	// -----------------------------
 	// 		Prepare stack
 	// -----------------------------
@@ -118,7 +134,7 @@ func (o *upOptions) Run(appName string) error {
 	}
 	// Use officaial stack
 	if o.Stack != "" {
-		stk, err := stack.New(o.Stack)
+		stk, err := stack.New(o.Stack, o.Version)
 		if err != nil {
 			return err
 		}
@@ -240,11 +256,13 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		Short: "Spin up your application",
 		Long:  upDesc,
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			_ = os.Setenv("APP_NAME", args[0]) // used by stack
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := o.Validate(cmd, args); err != nil {
 				return err
 			}
+			return o.Complete()
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.Run(args[0])
 		},
 	}

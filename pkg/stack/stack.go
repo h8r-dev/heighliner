@@ -10,11 +10,14 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-getter/v2"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
+
+// HlnRepoURL is official repo
+const HlnRepoURL = "https://stack.h8r.io"
 
 // Stack is a CloudNative application template.
 type Stack struct {
@@ -27,17 +30,9 @@ type Stack struct {
 	Description string `json:"description" yaml:"description"`
 }
 
-// StacksIndexURL to get index
-const StacksIndexURL = "https://stack.h8r.io/index.yaml"
-
-var (
-	// ErrNotExist mean this stack doesn't exist.
-	ErrNotExist = errors.New("target stack doesn't exist")
-)
-
 // List all stacks
 func List() ([]Stack, error) {
-	b, err := getIndexYaml()
+	b, err := getIndexYaml(HlnRepoURL)
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +45,11 @@ func List() ([]Stack, error) {
 	return idx.Stacks, nil
 }
 
-func getIndexYaml() ([]byte, error) {
+func getIndexYaml(repoURL string) ([]byte, error) {
 	var client http.Client
-	resp, err := client.Get(StacksIndexURL)
+	indexFile := "index.yaml"
+	indexURL := repoURL + "/" + indexFile
+	resp, err := client.Get(indexURL)
 	if err != nil {
 		return nil, err
 	}
@@ -72,15 +69,17 @@ func getIndexYaml() ([]byte, error) {
 }
 
 // New returns a Stack object.
-func New(name string) (*Stack, error) {
+func New(name, version string) (*Stack, error) {
 	const defaultVersion = "latest"
-
-	url := fmt.Sprintf("https://stack.h8r.io/%s-%s.tar.gz", name, defaultVersion)
+	if version == "" {
+		version = defaultVersion
+	}
+	url := fmt.Sprintf("https://stack.h8r.io/%s-%s.tar.gz", name, version)
 	s := &Stack{
 		Path:    filepath.Join(state.GetCache(), name),
 		Name:    name,
 		URL:     url,
-		Version: "0.0.1",
+		Version: version,
 	}
 
 	return s, nil
