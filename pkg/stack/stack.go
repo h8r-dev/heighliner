@@ -16,18 +16,56 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/util"
 )
 
-// HlnRepoURL is official repo
-const HlnRepoURL = "https://stack.h8r.io"
+const (
+	// HlnRepoURL is official repo
+	HlnRepoURL   = "https://stack.h8r.io"
+	MetaFileName = "metadata.yaml"
+)
 
 // Stack is a CloudNative application template.
 type Stack struct {
 	Path string
 
-	// TODO Should read from stack metadata
 	Name        string `json:"name" yaml:"name"`
 	URL         string `json:"url" yaml:"url"`
 	Version     string `json:"version" yaml:"version"`
 	Description string `json:"description" yaml:"description"`
+}
+
+type Metadata struct {
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	OwnerRef    Owner  `json:"owner"`
+	Description string `json:"description"`
+	Icon        string `json:"icon"`
+	URL         string `json:"url"`
+	Tags        []*Tag `json:"tags"`
+}
+
+type Owner struct {
+	Name    string `json:"name"`
+	Contact string `json:"contact"`
+}
+
+type Tag string
+
+func LoadMeta(path string) (*Metadata, error) {
+	metafile := filepath.Join(path, MetaFileName)
+	b, err := os.ReadFile(metafile)
+	if err != nil {
+		return nil, err
+	}
+	stackMeta := &Metadata{}
+	if err := yaml.Unmarshal(b, stackMeta); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal mettadata: %w", err)
+	}
+	return stackMeta, nil
+}
+
+func (m Metadata) Show(w io.Writer) {
+	fmt.Fprintf(w, "\nNAME: %s\n", m.Name)
+	fmt.Fprintf(w, "VERSION: %s\n", m.Version)
+	fmt.Fprintf(w, "DESCRIPTION: %s\n", m.Description)
 }
 
 // List all stacks

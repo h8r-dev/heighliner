@@ -3,9 +3,12 @@ package schema
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"text/tabwriter"
 
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
@@ -41,9 +44,25 @@ func New(dir string) *Schema {
 	}
 }
 
+func (s Schema) Show(o io.Writer) {
+
+	w := tabwriter.NewWriter(o, 0, 4, 2, ' ', tabwriter.TabIndent)
+	defer func() {
+		if err := w.Flush(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	fmt.Fprintf(w, "\nPARAMETERS LIST:\n")
+	fmt.Fprintln(w, "PARAMETER\tTYPE\tKEY\tDEFAULT\tREQUIRED\tDESCRIPTION")
+	for _, p := range s.Parameters {
+		line := fmt.Sprintf("%s\t%s\t%s\t%s\t%v\t%s", p.Title, p.Type, p.Key, p.Default, p.Required, p.Description)
+		fmt.Fprintln(w, line)
+	}
+}
+
 // AutomaticEnv sets envs automatically.
 func (s *Schema) AutomaticEnv(interactive bool) error {
-	var err = s.load()
+	var err = s.LoadSchema()
 	if err != nil {
 		return err
 	}
@@ -86,8 +105,8 @@ func (s *Schema) AutomaticEnv(interactive bool) error {
 	return nil
 }
 
-// NOTE: Make sure you are already in the project dir.
-func (s *Schema) load() error {
+// LoadSchema reads the schema
+func (s *Schema) LoadSchema() error {
 	b, err := ioutil.ReadFile(filepath.Join(s.Dir, "schemas", "schema.yaml"))
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrNotExist, err.Error())
