@@ -10,4 +10,5 @@ type State interface {
 	LoadOutput(appName string) (*app.Output, error)
 	LoadTFProvider(appName string) (string, error)
 	SaveOutputAndTFProvider(appName string) error
+	DeleteOutputAndTFProvider(appName string) error
 }
