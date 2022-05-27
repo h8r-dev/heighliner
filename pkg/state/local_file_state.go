@@ -59,12 +59,16 @@ func (l *LocalFileState) SaveOutputAndTFProvider(appName string) error {
 	return copy.Copy(ao.SCM.TfProvider, filepath.Join(pwd, providerInfo))
 }
 
+// DeleteOutputAndTFProvider delete state file
 func (l *LocalFileState) DeleteOutputAndTFProvider(appName string) error {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
 	if err := os.Remove(filepath.Join(pwd, ".hln", "output.yaml")); err != nil {
+		return err
+	}
+	if err := os.Remove(filepath.Join(pwd, ".hln", "provider.tf")); err != nil {
 		return err
 	}
 	return nil
