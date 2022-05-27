@@ -78,7 +78,18 @@ func (o *downOptions) Run(appName string) error {
 		}
 	}
 
-	return deleteRepos(appName, kubeconfig, pat, output.SCM, o.IOStreams)
+	if err := deleteRepos(appName, kubeconfig, pat, output.SCM, o.IOStreams); err != nil {
+		return err
+	}
+
+	cm, err := getConfigMapState()
+	if err != nil {
+		return err
+	}
+	if err := cm.DeleteOutputAndTFProvider(appName); err != nil {
+		return err
+	}
+	return nil
 }
 
 func newDownCmd(streams genericclioptions.IOStreams) *cobra.Command {

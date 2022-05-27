@@ -137,3 +137,13 @@ func (c *ConfigMapState) SaveOutputAndTFProvider(appName string) error {
 
 	return os.Remove(stackOutput)
 }
+
+// DeleteOutputAndTFProvider delete output and tf provider configMap
+func (c *ConfigMapState) DeleteOutputAndTFProvider(appName string) error {
+	ctx := context.TODO()
+	tfConfigName := "tf-" + appName
+	if err := c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Delete(ctx, appName, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+	return c.ClientSet.CoreV1().ConfigMaps(HeighlinerNs).Delete(ctx, tfConfigName, metav1.DeleteOptions{})
+}
