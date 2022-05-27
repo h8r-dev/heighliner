@@ -89,7 +89,6 @@ func getMetrics(appName string) (*Metrics, error) {
 				if err != nil {
 					return nil, fmt.Errorf("failed to decode annotations :%w", err)
 				}
-				fmt.Printf("%s\n", data)
 				mdbs := []struct {
 					Title string `json:"title"`
 					Path  string `json:"path"`
