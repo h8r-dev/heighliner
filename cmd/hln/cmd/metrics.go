@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"sigs.k8s.io/yaml"
 )
 
 type metricsOptions struct {
@@ -22,7 +22,7 @@ type metricsOptions struct {
 type Metrics struct {
 	AppName       string
 	CridentialRef Cridential
-	DashboardRefs []MonitorDashboard
+	DashboardRefs []*MonitorDashboard
 }
 
 // Cridential for login
@@ -89,18 +89,19 @@ func getMetrics(appName string) (*Metrics, error) {
 				if err != nil {
 					return nil, fmt.Errorf("failed to decode annotations :%w", err)
 				}
-				type MDashboard struct {
+				mdbs := []struct {
 					Title string `json:"title"`
 					Path  string `json:"path"`
-				}
-				mdb := MDashboard{}
-				if err := json.Unmarshal(data, &mdb); err != nil {
+				}{}
+				if err := yaml.Unmarshal(data, &mdbs); err != nil {
 					return nil, fmt.Errorf("bad annotations format: %w", err)
 				}
-				metrics.DashboardRefs = append(metrics.DashboardRefs, MonitorDashboard{
-					Title: mdb.Title,
-					URL:   argoApp.URL + mdb.Path,
-				})
+				for _, mdb := range mdbs {
+					metrics.DashboardRefs = append(metrics.DashboardRefs, &MonitorDashboard{
+						Title: mdb.Title,
+						URL:   argoApp.URL + mdb.Path,
+					})
+				}
 			}
 		}
 	}
