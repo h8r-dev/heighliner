@@ -11,7 +11,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/mitchellh/go-homedir"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 var (
