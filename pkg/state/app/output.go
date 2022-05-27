@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 // Output defines the output structure of `hln up` command.

@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"os"
 
-	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/yaml"
 
 	"github.com/h8r-dev/heighliner/pkg/state/app"
 )

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/otiai10/copy"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/h8r-dev/heighliner/pkg/state/app"
 )
