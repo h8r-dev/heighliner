@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 // Output defines the output structure of `hln up` command.
