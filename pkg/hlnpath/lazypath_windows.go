@@ -2,7 +2,10 @@
 
 package hlnpath
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 func dataHome(cmd string) string {
 	return filepath.Join(os.Getenv("APPDATA"), cmd, "data")
