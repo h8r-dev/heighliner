@@ -5,11 +5,12 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
-func newVersionCmd() *cobra.Command {
+func newVersionCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the version",
@@ -17,7 +18,8 @@ func newVersionCmd() *cobra.Command {
 	}
 
 	versionCmd.Run = func(cmd *cobra.Command, args []string) {
-		fmt.Printf("hln %s (%s) %s/%s\n",
+		out := streams.Out
+		fmt.Fprintf(out, "hln %s (%s) %s/%s\n",
 			version.Version,
 			version.Revision,
 			runtime.GOOS, runtime.GOARCH,

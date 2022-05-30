@@ -21,12 +21,12 @@ type metricsOptions struct {
 // Metrics to print
 type Metrics struct {
 	AppName       string
-	CridentialRef Cridential
+	CredentialRef Credential
 	DashboardRefs []*MonitorDashboard
 }
 
-// Cridential for login
-type Cridential struct {
+// Credential for login
+type Credential struct {
 	Username string
 	Password string
 }
@@ -37,8 +37,7 @@ type MonitorDashboard struct {
 	URL   string
 }
 
-func (o *metricsOptions) Run(args []string) error {
-	appName := args[0]
+func (o *metricsOptions) Run(appName string) error {
 	metrics, err := getMetrics(appName)
 	if err != nil {
 		return fmt.Errorf("failed to get application metrics: %w", err)
@@ -59,7 +58,7 @@ func newMetricsCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	}
 
 	cmd.RunE = func(c *cobra.Command, args []string) error {
-		return o.Run(args)
+		return o.Run(args[0])
 	}
 
 	return cmd
@@ -81,8 +80,8 @@ func getMetrics(appName string) (*Metrics, error) {
 	for _, argoApp := range ao.CD.ApplicationRef {
 		if argoApp.Type == "monitoring" {
 			foundFlag = true
-			metrics.CridentialRef.Username = argoApp.Username
-			metrics.CridentialRef.Password = argoApp.Password
+			metrics.CredentialRef.Username = argoApp.Username
+			metrics.CredentialRef.Password = argoApp.Password
 			if argoApp.Annotations != "" {
 				str := argoApp.Annotations
 				data, err := base64.StdEncoding.DecodeString(str)
@@ -112,9 +111,9 @@ func getMetrics(appName string) (*Metrics, error) {
 }
 
 func showMetrics(w io.Writer, m *Metrics) {
-	fmt.Fprintf(w, "Use this cridential to login the monitoring dashboards of %s:\n", m.AppName)
-	fmt.Fprintf(w, "  Username: %s\n", color.HiBlueString(m.CridentialRef.Username))
-	fmt.Fprintf(w, "  Password: %s\n", color.HiBlueString(m.CridentialRef.Password))
+	fmt.Fprintf(w, "Use this credential to login the monitoring dashboards of %s:\n", m.AppName)
+	fmt.Fprintf(w, "  Username: %s\n", color.HiBlueString(m.CredentialRef.Username))
+	fmt.Fprintf(w, "  Password: %s\n", color.HiBlueString(m.CredentialRef.Password))
 	fmt.Fprintf(w, "\nApplication %s has %d available dashboard(s):\n", m.AppName, len(m.DashboardRefs))
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
 	defer func() {

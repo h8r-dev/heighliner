@@ -5,12 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -26,10 +26,13 @@ type LogsOptions struct {
 	Follow bool
 
 	Kubecli *kubernetes.Clientset
+	genericclioptions.IOStreams
 }
 
-func newLogsCmd() *cobra.Command {
-	o := &LogsOptions{}
+func newLogsCmd(streams genericclioptions.IOStreams) *cobra.Command {
+	o := &LogsOptions{
+		IOStreams: streams,
+	}
 
 	cmd := &cobra.Command{
 		Use:   "logs [appName]",
@@ -113,7 +116,7 @@ func (o *LogsOptions) getPodLogs(cmd *cobra.Command, args []string) error {
 		Follow: o.Follow,
 	})
 
-	return DefaultConsumeRequest(request, os.Stdout)
+	return DefaultConsumeRequest(request, o.Out)
 }
 
 // DefaultConsumeRequest reads the data from request and writes into

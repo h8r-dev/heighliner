@@ -55,12 +55,12 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		newListCmd(),
-		newVersionCmd(),
+		newListCmd(cfg.IOStreams),
+		newVersionCmd(cfg.IOStreams),
 		newUpCmd(cfg.IOStreams),
 		newDownCmd(cfg.IOStreams),
-		newStatusCmd(),
-		newLogsCmd(),
+		newStatusCmd(cfg.IOStreams),
+		newLogsCmd(cfg.IOStreams),
 		newMetricsCmd(cfg.IOStreams),
 		newInitCmd(cfg.IOStreams),
 		newDomainMappingCmd(cfg.IOStreams),

@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"text/tabwriter"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-func newListAppsCmd() *cobra.Command {
+func newListAppsCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	listAppsCmd := &cobra.Command{
 		Use:   "apps",
 		Short: "List all heighliner applications",
@@ -28,7 +28,7 @@ func newListAppsCmd() *cobra.Command {
 			return err
 		}
 
-		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.TabIndent)
+		w := tabwriter.NewWriter(streams.Out, 0, 4, 2, ' ', tabwriter.TabIndent)
 		defer func() {
 			err := w.Flush()
 			if err != nil {
