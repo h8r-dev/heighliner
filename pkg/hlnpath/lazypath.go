@@ -24,7 +24,7 @@ const (
 // lazypath is an lazy-loaded path buffer for the XDG base directory specification.
 type lazypath string
 
-func (l lazypath) path(hlnEnvVar, xdgEnvVar string, defaultFn func() string, elem ...string) string {
+func (l lazypath) path(hlnEnvVar, xdgEnvVar string, defaultFn func(cmd string) string, elem ...string) string {
 
 	// There is an order to checking for a path.
 	// 1. See if a Hln specific environment variable has been set.
@@ -35,10 +35,11 @@ func (l lazypath) path(hlnEnvVar, xdgEnvVar string, defaultFn func() string, ele
 		return filepath.Join(base, filepath.Join(elem...))
 	}
 	base = os.Getenv(xdgEnvVar)
-	if base == "" {
-		base = defaultFn()
+	if base != "" {
+		return filepath.Join(base, string(l), filepath.Join(elem...))
 	}
-	return filepath.Join(base, string(l), filepath.Join(elem...))
+	base = defaultFn(string(l))
+	return filepath.Join(base, filepath.Join(elem...))
 }
 
 // cachePath defines the base directory relative to which user specific non-essential data files

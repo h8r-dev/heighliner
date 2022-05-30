@@ -4,8 +4,14 @@ package hlnpath
 
 import "os"
 
-func dataHome() string { return configHome() }
+func dataHome(cmd string) string {
+	return filepath.Join(os.Getenv("APPDATA"), cmd, "data")
+}
 
-func configHome() string { return os.Getenv("APPDATA") }
+func configHome(cmd string) string {
+	return filepath.Join(os.Getenv("APPDATA"), cmd, "config")
+}
 
-func cacheHome() string { return os.Getenv("TEMP") }
+func cacheHome() string {
+	return filepath.Join(os.Getenv("APPDATA"), cmd, "cache")
+}
