@@ -2,18 +2,20 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/internal/k8sfactory"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/state/app"
 )
 
-func newStatusCmd() *cobra.Command {
+func newStatusCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "status [appName]",
 		Short: "Show status of your application",
@@ -38,7 +40,7 @@ func newStatusCmd() *cobra.Command {
 			if !found {
 				return fmt.Errorf("application \"%s\" not found ", args[0])
 			}
-			return showStatus(args[0])
+			return showStatus(streams.Out, args[0])
 		},
 	}
 
@@ -91,15 +93,14 @@ func getAppStatus(appName string) (*app.Status, error) {
 	return &s, nil
 }
 
-func showStatus(appName string) error {
+func showStatus(w io.Writer, appName string) error {
 
 	status, err := getAppStatus(appName)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println()
-	fmt.Printf("🎉 Heighliner application %s is ready! ", status.AppName)
+	fmt.Fprintf(w, "\n🎉 Heighliner application %s is ready! ", status.AppName)
 
 	var frontendService app.UserService
 	var addonServices []app.ServiceInfo
@@ -126,59 +127,57 @@ func showStatus(appName string) error {
 	}
 
 	if found {
-		fmt.Printf("access URL: %s", color.HiBlueString(frontendService.Service.URL))
+		fmt.Fprintf(w, "access URL: %s\n\n", color.HiBlueString(frontendService.Service.URL))
 	}
-	fmt.Printf("\n\n")
 
-	fmt.Printf("There are %d services have been deployed:\n", len(status.UserServices))
+	fmt.Fprintf(w, "There are %d services have been deployed:\n", len(status.UserServices))
 	for _, info := range status.UserServices {
-		fmt.Printf("● %s\n", info.Service.Name)
+		fmt.Fprintf(w, "● %s\n", info.Service.Name)
 
 		if info.Service.URL != "" {
-			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.Service.URL))
+			fmt.Fprintf(w, "  ● access URL: %s\n", color.HiBlueString(info.Service.URL))
 		}
 
 		if info.Repo != nil {
-			fmt.Printf("  ● resource code: %s\n", color.HiBlueString(info.Repo.URL))
+			fmt.Fprintf(w, "  ● resource code: %s\n", color.HiBlueString(info.Repo.URL))
 		}
 
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
 
-	fmt.Printf("There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices)+1)
-	fmt.Printf("● %s\n", status.CD.Provider)
+	fmt.Fprintf(w, "There are %d addons have been deployed:\n", len(addonServices)+len(emptyAddonServices)+1)
+	fmt.Fprintf(w, "● %s\n", status.CD.Provider)
 	if status.CD.URL != "" {
-		fmt.Printf("  ● access URL: %s\n", color.HiBlueString(status.CD.URL))
+		fmt.Fprintf(w, "  ● access URL: %s\n", color.HiBlueString(status.CD.URL))
 	}
 	if status.CD.Username != "" && status.CD.Password != "" {
-		fmt.Printf("  ● credential: [Username: %s Password: %s]\n", status.CD.Username, status.CD.Password)
+		fmt.Fprintf(w, "  ● credential: [Username: %s Password: %s]\n", status.CD.Username, status.CD.Password)
 	}
-	fmt.Println()
+	fmt.Fprintln(w)
 
 	for _, info := range addonServices {
-		fmt.Printf("● %s\n", info.Name)
+		fmt.Fprintf(w, "● %s\n", info.Name)
 
 		if info.URL != "" {
-			fmt.Printf("  ● access URL: %s\n", color.HiBlueString(info.URL))
+			fmt.Fprintf(w, "  ● access URL: %s\n", color.HiBlueString(info.URL))
 		}
 
 		if info.Username != "" && info.Password != "" {
-			fmt.Printf("  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
+			fmt.Fprintf(w, "  ● credential: [Username: %s Password: %s]\n", info.Username, info.Password)
 		}
 
 		if info.Prompt != "" {
 			for _, prompt := range strings.Split(info.Prompt, ", ") {
-				fmt.Printf("  ● %s\n", prompt)
+				fmt.Fprintf(w, "  ● %s\n", prompt)
 			}
 		}
 
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
 
 	for _, info := range emptyAddonServices {
-		fmt.Printf("● %s\n", info.Name)
+		fmt.Fprintf(w, "● %s\n", info.Name)
 	}
 
-	fmt.Println()
 	return nil
 }

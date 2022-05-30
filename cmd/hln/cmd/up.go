@@ -211,7 +211,7 @@ func (o *upOptions) Run(appName string) error {
 	if err := cm.SaveOutputAndTFProvider(appName); err != nil {
 		return err
 	}
-	if err := showStatus(appName); err != nil {
+	if err := showStatus(o.Out, appName); err != nil {
 		return err
 	}
 	fmt.Fprintf(o.Out, "\n%s\n", color.GreenString("Congrats! Application is ready!"))

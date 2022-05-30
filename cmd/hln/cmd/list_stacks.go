@@ -2,16 +2,16 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"text/tabwriter"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/stack"
 )
 
-func newListStacksCmd() *cobra.Command {
+func newListStacksCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	listStacksCmd := &cobra.Command{
 		Use:   "stacks",
 		Short: "List stacks",
@@ -23,7 +23,7 @@ func newListStacksCmd() *cobra.Command {
 		if err != nil {
 			return err
 		}
-		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.TabIndent)
+		w := tabwriter.NewWriter(streams.Out, 0, 4, 2, ' ', tabwriter.TabIndent)
 		defer func() {
 			err := w.Flush()
 			if err != nil {
