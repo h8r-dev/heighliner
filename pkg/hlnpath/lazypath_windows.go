@@ -12,6 +12,6 @@ func configHome(cmd string) string {
 	return filepath.Join(os.Getenv("APPDATA"), cmd, "config")
 }
 
-func cacheHome() string {
+func cacheHome(cmd string) string {
 	return filepath.Join(os.Getenv("APPDATA"), cmd, "cache")
 }
