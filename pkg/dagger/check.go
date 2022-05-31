@@ -9,14 +9,13 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/cavaliergopher/grab/v3"
-	"github.com/hashicorp/go-getter/v2"
 	gover "github.com/hashicorp/go-version"
 	"go.uber.org/zap"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/getter"
 	"github.com/h8r-dev/heighliner/pkg/util/ziputil"
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
@@ -76,51 +75,38 @@ func (c *Client) install() error {
 	if runtime.GOOS == "windows" {
 		return c.installForWindows()
 	}
-	err := os.Setenv("DAGGER_VERSION", version.DaggerDefault)
-	if err != nil {
+	if err := os.Setenv("DAGGER_VERSION", version.DaggerDefault); err != nil {
 		return err
 	}
-	dir := filepath.Dir(filepath.Dir(c.Binary))
-	err = os.MkdirAll(dir, 0755)
-	if err != nil {
+	dst := filepath.Dir(filepath.Dir(c.Binary))
+	if err := os.MkdirAll(dst, 0755); err != nil {
 		return err
 	}
-	err = os.Chdir(dir)
-	if err != nil {
+	if err := os.Chdir(dst); err != nil {
 		return err
 	}
-	installScript := filepath.Join(dir, "dagger", "install.sh")
-	_, err = os.Stat(installScript)
-	if err == nil {
-		err = os.Remove(installScript)
-		if err != nil {
-			return err
-		}
-	}
-	req := &getter.Request{
-		Src: installScriptURL,
-		Dst: filepath.Dir(installScript),
-	}
-	err = util.GetWithTracker(req)
-	if err != nil {
+	src := installScriptURL
+	shName := "installDagger.sh"
+	if err := getter.Get(c.Out, getter.NewRequest(src, dst, shName)); err != nil {
 		return err
 	}
-	err = util.Exec(c.IOStreams, "/bin/sh", installScript)
-	if err != nil {
+	shFile := filepath.Join(dst, shName)
+	if err := util.Exec(c.IOStreams, "/bin/sh", shFile); err != nil {
 		return err
 	}
-	return nil
+	return os.Remove(shFile)
 }
 
 func (c Client) installForWindows() error {
 	fileName := "dagger_v" + version.DaggerDefault + "_windows_amd64"
-	url := fmt.Sprintf("%s/dagger/releases/%s/%s.zip", windowsBase, version.DaggerDefault, fileName)
-	hlnbin := filepath.Dir(filepath.Dir(c.Binary))
-	zipFile := filepath.Join(hlnbin, "dagger.zip")
-	if _, err := grab.Get(zipFile, url); err != nil {
+	src := fmt.Sprintf("%s/dagger/releases/%s/%s.zip", windowsBase, version.DaggerDefault, fileName)
+	dst := filepath.Dir(c.Binary)
+	zipName := "dagger.zip"
+	if err := getter.Get(c.Out, getter.NewRequest(src, dst, zipName)); err != nil {
 		return err
 	}
-	if err := ziputil.Extract(filepath.Join(hlnbin, "bin"), zipFile); err != nil {
+	zipFile := filepath.Join(dst, zipName)
+	if err := ziputil.Extract(dst, zipFile); err != nil {
 		return err
 	}
 	return os.Remove(zipFile)

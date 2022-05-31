@@ -9,8 +9,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/cavaliergopher/grab/v3"
-	"github.com/hashicorp/go-getter/v2"
+	"github.com/h8r-dev/heighliner/pkg/util/getter"
 	gover "github.com/hashicorp/go-version"
 	"go.uber.org/zap"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -22,6 +21,8 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
+const DOWNLOAD_BASE_URL = "https://dl.h8r.io/terraform"
+
 // Client interactive with terraform
 type Client struct {
 	// Path to the executable binary file of terraform.
@@ -30,8 +31,8 @@ type Client struct {
 	genericclioptions.IOStreams
 }
 
-// GetBin returns the path to the terraform binary.
-func GetBin() string {
+// getBin returns the path to the terraform binary.
+func getBin() string {
 	bin := filepath.Join(state.GetHln(), "bin", "terraform")
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
@@ -42,7 +43,7 @@ func GetBin() string {
 // NewDefaultClient creates a default terraform client.
 func NewDefaultClient(streams genericclioptions.IOStreams) (*Client, error) {
 	return &Client{
-		Binary:    GetBin(),
+		Binary:    getBin(),
 		IOStreams: streams,
 	}, nil
 }
@@ -61,7 +62,7 @@ func (c *Client) Check() error {
 		In:     buf,
 		Out:    buf,
 		ErrOut: buf,
-	}, GetBin(), "version")
+	}, c.Binary, "version")
 	if err != nil {
 		return err
 	}
@@ -93,30 +94,17 @@ func (c *Client) CheckAndInstall() error {
 }
 
 func (c *Client) install() error {
-	src := fmt.Sprintf(
-		"https://dl.h8r.io/terraform/terraform_%s_%s_%s.zip",
+	zipName := fmt.Sprintf(
+		"terraform_%s_%s_%s.zip",
 		version.TerraformDefault, runtime.GOOS, runtime.GOARCH)
-	if runtime.GOOS == "windows" {
-		return c.installForWindows(src)
-	}
-	req := &getter.Request{
-		Src: src,
-		Dst: filepath.Dir(c.Binary),
-	}
-	err := util.GetWithTracker(req)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+	src := DOWNLOAD_BASE_URL + "/" + zipName
+	dst := filepath.Dir(c.Binary)
 
-func (c Client) installForWindows(src string) error {
-	hlnbin := filepath.Dir(filepath.Dir(c.Binary))
-	zipFile := filepath.Join(hlnbin, "terraform.zip")
-	if _, err := grab.Get(zipFile, src); err != nil {
+	if err := getter.Get(c.Out, getter.NewRequest(src, dst, zipName)); err != nil {
 		return err
 	}
-	if err := ziputil.Extract(filepath.Join(hlnbin, "bin"), zipFile); err != nil {
+	zipFile := filepath.Join(dst, zipName)
+	if err := ziputil.Extract(dst, zipFile); err != nil {
 		return err
 	}
 	return os.Remove(zipFile)

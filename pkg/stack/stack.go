@@ -1,6 +1,7 @@
 package stack
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -9,11 +10,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hashicorp/go-getter/v2"
+	"github.com/cavaliergopher/grab/v3"
+	"github.com/fluxcd/pkg/untar"
 	"sigs.k8s.io/yaml"
 
+	"github.com/h8r-dev/heighliner/pkg/hlnpath"
 	"github.com/h8r-dev/heighliner/pkg/state"
-	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/getter"
 )
 
 const (
@@ -52,6 +55,22 @@ type Owner struct {
 
 // Tag is a key word.
 type Tag string
+
+func stackPath() string {
+	return hlnpath.CachePath("repository")
+}
+
+func Download() error {
+	path := stackPath()
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return err
+	}
+	_, err := grab.Get(path, HlnRepoURL+"/sample-latest.tar.gz")
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // LoadMeta loads metadata file.
 func LoadMeta(path string) (*Metadata, error) {
@@ -148,15 +167,22 @@ func (s *Stack) check() bool {
 }
 
 func (s *Stack) pull() error {
-	req := &getter.Request{
-		Src: s.URL,
-		Dst: filepath.Dir(s.Path),
-	}
-	err := util.GetWithTracker(req)
-	if err != nil {
+	src := s.URL
+	dst := filepath.Dir(s.Path)
+	tarName := s.Name + ".tar.gz"
+	if err := getter.Get(os.Stdout, getter.NewRequest(src, dst, tarName)); err != nil {
 		return fmt.Errorf("failed to pull stack, please check stack name: %w", err)
 	}
-	return nil
+	tarFile := filepath.Join(dst, tarName)
+	data, err := os.ReadFile(tarFile)
+	if err != nil {
+		return err
+	}
+	buf := bytes.NewBuffer(data)
+	if _, err := untar.Untar(buf, dst); err != nil {
+		return err
+	}
+	return os.Remove(tarFile)
 }
 
 func (s *Stack) clean() {
