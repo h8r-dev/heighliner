@@ -10,11 +10,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cavaliergopher/grab/v3"
 	"github.com/fluxcd/pkg/untar"
 	"sigs.k8s.io/yaml"
 
-	"github.com/h8r-dev/heighliner/pkg/hlnpath"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util/getter"
 )
@@ -55,22 +53,6 @@ type Owner struct {
 
 // Tag is a key word.
 type Tag string
-
-func stackPath() string {
-	return hlnpath.CachePath("repository")
-}
-
-func Download() error {
-	path := stackPath()
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return err
-	}
-	_, err := grab.Get(path, HlnRepoURL+"/sample-latest.tar.gz")
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 // LoadMeta loads metadata file.
 func LoadMeta(path string) (*Metadata, error) {

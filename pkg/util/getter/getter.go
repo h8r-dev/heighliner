@@ -10,12 +10,14 @@ import (
 	"github.com/cavaliergopher/grab/v3"
 )
 
+// Request of getting resources
 type Request struct {
 	Src  string
 	Dst  string
 	Name string
 }
 
+// NewRequest returns a request
 func NewRequest(src, dst, name string) *Request {
 	return &Request{
 		Src:  src,
@@ -24,6 +26,7 @@ func NewRequest(src, dst, name string) *Request {
 	}
 }
 
+// Get the resources
 func Get(w io.Writer, req *Request) error {
 	client := grab.NewClient()
 

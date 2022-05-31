@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/h8r-dev/heighliner/pkg/util/getter"
 	gover "github.com/hashicorp/go-version"
 	"go.uber.org/zap"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -17,11 +16,13 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/getter"
 	"github.com/h8r-dev/heighliner/pkg/util/ziputil"
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
-const DOWNLOAD_BASE_URL = "https://dl.h8r.io/terraform"
+// TerraformDownloadBaseURL of downloading terraform
+const TerraformDownloadBaseURL = "https://dl.h8r.io/terraform"
 
 // Client interactive with terraform
 type Client struct {
@@ -97,7 +98,7 @@ func (c *Client) install() error {
 	zipName := fmt.Sprintf(
 		"terraform_%s_%s_%s.zip",
 		version.TerraformDefault, runtime.GOOS, runtime.GOARCH)
-	src := DOWNLOAD_BASE_URL + "/" + zipName
+	src := TerraformDownloadBaseURL + "/" + zipName
 	dst := filepath.Dir(c.Binary)
 
 	if err := getter.Get(c.Out, getter.NewRequest(src, dst, zipName)); err != nil {
