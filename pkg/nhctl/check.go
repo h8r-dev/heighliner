@@ -9,13 +9,13 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/hashicorp/go-getter/v2"
 	gover "github.com/hashicorp/go-version"
 	"go.uber.org/zap"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/getter"
 	"github.com/h8r-dev/heighliner/pkg/version"
 )
 
@@ -68,20 +68,15 @@ func (c *Client) install() error {
 	src := fmt.Sprintf(
 		"https://github.com/nocalhost/nocalhost/releases/download/v%s/%s",
 		version.NhctlDefault, c.getName())
-	req := &getter.Request{
-		Src: src,
-		Dst: filepath.Dir(c.Binary),
-	}
-	err := util.GetWithTracker(req)
-	if err != nil {
+	dst := filepath.Dir(c.Binary)
+	if err := getter.Get(os.Stdout, getter.NewRequest(src, dst, c.getName())); err != nil {
 		return err
 	}
 	if err := os.Rename(filepath.Join(filepath.Dir(c.Binary), c.getName()),
 		c.Binary); err != nil {
 		return err
 	}
-	err = os.Chmod(c.Binary, 0700)
-	if err != nil {
+	if err := os.Chmod(c.Binary, 0700); err != nil {
 		return err
 	}
 	return nil
