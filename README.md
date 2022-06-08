@@ -4,7 +4,7 @@ Heighliner(/’haɪlaɪnər/) is a modern developer tool that deliver your appli
 
 We provide and maintain official stacks to provide out-of-the-box experience for common use cases. Your development environment can be spinned up in one click. This will help you build apps easily and quickly using state-of-the-art cloud native stacks.
 
-Watch introduction video [Here](https://www.youtube.com/watch?v=74KZT-WW-lk&ab_channel=Heighliner)
+[![IMAGE ALT TEXT](https://heighliner.dev/img/homepage/video-poster.png)](https://www.youtube.com/watch?v=74KZT-WW-lk&ab_channel=Heighliner "Heighliner Introduction")
 
 ## Why Heighliner
 **Stack as Code (SaC)**: Your entire application stack can be codified. You can version, reuse, and share your stacks. You can even import existing stacks to build more advanced stacks. You can compose it in a way that optimizes for your environments, including Helm chart, CI/CD pipelines, logging and monitoring, security and access control, etc. We also provide official stacks to provide cloud native best practice out of the box.
