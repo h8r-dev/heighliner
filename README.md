@@ -5,7 +5,7 @@ Heighliner(/’haɪlaɪnər/) is a modern developer tool that deliver your appli
 We provide and maintain official stacks to provide out-of-the-box experience for common use cases. Your development environment can be spinned up in one click. This will help you build apps easily and quickly using state-of-the-art cloud native stacks.
 
 <video id="video" controls="" preload="none">
-      <source id="mp4" src="[mp4格式视频](https://dl.h8r.io/Heighliner-Introduction-English.mp4)" type="video/mp4">
+      <source id="mp4" src="https://dl.h8r.io/Heighliner-Introduction-English.mp4" type="video/mp4">
 </videos>
 
 ## Why Heighliner
