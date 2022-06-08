@@ -84,7 +84,7 @@ func (o *upOptions) BindFlags(f *pflag.FlagSet) {
 	f.StringVarP(&o.Stack, "stack", "s", "", "Name of your stack")
 	f.StringVar(&o.Dir, "dir", "", "Path to your local stack")
 	f.StringArrayVar(&o.Values, "set", []string{}, "The input values of your project")
-	f.BoolVarP(&o.Interactive, "interactive", "i", false, "If this flag is set, heighliner will promt dialog when necessary.")
+	f.BoolVarP(&o.Interactive, "interactive", "i", false, "If this flag is set, heighliner will prompt dialog when necessary.")
 	f.BoolVar(&o.NoCache, "no-cache", false, "Disable caching")
 }
 
