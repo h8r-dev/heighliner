@@ -1,9 +1,8 @@
 package dagger
 
 import (
+	"fmt"
 	"os"
-
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/h8r-dev/heighliner/pkg/util"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
@@ -57,8 +56,12 @@ func (c *Client) Do(o *ActionOptions) error {
 			return err
 		}
 	}
-	if err := util.Exec(genericclioptions.NewTestIOStreamsDiscard(), c.Binary, "project", "init"); err != nil {
-		return err
+	if fi, err := os.Stat("cue.mod"); err != nil || !fi.IsDir() {
+		pwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("%s is not a stack", pwd)
 	}
 	if err := util.Exec(c.IOStreams, c.Binary, "project", "update"); err != nil {
 		return err
