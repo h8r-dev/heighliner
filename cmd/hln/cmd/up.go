@@ -27,6 +27,7 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
+	"github.com/h8r-dev/heighliner/pkg/logger"
 	"github.com/h8r-dev/heighliner/pkg/schema"
 	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/h8r-dev/heighliner/pkg/state"
@@ -109,7 +110,7 @@ func (o *upOptions) Complete() error {
 	if strings.Contains(o.Stack, "@") {
 		args := strings.Split(o.Stack, "@")
 		if len(args) < 2 {
-			return errors.New("invalid stack fromat, should be name@version")
+			return errors.New("invalid stack format, should be name@version")
 		}
 		o.Stack = args[0]
 		o.Version = args[1]
@@ -154,30 +155,8 @@ func (o *upOptions) Run(appName string) error {
 	// 	Port-forward buildkit
 	// -----------------------------
 	// Forwarding port to buildkit
-	readyCh := make(chan struct{})
-	stopCh := make(chan struct{}, 1)
-	errChan := make(chan error)
-	port, err := util.GetAvailablePort()
-	if err != nil {
+	if err := runForward(o.IOStreams); err != nil {
 		return err
-	}
-
-	go func() {
-		errChan <- forwardPortToBuildKit(fmt.Sprintf("%d:%d", port, 1234), readyCh, stopCh)
-	}()
-
-	select {
-	case <-readyCh:
-		fmt.Println("PortForward to buildkit is ready")
-	case err = <-errChan:
-		fmt.Printf("PortForward to buildkit is terminated unexpectedly: %v\n", err)
-		return err
-	}
-	_ = os.Setenv("BUILDKIT_HOST", fmt.Sprintf("tcp://127.0.0.1:%d", port))
-
-	fmt.Fprintf(o.IOStreams.Out, "Flattening kubeconfig: %s\n", k8sutil.GetKubeConfigPath())
-	if err := flattenKubeconfig(); err != nil {
-		fmt.Println("Flatten kubeconfig failed: " + err.Error())
 	}
 
 	// -----------------------------
@@ -271,7 +250,39 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
-func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error {
+func runForward(streams genericclioptions.IOStreams) error {
+	lg := logger.New(streams)
+	readyCh := make(chan struct{})
+	stopCh := make(chan struct{}, 1)
+	errChan := make(chan error)
+	port, err := util.GetAvailablePort()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		errChan <- forwardPortToBuildKit(streams, fmt.Sprintf("%d:%d", port, 1234), readyCh, stopCh)
+	}()
+
+	select {
+	case <-readyCh:
+		lg.Info("port-forward to buildkit is ready")
+	case err = <-errChan:
+		return fmt.Errorf("port-forward to buildkit is terminated unexpectedly: %w", err)
+	}
+
+	if err := os.Setenv("BUILDKIT_HOST", fmt.Sprintf("tcp://127.0.0.1:%d", port)); err != nil {
+		return err
+	}
+
+	lg.Info(fmt.Sprintf("flattening kubeconfig: %s\n", k8sutil.GetKubeConfigPath()))
+	if err := flattenKubeconfig(); err != nil {
+		return fmt.Errorf("failed to flatten kubeconfig: %w", err)
+	}
+	return nil
+}
+
+func forwardPortToBuildKit(streams genericclioptions.IOStreams, portStr string, readyCh, stopCh chan struct{}) error {
 	fact := k8sutil.NewFactory(k8sutil.GetKubeConfigPath())
 	client, err := fact.KubernetesClientSet()
 	if err != nil {
@@ -304,13 +315,12 @@ func forwardPortToBuildKit(portStr string, readyCh, stopCh chan struct{}) error 
 		Name(podName).
 		SubResource("portforward")
 
-	iostream := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
 	transport, upgrader, err := spdy.RoundTripperFor(restConfig)
 	if err != nil {
 		return err
 	}
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", req.URL())
-	fw, err := portforward.NewOnAddresses(dialer, []string{"127.0.0.1"}, []string{portStr}, stopCh, readyCh, iostream.Out, iostream.ErrOut)
+	fw, err := portforward.NewOnAddresses(dialer, []string{"127.0.0.1"}, []string{portStr}, stopCh, readyCh, streams.Out, streams.ErrOut)
 	if err != nil {
 		return err
 	}
