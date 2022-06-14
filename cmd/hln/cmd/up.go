@@ -155,7 +155,9 @@ func (o *upOptions) Run(appName string) error {
 	// 	Port-forward buildkit
 	// -----------------------------
 	// Forwarding port to buildkit
-	runForward(o.IOStreams)
+	if err := runForward(o.IOStreams); err != nil {
+		return err
+	}
 
 	// -----------------------------
 	// 	Execute dagger action
