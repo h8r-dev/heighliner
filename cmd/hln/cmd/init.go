@@ -1,11 +1,17 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sync"
 	"time"
 
+	"github.com/fluxcd/pkg/untar"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -15,10 +21,14 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/h8r-dev/heighliner/pkg/dagger"
+	"github.com/h8r-dev/heighliner/pkg/hlnpath"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/terraform"
+	"github.com/h8r-dev/heighliner/pkg/util/getter"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
+
+const infraSrc = "https://stack.h8r.io/infra.tar.gz"
 
 func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
@@ -26,11 +36,10 @@ func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		Short: "Initialize dependent tools and services",
 	}
 	cmd.RunE = func(c *cobra.Command, args []string) error {
-		err := checkAndInstall(streams)
-		if err != nil {
+		if err := checkAndInstall(streams); err != nil {
 			return err
 		}
-		return installBuildKit()
+		return initInfrasForCluster(streams)
 	}
 	// Shadow the root PersistentPreRun
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {}
@@ -38,21 +47,81 @@ func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
 	return cmd
 }
 
+func initInfrasForCluster(streams genericclioptions.IOStreams) error {
+	if err := installBuildKit(); err != nil {
+		return err
+	}
+	if err := runForward(streams); err != nil {
+		return err
+	}
+	return runInfraStack(streams)
+}
+
+func runInfraStack(streams genericclioptions.IOStreams) error {
+	infraPath := hlnpath.CachePath("infrastructure", "infra")
+	src := infraSrc
+	dst := filepath.Dir(infraPath)
+	tarName := "infra.tar.gz"
+	if err := getter.Get(os.Stdout, getter.NewRequest(src, dst, tarName)); err != nil {
+		return fmt.Errorf("failed to pull stack, please check stack name: %w", err)
+	}
+	tarFile := filepath.Join(dst, tarName)
+	data, err := os.ReadFile(tarFile)
+	if err != nil {
+		return err
+	}
+	buf := bytes.NewBuffer(data)
+	if _, err := untar.Untar(buf, dst); err != nil {
+		return err
+	}
+	if err := os.Remove(tarFile); err != nil {
+		return err
+	}
+
+	cli, err := dagger.NewClient(
+		viper.GetString("log-format"),
+		viper.GetString("log-level"),
+		streams,
+	)
+	if err != nil {
+		return err
+	}
+	return cli.Do(&dagger.ActionOptions{
+		Name: "up",
+		Dir:  infraPath,
+		Plan: "./plan",
+	})
+}
+
 func checkAndInstall(streams genericclioptions.IOStreams) error {
-	daggerCli, err := dagger.NewDefaultClient(streams)
-	if err != nil {
-		return err
-	}
-	if err := daggerCli.CheckAndInstall(); err != nil {
-		return err
-	}
-	tfCli, err := terraform.NewDefaultClient(streams)
-	if err != nil {
-		return err
-	}
-	if err := tfCli.CheckAndInstall(); err != nil {
-		return err
-	}
+	errCh := make(chan error)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		daggerCli, err := dagger.NewDefaultClient(streams)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		if err := daggerCli.CheckAndInstall(); err != nil {
+			errCh <- err
+			return
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		tfCli, err := terraform.NewDefaultClient(streams)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		if err := tfCli.CheckAndInstall(); err != nil {
+			errCh <- err
+			return
+		}
+	}()
+	wg.Wait()
 	return nil
 	// nhctlCli, err := nhctl.NewDefaultClient(streams)
 	// if err != nil {
