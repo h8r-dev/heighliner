@@ -58,12 +58,22 @@ func initInfrasForCluster(streams genericclioptions.IOStreams) error {
 }
 
 func runInfraStack(streams genericclioptions.IOStreams) error {
+	kc, ok := os.LookupEnv("KUBECONFIG")
+	if !ok {
+		kc = k8sutil.GetKubeConfigPath()
+	}
+	if err := os.Setenv("KUBECONFIG", kc); err != nil {
+		return err
+	}
 	infraPath := hlnpath.CachePath("infrastructure", "infra")
+	if err := os.RemoveAll(infraPath); err != nil {
+		return err
+	}
 	src := infraSrc
 	dst := filepath.Dir(infraPath)
 	tarName := "infra.tar.gz"
 	if err := getter.Get(os.Stdout, getter.NewRequest(src, dst, tarName)); err != nil {
-		return fmt.Errorf("failed to pull stack, please check stack name: %w", err)
+		return fmt.Errorf("failed to pull infra source: %w", err)
 	}
 	tarFile := filepath.Join(dst, tarName)
 	data, err := os.ReadFile(tarFile)
