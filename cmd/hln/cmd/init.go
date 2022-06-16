@@ -11,6 +11,7 @@ import (
 
 	"github.com/fluxcd/pkg/untar"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,7 +31,20 @@ import (
 
 const infraSrc = "https://stack.h8r.io/infra.tar.gz"
 
+type initOptions struct {
+	WithoutDashboard bool
+
+	genericclioptions.IOStreams
+}
+
+func (o *initOptions) BindFlags(f *pflag.FlagSet) {
+	f.BoolVar(&o.WithoutDashboard, "without-dashboard", false, "Don't install hln dashboard")
+}
+
 func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
+	o := &initOptions{
+		IOStreams: streams,
+	}
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize dependent tools and services",
@@ -39,25 +53,33 @@ func newInitCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		if err := checkAndInstall(streams); err != nil {
 			return err
 		}
-		return initInfrasForCluster(streams)
+		return o.initInfrasForCluster()
 	}
+	o.BindFlags(cmd.Flags())
+
 	// Shadow the root PersistentPreRun
 	cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {}
 
 	return cmd
 }
 
-func initInfrasForCluster(streams genericclioptions.IOStreams) error {
+func (o *initOptions) initInfrasForCluster() error {
 	if err := installBuildKit(); err != nil {
 		return err
 	}
-	if err := runForward(streams); err != nil {
+	if err := runForward(o.IOStreams); err != nil {
 		return err
 	}
-	return runInfraStack(streams)
+	return o.runInfraStack()
 }
 
-func runInfraStack(streams genericclioptions.IOStreams) error {
+func (o *initOptions) runInfraStack() error {
+	if o.WithoutDashboard {
+		if err := os.Setenv("HLN_WITHOUT_DASHBORAD", "true"); err != nil {
+			return err
+		}
+	}
+
 	kc, ok := os.LookupEnv("KUBECONFIG")
 	if !ok {
 		kc = k8sutil.GetKubeConfigPath()
@@ -65,6 +87,7 @@ func runInfraStack(streams genericclioptions.IOStreams) error {
 	if err := os.Setenv("KUBECONFIG", kc); err != nil {
 		return err
 	}
+
 	infraPath := hlnpath.CachePath("infrastructure", "infra")
 	if err := os.RemoveAll(infraPath); err != nil {
 		return err
@@ -91,7 +114,7 @@ func runInfraStack(streams genericclioptions.IOStreams) error {
 	cli, err := dagger.NewClient(
 		viper.GetString("log-format"),
 		viper.GetString("log-level"),
-		streams,
+		o.IOStreams,
 	)
 	if err != nil {
 		return err
