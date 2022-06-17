@@ -75,7 +75,7 @@ func (o *initOptions) initInfrasForCluster() error {
 
 func (o *initOptions) runInfraStack() error {
 	if o.WithoutDashboard {
-		if err := os.Setenv("HLN_WITHOUT_DASHBORAD", "true"); err != nil {
+		if err := os.Setenv("HLN_WITHOUT_DASHBOARD", "true"); err != nil {
 			return err
 		}
 	}
