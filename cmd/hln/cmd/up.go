@@ -180,20 +180,7 @@ func (o *upOptions) Run(appName string) error {
 		return err
 	}
 
-	// -----------------------------
-	// 	Handle the output
-	// -----------------------------
-	cm, err := getConfigMapState()
-	if err != nil {
-		return err
-	}
-	if err := cm.SaveOutputAndTFProvider(appName); err != nil {
-		return err
-	}
-	if err := showStatus(o.Out, appName); err != nil {
-		return err
-	}
-	fmt.Fprintf(o.Out, "\n%s\n", color.GreenString("Congrats! Application is ready!"))
+	fmt.Fprintf(o.Out, "\n%s\n", color.GreenString("🎉 Congrats! Application is ready!"))
 	return nil
 }
 
