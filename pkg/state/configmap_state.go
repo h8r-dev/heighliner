@@ -13,11 +13,25 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/h8r-dev/heighliner/pkg/state/app"
+	"github.com/h8r-dev/heighliner/pkg/state/infra"
 )
 
 // ConfigMapState state using k8s configmap as backend
 type ConfigMapState struct {
 	ClientSet *kubernetes.Clientset
+}
+
+func (c *ConfigMapState) LoadInfra() (*infra.Output, error) {
+	cm, err := c.ClientSet.CoreV1().ConfigMaps(InfraNs).Get(context.TODO(), InfraConfigMap, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	rawInfra := cm.Data[InfraEntry]
+	infra := &infra.Output{}
+	if err := yaml.Unmarshal([]byte(rawInfra), infra); err != nil {
+		return nil, err
+	}
+	return infra, nil
 }
 
 // ListApps list all heighliner applications

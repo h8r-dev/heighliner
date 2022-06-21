@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/fluxcd/pkg/untar"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -70,7 +71,22 @@ func (o *initOptions) initInfrasForCluster() error {
 	if err := runForward(o.IOStreams); err != nil {
 		return err
 	}
-	return o.runInfraStack()
+	if err := o.runInfraStack(); err != nil {
+		return err
+	}
+	st, err := getStateInSpecificBackend()
+	if err != nil {
+		return err
+	}
+	infra, err := st.LoadInfra()
+	if err != nil {
+		return fmt.Errorf("failed to load infrastructure info: %w", err)
+	}
+	fmt.Fprintf(o.Out, "\nPlease visit %s to see the dashboard\n", color.CyanString(infra.Dashboard.Ingress))
+	fmt.Fprintf(o.Out, "\tUsername: %s\n\tPassword: %s\n", infra.Dashboard.Credentials.Username, infra.Dashboard.Credentials.Password)
+	documentationLink := "https://heighliner.dev/docs/getting_started/installation"
+	fmt.Fprintf(o.Out, "\nSee the documentation for more information: %s\n", documentationLink)
+	return nil
 }
 
 func (o *initOptions) runInfraStack() error {

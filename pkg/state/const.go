@@ -4,7 +4,10 @@ import "path/filepath"
 
 const (
 	// HeighlinerNs Heighliner namespace
-	HeighlinerNs = "heighliner"
+	InfraNs        = "heighliner-infra"
+	InfraConfigMap = "heighliner-infra-config"
+	InfraEntry     = "infra"
+	HeighlinerNs   = "heighliner"
 
 	tfProviderConfigMapKey = "tf-provider"
 	stackOutput            = "output.yaml"
