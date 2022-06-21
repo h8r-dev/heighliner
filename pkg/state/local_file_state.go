@@ -17,6 +17,7 @@ import (
 type LocalFileState struct {
 }
 
+// LoadInfra load infra info from local file
 func (l *LocalFileState) LoadInfra() (*infra.Output, error) {
 	return nil, errors.New("not implemented")
 }

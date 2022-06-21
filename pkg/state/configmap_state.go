@@ -21,6 +21,7 @@ type ConfigMapState struct {
 	ClientSet *kubernetes.Clientset
 }
 
+// LoadInfra load infra from configmap
 func (c *ConfigMapState) LoadInfra() (*infra.Output, error) {
 	cm, err := c.ClientSet.CoreV1().ConfigMaps(InfraNs).Get(context.TODO(), InfraConfigMap, metav1.GetOptions{})
 	if err != nil {

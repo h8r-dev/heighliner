@@ -3,11 +3,14 @@ package state
 import "path/filepath"
 
 const (
-	// HeighlinerNs Heighliner namespace
-	InfraNs        = "heighliner-infra"
+	// InfraNs is the namespace of infra
+	InfraNs = "heighliner-infra"
+	// InfraConfigMap Infra configmap
 	InfraConfigMap = "heighliner-infra-config"
-	InfraEntry     = "infra"
-	HeighlinerNs   = "heighliner"
+	// InfraEntry Infra entry
+	InfraEntry = "infra"
+	// HeighlinerNs Heighliner namespace
+	HeighlinerNs = "heighliner"
 
 	tfProviderConfigMapKey = "tf-provider"
 	stackOutput            = "output.yaml"
