@@ -1,6 +1,7 @@
 package state
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,10 +10,16 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/h8r-dev/heighliner/pkg/state/app"
+	"github.com/h8r-dev/heighliner/pkg/state/infra"
 )
 
 // LocalFileState State using local file as backend
 type LocalFileState struct {
+}
+
+// LoadInfra load infra info from local file
+func (l *LocalFileState) LoadInfra() (*infra.Output, error) {
+	return nil, errors.New("not implemented")
 }
 
 // LoadOutput load output
