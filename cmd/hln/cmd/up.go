@@ -18,7 +18,6 @@ import (
 	"github.com/spf13/viper"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/portforward"
@@ -90,11 +89,6 @@ func (o *upOptions) BindFlags(f *pflag.FlagSet) {
 }
 
 func (o *upOptions) Validate(cmd *cobra.Command, args []string) error {
-	errs := validation.IsDNS1123Subdomain(args[0])
-	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, ";"))
-	}
-
 	if o.Stack != "" && o.Dir != "" {
 		return errors.New("can't use both stack and dir")
 	}
@@ -118,10 +112,7 @@ func (o *upOptions) Complete() error {
 	return nil
 }
 
-func (o *upOptions) Run(appName string) error {
-	if err := os.Setenv("APP_NAME", appName); err != nil {
-		return err
-	}
+func (o *upOptions) Run() error {
 	// -----------------------------
 	// 		Prepare stack
 	// -----------------------------
@@ -221,7 +212,7 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 		Use:   "up [appName]",
 		Short: "Spin up your application",
 		Long:  upDesc,
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := o.Validate(cmd, args); err != nil {
 				return err
@@ -229,7 +220,7 @@ func newUpCmd(streams genericclioptions.IOStreams) *cobra.Command {
 			return o.Complete()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return o.Run(args[0])
+			return o.Run()
 		},
 	}
 	o.BindFlags(cmd.Flags())
