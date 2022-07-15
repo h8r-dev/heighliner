@@ -8,6 +8,7 @@ import (
 	"cuelang.org/go/encoding/yaml"
 )
 
+// ConvertYamlToCue and write cue file to dest
 func ConvertYamlToCue(from string, to string) error {
 	a, err := yaml.Extract(from, nil)
 	if err != nil {
