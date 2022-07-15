@@ -31,6 +31,7 @@ import (
 	"github.com/h8r-dev/heighliner/pkg/stack"
 	"github.com/h8r-dev/heighliner/pkg/state"
 	"github.com/h8r-dev/heighliner/pkg/util"
+	"github.com/h8r-dev/heighliner/pkg/util/cueutil"
 	"github.com/h8r-dev/heighliner/pkg/util/k8sutil"
 )
 
@@ -72,6 +73,7 @@ type upOptions struct {
 	Version string
 	Dir     string
 
+	File   string
 	Values []string
 
 	Interactive bool
@@ -82,6 +84,7 @@ type upOptions struct {
 
 func (o *upOptions) BindFlags(f *pflag.FlagSet) {
 	f.StringVarP(&o.Stack, "stack", "s", "", "Name of your stack")
+	f.StringVarP(&o.File, "file", "f", "", "Path to your input file")
 	f.StringVar(&o.Dir, "dir", "", "Path to your local stack")
 	f.StringArrayVar(&o.Values, "set", []string{}, "The input values of your project")
 	f.BoolVarP(&o.Interactive, "interactive", "i", false, "If this flag is set, heighliner will prompt dialog when necessary.")
@@ -136,6 +139,14 @@ func (o *upOptions) Run() error {
 		o.Dir = stk.Path
 	}
 	// -----------------------------
+	//     	Convert input file
+	// -----------------------------
+	if o.File != "" {
+		if err := cueutil.ConvertYamlToCue(o.File, filepath.Join(o.Dir, "plans", "input.cue")); err != nil {
+			return fmt.Errorf("failed to convert input file: %w", err)
+		}
+	}
+	// -----------------------------
 	//     	Set input values
 	// -----------------------------
 	// Handle --set flags
@@ -149,7 +160,6 @@ func (o *upOptions) Run() error {
 	if err := runForward(o.IOStreams); err != nil {
 		return err
 	}
-
 	// -----------------------------
 	// 	Execute dagger action
 	// -----------------------------
